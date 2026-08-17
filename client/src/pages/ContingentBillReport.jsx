@@ -1,0 +1,363 @@
+import { useEffect, useState } from "react";
+
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  MenuItem,
+  TextField,
+  Chip,
+  Collapse,
+  Divider,
+  IconButton,
+} from "@mui/material";
+
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import PrintIcon from "@mui/icons-material/Print";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+
+import { useNavigate } from "react-router-dom";
+import MainLayout from "../layouts/MainLayout";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { getContingentBills, deleteContingentBill } from "../api/financeApi";
+import { useToast } from "../utils/useToast";
+import { exportExcel } from "../utils/exportExcel";
+import { printContingentBillPdf, downloadContingentBillPdf } from "../utils/contingentBillPdf";
+import { brand, shadowCard } from "../theme";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+export default function ContingentBillReport() {
+  const navigate = useNavigate();
+  const { showToast, ToastUI } = useToast();
+  const farm = localStorage.getItem("farm") || "Blue Farm";
+
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const [filterMonth, setFilterMonth] = useState("all");
+  const [filterYear, setFilterYear] = useState("all");
+  const [filterHead, setFilterHead] = useState("all");
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const billRes = await getContingentBills();
+      setBills(billRes.data || []);
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to load contingent bills", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const years = Array.from(new Set(bills.map((b) => b.year).filter(Boolean))).sort().reverse();
+  const headOptions = Array.from(new Set(bills.map((b) => b.headName).filter(Boolean))).sort();
+
+  const filtered = bills.filter((b) => {
+    if (filterMonth !== "all" && b.month !== filterMonth) return false;
+    if (filterYear !== "all" && b.year !== filterYear) return false;
+    if (filterHead !== "all" && (b.headName || "") !== filterHead) return false;
+    return true;
+  });
+
+  const totalAmount = filtered.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+
+  const handleExportExcel = () => {
+    const columns = [
+      { key: "voucherNo", label: "Voucher No" },
+      { key: "month", label: "Month" },
+      { key: "year", label: "Year" },
+      { key: "headName", label: "Payment Head" },
+      { key: "paymentToMS", label: "Payment to M/S" },
+      { key: "authority", label: "Authority" },
+      { key: "totalAmount", label: "Total Amount" },
+      { key: "amountInWords", label: "Amount in Words" },
+    ];
+    const rows = filtered.map((b) => ({
+      voucherNo: b.voucherNo || "",
+      month: b.month || "",
+      year: b.year || "",
+      headName: b.headName || "",
+      paymentToMS: b.paymentToMS || "",
+      authority: b.authority || "",
+      totalAmount: Number(b.totalAmount || 0).toLocaleString(),
+      amountInWords: b.amountInWords || "",
+    }));
+    exportExcel("Contingent_Bill_Report", columns, rows);
+  };
+
+  const handlePrintVoucher = (bill) => {
+    printContingentBillPdf(bill, farm);
+  };
+
+  const handleDownloadPdf = (bill) => {
+    downloadContingentBillPdf(bill, farm, `Contingent_Bill_${bill.voucherNo || bill.id}.pdf`);
+  };
+
+  const handleDelete = async () => {
+    const bill = confirmDelete;
+    setConfirmDelete(null);
+    try {
+      await deleteContingentBill(bill.id);
+      showToast("Contingent bill deleted", "success");
+      load();
+    } catch (err) {
+      console.error(err);
+      showToast("Could not delete this contingent bill", "error");
+    }
+  };
+
+  return (
+    <MainLayout>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{
+          display: "inline-flex", alignItems: "center", gap: 0.6,
+          px: 1.6, py: 0.4, borderRadius: 10,
+          background: `${brand.gold}1f`, border: `1px solid ${brand.gold}`,
+          fontSize: 11, fontWeight: 700, letterSpacing: 1, color: brand.goldDark, mb: 1.2,
+        }}>REPORTS
+        </Box>
+
+        <Typography variant="h4" fontWeight="bold" mb={1}>
+          Report Contingent Bill
+        </Typography>
+        <Typography color="text.secondary" mb={3}>
+          Browse saved Contingent Bill vouchers — filter, print the original voucher layout, or export to Excel.
+        </Typography>
+
+        {/* Filters */}
+        <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={3}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Month"
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                >
+                  <MenuItem value="all">All Months</MenuItem>
+                  {MONTHS.map((m) => (
+                    <MenuItem key={m} value={m}>{m}</MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={2}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Year"
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(e.target.value)}
+                >
+                  <MenuItem value="all">All Years</MenuItem>
+                  {years.map((y) => (
+                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Payment Head"
+                  value={filterHead}
+                  onChange={(e) => setFilterHead(e.target.value)}
+                >
+                  <MenuItem value="all">All Heads</MenuItem>
+                  {headOptions.map((h) => (
+                    <MenuItem key={h} value={h}>{h}</MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Box sx={{ display: "flex", gap: 1, justifyContent: { md: "flex-end" } }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={handleExportExcel}
+                    sx={{ background: "#1E8E5A", "&:hover": { background: "#166B44" } }}
+                  >
+                    Excel
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* No bills */}
+        {!loading && filtered.length === 0 && (
+          <Card sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
+            <CardContent sx={{ textAlign: "center", py: 6 }}>
+              <Typography color="text.secondary">No contingent bills match the current filters.</Typography>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* List */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {filtered.map((b) => {
+            const isExpanded = expandedId === b.id;
+
+            return (
+              <Card key={b.id} sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
+                <CardContent>
+                  <Box sx={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    flexWrap: "nowrap", gap: 2,
+                  }}>
+                    <Box sx={{
+                      display: "flex", gap: 1.5, alignItems: "center", flexWrap: "nowrap",
+                      overflowX: "auto", minWidth: 0, py: 0.5,
+                      "&::-webkit-scrollbar": { height: 4 },
+                    }}>
+                      <Chip
+                        label={`Voucher ${b.voucherNo || "—"}`}
+                        sx={{ fontWeight: 700, background: "linear-gradient(135deg,#1E88E5,#1565C0)", color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}
+                      />
+                      <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }} />
+                      <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220 }} />
+                      <Chip
+                        label={`Total: Rs. ${Number(b.totalAmount || 0).toLocaleString()}`}
+                        sx={{ fontWeight: 700, background: brand.success, color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}
+                      />
+                    </Box>
+
+                    <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+                      <Button
+                        variant="contained"
+                        startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        onClick={() => setExpandedId(isExpanded ? null : b.id)}
+                        sx={{ background: "#0F4C81", "&:hover": { background: "#0B3A63" }, whiteSpace: "nowrap" }}
+                      >
+                        {isExpanded ? "Hide Details" : "View Details"}
+                      </Button>
+                      <Button
+                        variant="contained"
+                        startIcon={<EditIcon />}
+                        onClick={() => navigate(`/finance/edit-contingent-bill/${b.id}`)}
+                        sx={{ background: "#9C7A1E", "&:hover": { background: "#7A5F16" }, whiteSpace: "nowrap" }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="contained"
+                        startIcon={<PrintIcon />}
+                        onClick={() => handlePrintVoucher(b)}
+                        sx={{ background: "#16608f", "&:hover": { background: "#124d72" }, whiteSpace: "nowrap" }}
+                      >
+                        Print Voucher
+                      </Button>
+                      <Button
+                        variant="contained"
+                        startIcon={<PictureAsPdfIcon />}
+                        onClick={() => handleDownloadPdf(b)}
+                        sx={{ background: "#B3261E", "&:hover": { background: "#8E1E17" }, whiteSpace: "nowrap" }}
+                      >
+                        Download PDF
+                      </Button>
+                      <IconButton color="error" onClick={() => setConfirmDelete(b)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <Collapse in={isExpanded}>
+                    <Divider sx={{ my: 2 }} />
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="caption" color="text.secondary">Payment Head</Typography>
+                        <Typography fontWeight={700}>{b.headName || "—"}</Typography>
+                      </Grid>
+                      <Grid item xs={12} md={8}>
+                        <Typography variant="caption" color="text.secondary">Authority</Typography>
+                        <Typography fontWeight={700}>{b.authority || "—"}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="caption" color="text.secondary">Rupees</Typography>
+                        <Typography fontWeight={700}>{b.amountInWords || "—"}</Typography>
+                      </Grid>
+                    </Grid>
+
+                    {[...(b.items || [])]
+                      .sort((x, y) => (x.billDate || "").localeCompare(y.billDate || ""))
+                      .map((it, i) => (
+                      <Box
+                        key={it.id || i}
+                        sx={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          flexWrap: "nowrap", gap: 1, py: 1, borderBottom: "1px solid #EEF2F8",
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
+                          <Typography fontWeight={700} noWrap title={it.description || "—"}>
+                            {it.description || "—"}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                            Bill No: {it.billNo || "—"} • Date: {it.billDate || "—"}
+                          </Typography>
+                        </Box>
+                        <Typography fontWeight={700} sx={{ flexShrink: 0 }}>
+                          Rs. {Number(it.amount || 0).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Collapse>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </Box>
+
+        {/* Total */}
+        {filtered.length > 0 && (
+          <Box sx={{
+            mt: 3, p: 2.5, borderRadius: 3, background: brand.panel,
+            display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "nowrap", gap: 1,
+          }}>
+            <Typography fontWeight={700} noWrap sx={{ color: brand.ink }}>
+              Total Vouchers: {filtered.length}
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: brand.ink }}>
+              Total Amount: Rs. {totalAmount.toLocaleString()}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Delete this contingent bill?"
+        message={confirmDelete ? `This will permanently delete voucher ${confirmDelete.voucherNo || "—"} for ${confirmDelete.paymentToMS}.` : ""}
+        confirmLabel="Yes, Delete It"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
+
+      {ToastUI}
+    </MainLayout>
+  );
+}

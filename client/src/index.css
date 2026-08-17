@@ -1,0 +1,90 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body,
+#root{
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#f6f9ff;
+}
+
+body{
+    background:
+        radial-gradient(1100px 620px at 8% -10%, #dceafc 0%, transparent 62%),
+        radial-gradient(900px 520px at 95% 0%, #ffeede 0%, transparent 58%),
+        radial-gradient(900px 600px at 85% 100%, #dff5ec 0%, transparent 60%),
+        radial-gradient(700px 500px at 20% 105%, #ece3fb 0%, transparent 60%),
+        linear-gradient(150deg,#f6f9ff 0%,#eef3fb 45%,#f3f0fa 100%);
+    background-attachment:fixed;
+}
+
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(15,76,129,.28);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:rgba(15,76,129,.45)}
+
+a{
+    text-decoration:none;
+    color:inherit;
+}
+
+button{
+    font-family:inherit;
+}
+
+img{
+    max-width:100%;
+}
+
+.MuiDataGrid-root{
+    border-radius:10px;
+}
+
+/* F5 Refresh Animation - Cow/Horse bounce */
+.f5-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 9999;
+}
+.f5-icon-spin {
+    font-size: 70px;
+    animation: f5Bounce 0.9s ease-out forwards;
+    filter: drop-shadow(0 0 30px rgba(212,175,55,0.6));
+}
+@keyframes f5Bounce {
+    0% {
+        transform: scale(0) rotate(-30deg);
+        opacity: 0;
+    }
+    30% {
+        transform: scale(1.4) rotate(15deg);
+        opacity: 1;
+    }
+    60% {
+        transform: scale(0.9) rotate(-5deg);
+        opacity: 0.9;
+    }
+    100% {
+        transform: scale(1.8) rotate(0deg);
+        opacity: 0;
+    }
+}
+@keyframes logoBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
