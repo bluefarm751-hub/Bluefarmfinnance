@@ -1,38 +1,63 @@
 const db = require("./database");
 
-db.serialize(() => {
-  // Ledger Parties (manual party master — vendors, contractors, customers, etc.)
-  db.run(`
-  CREATE TABLE IF NOT EXISTS ledger_parties (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      farm TEXT,
-      name TEXT NOT NULL,
-      type TEXT DEFAULT 'Other',
-      contact TEXT,
-      openingBalance REAL DEFAULT 0,
-      remarks TEXT,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
+async function initLedger() {
+  const client = await db.connect();
 
-  // Ledger Entries (manual General/Party ledger journal entries — separate
-  // from auto entries pulled from Finance Bills / Cash Book Receipts etc.)
-  db.run(`
-  CREATE TABLE IF NOT EXISTS ledger_entries (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      farm TEXT,
-      entryDate TEXT,
-      voucherNo TEXT,
-      party TEXT,
-      description TEXT,
-      debit REAL DEFAULT 0,
-      credit REAL DEFAULT 0,
-      remarks TEXT,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
+  try {
+    await client.query("BEGIN");
 
-  console.log("✅ Ledger Tables Created");
-});
+    // ============================================================
+    // LEDGER PARTIES
+    // ============================================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ledger_parties (
+        id SERIAL PRIMARY KEY,
+        farm TEXT,
+        name TEXT NOT NULL,
+        type TEXT DEFAULT 'Other',
+        contact TEXT,
+        "openingBalance" NUMERIC DEFAULT 0,
+        remarks TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-module.exports = db;
+    // ============================================================
+    // LEDGER ENTRIES
+    // ============================================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ledger_entries (
+        id SERIAL PRIMARY KEY,
+        farm TEXT,
+        "entryDate" TEXT,
+        "voucherNo" TEXT,
+        party TEXT,
+        description TEXT,
+        debit NUMERIC DEFAULT 0,
+        credit NUMERIC DEFAULT 0,
+        remarks TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query("COMMIT");
+
+    console.log("======================================");
+    console.log("✅ Ledger Tables Created");
+    console.log("======================================");
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+
+    console.error("❌ Ledger initialization failed:");
+    console.error(err);
+
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = initLedger;

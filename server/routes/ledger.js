@@ -1,288 +1,1102 @@
 const express = require("express");
 const router = express.Router();
+
 const db = require("../database/database");
 
 /**
- * LEDGER (General + Party)
+ * ============================================================
+ * LEDGER — GENERAL + PARTY
+ * ============================================================
  *
- * Combines two kinds of entries into one Debit/Credit register:
- *   1. AUTO entries — pulled read-only from records already entered elsewhere
- *      in the software (Finance Bills, Cash Book Receipts, Bank Deposits,
- *      HQ Remittances). Debit = money received, Credit = money paid — same
- *      convention already used by the Cash Book Statement.
- *   2. MANUAL entries — journal-style entries added directly on the Ledger
- *      pages (opening balances, adjustments, or anything not already
- *      captured elsewhere), stored in ledger_entries.
+ * AUTO ENTRIES:
+ *   Finance Bills
+ *   Cash Book Receipts
+ *   Bank Deposits
+ *   HQ Remittances
  *
- * General Ledger = every entry, running balance.
- * Party Ledger   = same entries filtered to one party, running balance
- *                   for that party only.
+ * MANUAL ENTRIES:
+ *   ledger_entries
+ *
+ * Debit  = money received
+ * Credit = money paid
+ *
+ * PostgreSQL version
+ * ============================================================
  */
 
-const num = (v) => (isNaN(parseFloat(v)) ? 0 : parseFloat(v));
-const all = (sql, params = []) =>
-  new Promise((resolve, reject) =>
-    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows || [])))
-  );
-const run = (sql, params = []) =>
-  new Promise((resolve, reject) =>
-    db.run(sql, params, function (err) {
-      err ? reject(err) : resolve(this);
-    })
-  );
+// ============================================================
+// HELPERS
+// ============================================================
 
-// ---------- Build the combined AUTO + MANUAL row list ----------
+const num = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+};
+
+const query = async (sql, params = []) => {
+    const result = await db.query(sql, params);
+    return result.rows || [];
+};
+
+const money = (v) => num(v);
+
+const normalizeDate = (value) => {
+    if (!value) return "";
+
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10);
+    }
+
+    return String(value).slice(0, 10);
+};
+
+// ============================================================
+// BUILD COMBINED LEDGER ROWS
+// ============================================================
+
 async function ledgerRows(filters = {}) {
-  const { farm, from, to, party } = filters;
+    const {
+        farm,
+        from,
+        to,
+        party,
+    } = filters;
 
-  const manual = await all("SELECT * FROM ledger_entries ORDER BY date(entryDate) ASC, id ASC");
-  const bills = await all(`
-    SELECT b.*, h.headName AS headName
-    FROM finance_bills b
-    LEFT JOIN finance_heads h ON h.id = b.headId
-    ORDER BY date(b.billDate) ASC, b.id ASC`);
-  const receipts = await all("SELECT * FROM cashbook_receipts ORDER BY date(entryDate) ASC, id ASC");
-  const bankDeposits = await all("SELECT * FROM bank_deposits ORDER BY date(entryDate) ASC, id ASC");
-  const hoRemittances = await all("SELECT * FROM ho_remittances ORDER BY date(entryDate) ASC, id ASC");
+    // --------------------------------------------------------
+    // MANUAL ENTRIES
+    // --------------------------------------------------------
 
-  const rows = [
-    ...manual.map((r) => ({
-      id: `M${r.id}`,
-      rawId: r.id,
-      date: r.entryDate || "",
-      voucherNo: r.voucherNo || `JV-${r.id}`,
-      party: r.party || "",
-      description: r.description || "",
-      source: "Manual Entry",
-      farm: r.farm || "",
-      debit: num(r.debit),
-      credit: num(r.credit),
-      remarks: r.remarks || "",
-      auto: false,
-    })),
-    ...bills.map((b) => ({
-      id: `B${b.id}`,
-      date: b.billDate || "",
-      voucherNo: b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`,
-      party: b.contractorName || "",
-      description: b.item || b.remarks || `Bill — ${b.headName || ""}`,
-      source: "Finance Bill",
-      farm: b.farm || "",
-      debit: 0,
-      credit: num(b.amount),
-      remarks: b.remarks || "",
-      auto: true,
-    })),
-    ...receipts.map((r) => ({
-      id: `R${r.id}`,
-      date: r.entryDate || "",
-      voucherNo: r.voucherNo || `RV-${r.id}`,
-      party: r.party || "",
-      description: r.description || r.head || r.source || "Receipt",
-      source: "Cash Book Receipt",
-      farm: r.farm || "",
-      debit: num(r.cash) + num(r.bank),
-      credit: 0,
-      remarks: "",
-      auto: true,
-    })),
-    ...bankDeposits.map((r) => ({
-      id: `BD${r.id}`,
-      date: r.entryDate || "",
-      voucherNo: r.voucherNo || `BD-${r.id}`,
-      party: "Bank Deposit",
-      description: r.remarks || `Bank Deposit — ${r.head || "Milk Sale"}`,
-      source: "Bank Deposit",
-      farm: r.farm || "",
-      debit: num(r.amount),
-      credit: 0,
-      remarks: r.remarks || "",
-      auto: true,
-    })),
-    ...hoRemittances.map((r) => ({
-      id: `HO${r.id}`,
-      date: r.entryDate || "",
-      voucherNo: r.voucherNo || `HOR-${r.id}`,
-      party: "Head Office",
-      description: r.remarks || `HQ Remittance (${r.transferMode || "RTGS"})`,
-      source: "HQ Remittance",
-      farm: r.farm || "",
-      debit: 0,
-      credit: num(r.amount),
-      remarks: r.remarks || "",
-      auto: true,
-    })),
-  ];
+    const manual = await query(`
+        SELECT *
+        FROM ledger_entries
+        ORDER BY
+            entryDate ASC NULLS LAST,
+            id ASC
+    `);
 
-  return rows
-    .filter((r) => (from ? (r.date || "") >= from : true))
-    .filter((r) => (to ? (r.date || "") <= to : true))
-    .filter((r) => (farm ? r.farm === farm : true))
-    .filter((r) => (party ? (r.party || "").toLowerCase() === String(party).toLowerCase() : true))
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.id).localeCompare(String(b.id)));
+    // --------------------------------------------------------
+    // FINANCE BILLS
+    // --------------------------------------------------------
+
+    const bills = await query(`
+        SELECT
+            b.*,
+            h.headName AS "headName"
+        FROM finance_bills b
+        LEFT JOIN finance_heads h
+            ON h.id = b."headId"
+        ORDER BY
+            b."billDate" ASC NULLS LAST,
+            b.id ASC
+    `);
+
+    // --------------------------------------------------------
+    // CASH BOOK RECEIPTS
+    // --------------------------------------------------------
+
+    const receipts = await query(`
+        SELECT *
+        FROM cashbook_receipts
+        ORDER BY
+            entryDate ASC NULLS LAST,
+            id ASC
+    `);
+
+    // --------------------------------------------------------
+    // BANK DEPOSITS
+    // --------------------------------------------------------
+
+    const bankDeposits = await query(`
+        SELECT *
+        FROM bank_deposits
+        ORDER BY
+            entryDate ASC NULLS LAST,
+            id ASC
+    `);
+
+    // --------------------------------------------------------
+    // HQ REMITTANCES
+    // --------------------------------------------------------
+
+    const hoRemittances = await query(`
+        SELECT *
+        FROM ho_remittances
+        ORDER BY
+            entryDate ASC NULLS LAST,
+            id ASC
+    `);
+
+    // ========================================================
+    // COMBINE ALL ENTRIES
+    // ========================================================
+
+    const rows = [
+
+        // ----------------------------------------------------
+        // MANUAL
+        // ----------------------------------------------------
+
+        ...manual.map((r) => ({
+            id: `M${r.id}`,
+            rawId: r.id,
+
+            date: normalizeDate(r.entryDate),
+
+            voucherNo:
+                r.voucherNo ||
+                `JV-${r.id}`,
+
+            party: r.party || "",
+
+            description:
+                r.description || "",
+
+            source: "Manual Entry",
+
+            farm: r.farm || "",
+
+            debit: money(r.debit),
+
+            credit: money(r.credit),
+
+            remarks:
+                r.remarks || "",
+
+            auto: false,
+        })),
+
+        // ----------------------------------------------------
+        // FINANCE BILLS
+        // ----------------------------------------------------
+
+        ...bills.map((b) => ({
+            id: `B${b.id}`,
+
+            rawId: b.id,
+
+            date: normalizeDate(b.billDate),
+
+            voucherNo:
+                b.sNo
+                    ? `BILL-${b.sNo}`
+                    : `BILL-${b.id}`,
+
+            party:
+                b.contractorName || "",
+
+            description:
+                b.item ||
+                b.remarks ||
+                `Bill — ${b.headName || ""}`,
+
+            source: "Finance Bill",
+
+            farm:
+                b.farm || "",
+
+            debit: 0,
+
+            credit:
+                money(b.amount),
+
+            remarks:
+                b.remarks || "",
+
+            auto: true,
+        })),
+
+        // ----------------------------------------------------
+        // CASH BOOK RECEIPTS
+        // ----------------------------------------------------
+
+        ...receipts.map((r) => ({
+            id: `R${r.id}`,
+
+            rawId: r.id,
+
+            date:
+                normalizeDate(r.entryDate),
+
+            voucherNo:
+                r.voucherNo ||
+                `RV-${r.id}`,
+
+            party:
+                r.party || "",
+
+            description:
+                r.description ||
+                r.head ||
+                r.source ||
+                "Receipt",
+
+            source:
+                "Cash Book Receipt",
+
+            farm:
+                r.farm || "",
+
+            debit:
+                money(r.cash) +
+                money(r.bank),
+
+            credit: 0,
+
+            remarks: "",
+
+            auto: true,
+        })),
+
+        // ----------------------------------------------------
+        // BANK DEPOSITS
+        // ----------------------------------------------------
+
+        ...bankDeposits.map((r) => ({
+            id: `BD${r.id}`,
+
+            rawId: r.id,
+
+            date:
+                normalizeDate(r.entryDate),
+
+            voucherNo:
+                r.voucherNo ||
+                `BD-${r.id}`,
+
+            party:
+                "Bank Deposit",
+
+            description:
+                r.remarks ||
+                `Bank Deposit — ${
+                    r.head || "Milk Sale"
+                }`,
+
+            source:
+                "Bank Deposit",
+
+            farm:
+                r.farm || "",
+
+            debit:
+                money(r.amount),
+
+            credit: 0,
+
+            remarks:
+                r.remarks || "",
+
+            auto: true,
+        })),
+
+        // ----------------------------------------------------
+        // HQ REMITTANCES
+        // ----------------------------------------------------
+
+        ...hoRemittances.map((r) => ({
+            id: `HO${r.id}`,
+
+            rawId: r.id,
+
+            date:
+                normalizeDate(r.entryDate),
+
+            voucherNo:
+                r.voucherNo ||
+                `HOR-${r.id}`,
+
+            party:
+                "Head Office",
+
+            description:
+                r.remarks ||
+                `HQ Remittance (${
+                    r.transferMode || "RTGS"
+                })`,
+
+            source:
+                "HQ Remittance",
+
+            farm:
+                r.farm || "",
+
+            debit: 0,
+
+            credit:
+                money(r.amount),
+
+            remarks:
+                r.remarks || "",
+
+            auto: true,
+        })),
+    ];
+
+    // ========================================================
+    // FILTER
+    // ========================================================
+
+    return rows
+        .filter((r) => {
+            if (!from) return true;
+            return r.date >= String(from);
+        })
+
+        .filter((r) => {
+            if (!to) return true;
+            return r.date <= String(to);
+        })
+
+        .filter((r) => {
+            if (!farm) return true;
+            return r.farm === farm;
+        })
+
+        .filter((r) => {
+            if (!party) return true;
+
+            return (
+                String(r.party || "")
+                    .toLowerCase()
+                    ===
+                String(party)
+                    .toLowerCase()
+            );
+        })
+
+        .sort((a, b) => {
+            const dateCompare =
+                String(a.date)
+                    .localeCompare(
+                        String(b.date)
+                    );
+
+            if (dateCompare !== 0) {
+                return dateCompare;
+            }
+
+            return String(a.id)
+                .localeCompare(
+                    String(b.id)
+                );
+        });
 }
+
+// ============================================================
+// RUNNING BALANCE
+// ============================================================
 
 function withRunningBalance(rows) {
-  let balance = 0;
-  return rows.map((r) => {
-    balance += num(r.debit) - num(r.credit);
-    return { ...r, balance };
-  });
+    let balance = 0;
+
+    return rows.map((row) => {
+
+        balance +=
+            money(row.debit) -
+            money(row.credit);
+
+        return {
+            ...row,
+            balance,
+        };
+    });
 }
 
-// ---------- GENERAL LEDGER ----------
+// ============================================================
+// GENERAL LEDGER
+// ============================================================
+
 router.get("/general", async (req, res) => {
-  try {
-    const rows = await ledgerRows(req.query);
-    res.json(withRunningBalance(rows));
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
+    try {
 
-// ---------- PARTY LEDGER ----------
-router.get("/party", async (req, res) => {
-  try {
-    if (!req.query.party) return res.json([]);
-    const rows = await ledgerRows(req.query);
-    res.json(withRunningBalance(rows));
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
+        const rows =
+            await ledgerRows(req.query);
 
-// ---------- PARTY LIST (manual master + names seen in bills/receipts) ----------
-router.get("/parties", async (req, res) => {
-  try {
-    const { farm } = req.query;
+        res.json(
+            withRunningBalance(rows)
+        );
 
-    let sql = "SELECT * FROM ledger_parties WHERE 1=1";
-    const params = [];
-    if (farm) {
-      sql += " AND farm=?";
-      params.push(farm);
+    } catch (err) {
+
+        console.error(
+            "GET /ledger/general:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    sql += " ORDER BY name ASC";
-    const manual = await all(sql, params);
-
-    const rows = await ledgerRows({ farm });
-    const seen = new Map();
-    manual.forEach((p) => seen.set(p.name.toLowerCase(), { name: p.name, manual: true, id: p.id, type: p.type, contact: p.contact, openingBalance: p.openingBalance, remarks: p.remarks }));
-    rows.forEach((r) => {
-      const name = (r.party || "").trim();
-      if (!name || ["Bank Deposit", "Head Office"].includes(name)) return;
-      const key = name.toLowerCase();
-      if (!seen.has(key)) seen.set(key, { name, manual: false });
-    });
-
-    res.json(Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name)));
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
 });
+
+// ============================================================
+// PARTY LEDGER
+// ============================================================
+
+router.get("/party", async (req, res) => {
+    try {
+
+        if (!req.query.party) {
+            return res.json([]);
+        }
+
+        const rows =
+            await ledgerRows(req.query);
+
+        res.json(
+            withRunningBalance(rows)
+        );
+
+    } catch (err) {
+
+        console.error(
+            "GET /ledger/party:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+});
+
+// ============================================================
+// PARTY LIST
+// ============================================================
+
+router.get("/parties", async (req, res) => {
+    try {
+
+        const { farm } =
+            req.query;
+
+        let sql = `
+            SELECT *
+            FROM ledger_parties
+            WHERE 1=1
+        `;
+
+        const params = [];
+
+        if (farm) {
+            params.push(farm);
+
+            sql += `
+                AND farm = $${params.length}
+            `;
+        }
+
+        sql += `
+            ORDER BY name ASC
+        `;
+
+        const manual =
+            await query(sql, params);
+
+        const rows =
+            await ledgerRows({ farm });
+
+        const seen =
+            new Map();
+
+        // ----------------------------------------------------
+        // MANUAL PARTIES
+        // ----------------------------------------------------
+
+        manual.forEach((p) => {
+
+            const name =
+                String(p.name || "")
+                    .trim();
+
+            if (!name) return;
+
+            seen.set(
+                name.toLowerCase(),
+                {
+                    name,
+
+                    manual: true,
+
+                    id: p.id,
+
+                    type:
+                        p.type || "Other",
+
+                    contact:
+                        p.contact || "",
+
+                    openingBalance:
+                        money(
+                            p.openingBalance
+                        ),
+
+                    remarks:
+                        p.remarks || "",
+                }
+            );
+        });
+
+        // ----------------------------------------------------
+        // PARTIES FOUND IN AUTO ENTRIES
+        // ----------------------------------------------------
+
+        rows.forEach((r) => {
+
+            const name =
+                String(r.party || "")
+                    .trim();
+
+            if (
+                !name ||
+                [
+                    "Bank Deposit",
+                    "Head Office",
+                ].includes(name)
+            ) {
+                return;
+            }
+
+            const key =
+                name.toLowerCase();
+
+            if (!seen.has(key)) {
+
+                seen.set(key, {
+                    name,
+                    manual: false,
+                });
+            }
+        });
+
+        res.json(
+            Array.from(
+                seen.values()
+            ).sort((a, b) =>
+                a.name.localeCompare(
+                    b.name
+                )
+            )
+        );
+
+    } catch (err) {
+
+        console.error(
+            "GET /ledger/parties:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+});
+
+// ============================================================
+// ADD PARTY
+// ============================================================
 
 router.post("/parties", async (req, res) => {
-  try {
-    const { farm, name, type, contact, openingBalance, remarks } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: "Party name is required" });
+    try {
+
+        const {
+            farm,
+            name,
+            type,
+            contact,
+            openingBalance,
+            remarks,
+        } = req.body;
+
+        if (
+            !name ||
+            !String(name).trim()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Party name is required",
+            });
+        }
+
+        const result =
+            await db.query(
+                `INSERT INTO ledger_parties
+                (
+                    farm,
+                    name,
+                    type,
+                    contact,
+                    openingBalance,
+                    remarks
+                )
+                VALUES
+                ($1,$2,$3,$4,$5,$6)
+                RETURNING id`,
+                [
+                    farm || null,
+
+                    String(name).trim(),
+
+                    type || "Other",
+
+                    contact || "",
+
+                    money(openingBalance),
+
+                    remarks || "",
+                ]
+            );
+
+        res.json({
+            success: true,
+
+            message:
+                "Party added successfully",
+
+            id:
+                result.rows[0].id,
+        });
+
+    } catch (err) {
+
+        console.error(
+            "POST /ledger/parties:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    const r = await run(
-      `INSERT INTO ledger_parties (farm, name, type, contact, openingBalance, remarks)
-       VALUES (?,?,?,?,?,?)`,
-      [farm || null, name.trim(), type || "Other", contact || "", num(openingBalance), remarks || ""]
-    );
-    res.json({ success: true, message: "Party added successfully", id: r.lastID });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
 });
+
+// ============================================================
+// UPDATE PARTY
+// ============================================================
 
 router.put("/parties/:id", async (req, res) => {
-  try {
-    const { name, type, contact, openingBalance, remarks } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: "Party name is required" });
+    try {
+
+        const {
+            name,
+            type,
+            contact,
+            openingBalance,
+            remarks,
+        } = req.body;
+
+        if (
+            !name ||
+            !String(name).trim()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Party name is required",
+            });
+        }
+
+        const result =
+            await db.query(
+                `UPDATE ledger_parties
+                 SET
+                    name = $1,
+                    type = $2,
+                    contact = $3,
+                    openingBalance = $4,
+                    remarks = $5,
+                    "updatedAt" =
+                        CURRENT_TIMESTAMP
+                 WHERE id = $6`,
+                [
+                    String(name).trim(),
+
+                    type || "Other",
+
+                    contact || "",
+
+                    money(openingBalance),
+
+                    remarks || "",
+
+                    req.params.id,
+                ]
+            );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Party not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            message:
+                "Party updated successfully",
+        });
+
+    } catch (err) {
+
+        console.error(
+            "PUT /ledger/parties:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    const r = await run(
-      `UPDATE ledger_parties SET name=?, type=?, contact=?, openingBalance=?, remarks=?, updatedAt=CURRENT_TIMESTAMP WHERE id=?`,
-      [name.trim(), type || "Other", contact || "", num(openingBalance), remarks || "", req.params.id]
-    );
-    if (r.changes === 0) return res.status(404).json({ success: false, message: "Party not found" });
-    res.json({ success: true, message: "Party updated successfully" });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
 });
+
+// ============================================================
+// DELETE PARTY
+// ============================================================
 
 router.delete("/parties/:id", async (req, res) => {
-  try {
-    const r = await run("DELETE FROM ledger_parties WHERE id=?", [req.params.id]);
-    if (r.changes === 0) return res.status(404).json({ success: false, message: "Party not found" });
-    res.json({ success: true, message: "Party deleted successfully" });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+
+        const result =
+            await db.query(
+                `DELETE FROM ledger_parties
+                 WHERE id = $1`,
+                [req.params.id]
+            );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Party not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            message:
+                "Party deleted successfully",
+        });
+
+    } catch (err) {
+
+        console.error(
+            "DELETE /ledger/parties:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
 });
 
-// ---------- MANUAL LEDGER ENTRIES (journal) ----------
+// ============================================================
+// MANUAL LEDGER ENTRIES
+// ============================================================
+
+// GET ENTRIES
 router.get("/entries", async (req, res) => {
-  try {
-    const { farm } = req.query;
-    let sql = "SELECT * FROM ledger_entries WHERE 1=1";
-    const params = [];
-    if (farm) {
-      sql += " AND farm=?";
-      params.push(farm);
+    try {
+
+        const { farm } =
+            req.query;
+
+        let sql = `
+            SELECT *
+            FROM ledger_entries
+            WHERE 1=1
+        `;
+
+        const params = [];
+
+        if (farm) {
+
+            params.push(farm);
+
+            sql += `
+                AND farm = $${params.length}
+            `;
+        }
+
+        sql += `
+            ORDER BY
+                entryDate DESC NULLS LAST,
+                id DESC
+        `;
+
+        const rows =
+            await query(sql, params);
+
+        res.json(rows);
+
+    } catch (err) {
+
+        console.error(
+            "GET /ledger/entries:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    sql += " ORDER BY date(entryDate) DESC, id DESC";
-    res.json(await all(sql, params));
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
 });
 
+// ADD ENTRY
 router.post("/entries", async (req, res) => {
-  try {
-    const { farm, entryDate, voucherNo, party, description, debit, credit, remarks } = req.body;
-    if (!num(debit) && !num(credit)) {
-      return res.status(400).json({ success: false, message: "Enter a Debit or Credit amount" });
+    try {
+
+        const {
+            farm,
+            entryDate,
+            voucherNo,
+            party,
+            description,
+            debit,
+            credit,
+            remarks,
+        } = req.body;
+
+        const debitAmount =
+            money(debit);
+
+        const creditAmount =
+            money(credit);
+
+        if (
+            debitAmount <= 0 &&
+            creditAmount <= 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Enter a Debit or Credit amount",
+            });
+        }
+
+        if (
+            debitAmount > 0 &&
+            creditAmount > 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Enter either Debit or Credit, not both",
+            });
+        }
+
+        const result =
+            await db.query(
+                `INSERT INTO ledger_entries
+                (
+                    farm,
+                    entryDate,
+                    voucherNo,
+                    party,
+                    description,
+                    debit,
+                    credit,
+                    remarks
+                )
+                VALUES
+                ($1,$2,$3,$4,$5,$6,$7,$8)
+                RETURNING id`,
+                [
+                    farm || null,
+
+                    entryDate || "",
+
+                    voucherNo || "",
+
+                    party || "",
+
+                    description || "",
+
+                    debitAmount,
+
+                    creditAmount,
+
+                    remarks || "",
+                ]
+            );
+
+        res.json({
+            success: true,
+
+            message:
+                "Ledger entry added successfully",
+
+            id:
+                result.rows[0].id,
+        });
+
+    } catch (err) {
+
+        console.error(
+            "POST /ledger/entries:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
     }
-    const r = await run(
-      `INSERT INTO ledger_entries (farm, entryDate, voucherNo, party, description, debit, credit, remarks)
-       VALUES (?,?,?,?,?,?,?,?)`,
-      [farm || null, entryDate || "", voucherNo || "", party || "", description || "", num(debit), num(credit), remarks || ""]
-    );
-    res.json({ success: true, message: "Ledger entry added successfully", id: r.lastID });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
 });
 
+// UPDATE ENTRY
 router.put("/entries/:id", async (req, res) => {
-  try {
-    const { entryDate, voucherNo, party, description, debit, credit, remarks } = req.body;
-    const r = await run(
-      `UPDATE ledger_entries
-       SET entryDate=?, voucherNo=?, party=?, description=?, debit=?, credit=?, remarks=?, updatedAt=CURRENT_TIMESTAMP
-       WHERE id=?`,
-      [entryDate || "", voucherNo || "", party || "", description || "", num(debit), num(credit), remarks || "", req.params.id]
-    );
-    if (r.changes === 0) return res.status(404).json({ success: false, message: "Entry not found" });
-    res.json({ success: true, message: "Ledger entry updated successfully" });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+
+        const {
+            entryDate,
+            voucherNo,
+            party,
+            description,
+            debit,
+            credit,
+            remarks,
+        } = req.body;
+
+        const debitAmount =
+            money(debit);
+
+        const creditAmount =
+            money(credit);
+
+        if (
+            debitAmount <= 0 &&
+            creditAmount <= 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Enter a Debit or Credit amount",
+            });
+        }
+
+        if (
+            debitAmount > 0 &&
+            creditAmount > 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Enter either Debit or Credit, not both",
+            });
+        }
+
+        const result =
+            await db.query(
+                `UPDATE ledger_entries
+                 SET
+                    entryDate = $1,
+                    voucherNo = $2,
+                    party = $3,
+                    description = $4,
+                    debit = $5,
+                    credit = $6,
+                    remarks = $7,
+                    "updatedAt" =
+                        CURRENT_TIMESTAMP
+                 WHERE id = $8`,
+                [
+                    entryDate || "",
+
+                    voucherNo || "",
+
+                    party || "",
+
+                    description || "",
+
+                    debitAmount,
+
+                    creditAmount,
+
+                    remarks || "",
+
+                    req.params.id,
+                ]
+            );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Entry not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            message:
+                "Ledger entry updated successfully",
+        });
+
+    } catch (err) {
+
+        console.error(
+            "PUT /ledger/entries:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
 });
 
+// DELETE ENTRY
 router.delete("/entries/:id", async (req, res) => {
-  try {
-    const r = await run("DELETE FROM ledger_entries WHERE id=?", [req.params.id]);
-    if (r.changes === 0) return res.status(404).json({ success: false, message: "Entry not found" });
-    res.json({ success: true, message: "Ledger entry deleted successfully" });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
+    try {
+
+        const result =
+            await db.query(
+                `DELETE FROM ledger_entries
+                 WHERE id = $1`,
+                [req.params.id]
+            );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Entry not found",
+            });
+        }
+
+        res.json({
+            success: true,
+            message:
+                "Ledger entry deleted successfully",
+        });
+
+    } catch (err) {
+
+        console.error(
+            "DELETE /ledger/entries:",
+            err
+        );
+
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
 });
+
+// ============================================================
+// EXPORT
+// ============================================================
 
 module.exports = router;

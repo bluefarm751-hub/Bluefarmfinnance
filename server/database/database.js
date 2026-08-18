@@ -1,31 +1,24 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+const { Pool } = require("pg");
 
-const db = new sqlite3.Database(
-    process.env.DB_PATH || path.join(__dirname, "bluefarm.db"),
-    (err) => {
-        if (err) {
-            console.error(err.message);
-        } else {
-            console.log("✅ SQLite Database Connected");
-        }
-    }
-);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
 
-// Add Farm Column (Run only once)
-db.run(
-    `ALTER TABLE employees ADD COLUMN farm TEXT`,
-    (err) => {
-        if (err) {
-            if (err.message.includes("duplicate column")) {
-                console.log("✅ Farm column already exists");
-            } else {
-                console.log(err.message);
-            }
-        } else {
-            console.log("✅ Farm column added");
-        }
-    }
-);
+  ssl: process.env.NODE_ENV === "production"
+    ? { rejectUnauthorized: false }
+    : false,
 
-module.exports = db;
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+// Test connection
+pool.on("connect", () => {
+  console.log("✅ PostgreSQL Database Connected");
+});
+
+pool.on("error", (err) => {
+  console.error("❌ PostgreSQL Pool Error:", err.message);
+});
+
+module.exports = pool;

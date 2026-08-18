@@ -3,11 +3,22 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 
-require("./database/initDatabase");
-const { runBackup, startScheduledBackups } = require("./utils/backup");
+// ============================================================
+// DATABASE INITIALIZATION
+// ============================================================
+const initDatabase = require("./database/initDatabase");
+const initCashbook = require("./database/initCashbook");
+const initLedger = require("./database/initLedger");
+
+// ============================================================
+// UTILITIES
+// ============================================================
 const { loginLimiter } = require("./utils/rateLimiter");
 const { requireAuth } = require("./middleware/authMiddleware");
 
+// ============================================================
+// ROUTES
+// ============================================================
 const employeeRoutes = require("./routes/employees");
 const authRoutes = require("./routes/auth");
 const payrollRoutes = require("./routes/payroll");
@@ -15,15 +26,31 @@ const financeRoutes = require("./routes/finance");
 const cashbookRoutes = require("./routes/cashbook");
 const ledgerRoutes = require("./routes/ledger");
 
+// ============================================================
+// APP
+// ============================================================
 const app = express();
+
 const PORT = Number(process.env.PORT || 3001);
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || true,
-  credentials: true,
-}));
-app.use(express.json());
+// ============================================================
+// CORS
+// ============================================================
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || true,
+    credentials: true,
+  })
+);
 
+// ============================================================
+// BODY PARSER
+// ============================================================
+app.use(express.json({ limit: "10mb" }));
+
+// ============================================================
+// SECURITY HEADERS
+// ============================================================
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -31,32 +58,50 @@ app.use((req, res, next) => {
   next();
 });
 
+// ============================================================
+// LOGIN RATE LIMITER
+// ============================================================
 app.use("/api/auth/login", loginLimiter);
 
-app.use((req, res, next) => {
-  if (req.method === "DELETE" || req.path.endsWith("/generate")) {
-    runBackup("pre-write: " + req.method + " " + req.path);
-  }
-  next();
-});
 
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+// ============================================================
+// UPLOADS
+// ============================================================
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "..", "uploads"))
+);
 
-// API routes under /api prefix to avoid collision with SPA routes
+// ============================================================
+// HEALTH CHECK
+// ============================================================
 app.get("/health", (req, res) => {
-  res.json({ success: true, status: "ok", service: "Blue Farm Finance System" });
+  res.json({
+    success: true,
+    status: "ok",
+    service: "Blue Farm Finance System",
+  });
 });
 
+// ============================================================
+// API STATUS
+// ============================================================
 app.get("/api", (req, res) => {
-    res.json({ success: true, message: "Blue Farm Finance API is Running" });
+  res.json({
+    success: true,
+    message: "Blue Farm Finance API is Running",
+  });
 });
 
-// /api/auth (login, logout) stays public — everything else under /api
-// requires a valid session token from a successful login (see
-// middleware/authMiddleware.js). Without this, any of the routes below
-// could previously be called directly (curl/Postman/typed URL) by anyone
-// who could reach the server, without ever going through the Login screen.
+// ============================================================
+// AUTH ROUTES
+// PUBLIC
+// ============================================================
 app.use("/api/auth", authRoutes);
+
+// ============================================================
+// PROTECTED API ROUTES
+// ============================================================
 app.use("/api", requireAuth);
 
 app.use("/api/employees", employeeRoutes);
@@ -65,25 +110,72 @@ app.use("/api/finance", financeRoutes);
 app.use("/api/cashbook", cashbookRoutes);
 app.use("/api/ledger", ledgerRoutes);
 
-// Serve the built React frontend
+// ============================================================
+// FRONTEND
+// ============================================================
 const distPath = path.join(__dirname, "..", "client", "dist");
+
 app.use(express.static(distPath));
 
-// SPA Fallback — serve index.html for any client-side route
-// Must use app.use (not app.get) for wildcard path compatibility
+// ============================================================
+// SPA FALLBACK
+// ============================================================
 app.use((req, res) => {
-  if (req.headers.accept && req.headers.accept.includes("application/json")) {
-    return res.status(404).json({ success: false, message: "API not found" });
+  if (
+    req.headers.accept &&
+    req.headers.accept.includes("application/json")
+  ) {
+    return res.status(404).json({
+      success: false,
+      message: "API not found",
+    });
   }
+
   const indexPath = path.join(distPath, "index.html");
+
   if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(500).send("Frontend not built. Run: cd client && npm run build");
+    return res.sendFile(indexPath);
   }
+
+  return res.status(500).send(
+    "Frontend not built. Run: cd client && npm run build"
+  );
 });
 
-app.listen(PORT, () => {
-    console.log("✅ Server running on port " + PORT);
-    startScheduledBackups();
-});
+// ============================================================
+// START SERVER AFTER DATABASE INITIALIZATION
+// ============================================================
+async function startServer() {
+  try {
+    await initDatabase();
+    await initCashbook();
+    await initLedger();
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("======================================");
+      console.log("✅ Blue Farm Finance System");
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log("✅ PostgreSQL mode enabled");
+      console.log("======================================");
+    });
+  } catch (err) {
+    console.error("❌ Server startup failed:", err);
+    process.exit(1);
+  }
+}
+
+const shutdown = async (signal) => {
+  console.log(`
+${signal} received. Shutting down...`);
+  try {
+    const db = require("./database/database");
+    await db.end();
+  } finally {
+    process.exit(0);
+  }
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+startServer();

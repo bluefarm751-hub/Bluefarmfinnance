@@ -7,7 +7,5 @@ services:
     startCommand: npm start --prefix server
     healthCheckPath: /health
     envVars:
-      - key: CORS_ORIGIN
-        value: "*"
-      - key: DB_PATH
-        value: /tmp/bluefarm.db
+      - key: NODE_ENV
+        value: production

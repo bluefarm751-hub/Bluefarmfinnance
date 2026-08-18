@@ -17,6 +17,6 @@
     "multer": "^2.2.0",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.1",
-    "sqlite3": "^6.0.1"
+    "pg": "^8.16.3"
   }
 }

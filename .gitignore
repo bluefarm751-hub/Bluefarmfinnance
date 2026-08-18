@@ -1,0 +1,5 @@
+node_modules
+server/database/*.db
+server/database/*.sqlite
+server/database/*.sqlite3
+*.dump

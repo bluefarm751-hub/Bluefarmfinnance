@@ -1,55 +1,240 @@
 const express = require("express");
 const router = express.Router();
+
 const db = require("../database/database");
-const { hashPassword, verifyPassword, isHashed } = require("../utils/passwordHash");
-const { recordFailure, clearAttempts } = require("../utils/rateLimiter");
-const { createSession, revokeSession } = require("../utils/sessionStore");
 
+const {
+    hashPassword,
+    verifyPassword,
+    isHashed
+} = require("../utils/passwordHash");
+
+const {
+    recordFailure,
+    clearAttempts
+} = require("../utils/rateLimiter");
+
+const {
+    createSession,
+    revokeSession
+} = require("../utils/sessionStore");
+
+
+// =====================================================
 // LOGIN
-router.post("/login", (req, res) => {
-  const username = String(req.body.username || "").trim().toLowerCase();
-  const password = String(req.body.password || "").trim();
+// =====================================================
 
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: "Username and password are required" });
-  }
+router.post("/login", async (req, res) => {
 
-  db.get("SELECT * FROM users WHERE LOWER(username)=?", [username], (err, row) => {
-    if (err) return res.status(500).json({ success: false, message: err.message });
+    try {
 
-    if (!row || !verifyPassword(password, row.password)) {
-      // Count this against the brute-force limiter — this was previously
-      // never called, so the login rate limit never actually triggered.
-      recordFailure(req);
-      return res.status(401).json({ success: false, message: "Invalid username or password" });
+        const username = String(
+            req.body.username || ""
+        ).trim().toLowerCase();
+
+        const password = String(
+            req.body.password || ""
+        ).trim();
+
+
+        // ---------------------------------------------
+        // VALIDATION
+        // ---------------------------------------------
+
+        if (!username || !password) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Username and password are required"
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // FIND USER
+        // ---------------------------------------------
+
+        const result = await db.query(
+            `
+            SELECT *
+            FROM users
+            WHERE LOWER(username) = $1
+            LIMIT 1
+            `,
+            [username]
+        );
+
+
+        const row = result.rows[0];
+
+
+        // ---------------------------------------------
+        // INVALID LOGIN
+        // ---------------------------------------------
+
+        if (
+            !row ||
+            !verifyPassword(password, row.password)
+        ) {
+
+            recordFailure(req);
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid username or password"
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // SUCCESSFUL LOGIN
+        // ---------------------------------------------
+
+        clearAttempts(req);
+
+
+        // ---------------------------------------------
+        // UPGRADE OLD PASSWORD
+        // ---------------------------------------------
+
+        if (!isHashed(row.password)) {
+
+            const upgraded = hashPassword(password);
+
+            try {
+
+                await db.query(
+                    `
+                    UPDATE users
+                    SET password = $1
+                    WHERE id = $2
+                    `,
+                    [
+                        upgraded,
+                        row.id
+                    ]
+                );
+
+            } catch (err) {
+
+                console.log(
+                    "Password upgrade failed:",
+                    err.message
+                );
+
+            }
+
+        }
+
+
+        // ---------------------------------------------
+        // USER OBJECT
+        // ---------------------------------------------
+
+        const user = {
+
+            username: row.username,
+
+            name: row.name,
+
+            role: row.role,
+
+            farm: row.farm
+
+        };
+
+
+        // ---------------------------------------------
+        // CREATE SESSION
+        // ---------------------------------------------
+
+        const token = createSession(user);
+
+
+        // ---------------------------------------------
+        // RESPONSE
+        // ---------------------------------------------
+
+        return res.json({
+
+            success: true,
+
+            token,
+
+            user
+
+        });
+
+    } catch (err) {
+
+        console.error(
+            "LOGIN ERROR:",
+            err
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Server error during login"
+
+        });
+
     }
 
-    // Successful login — clear this user's failed-attempt counter.
-    clearAttempts(req);
-
-    // Legacy plain-text passwords get silently upgraded to a salted hash on
-    // their next successful login (comment in passwordHash.js promised this,
-    // but nothing ever actually called hashPassword() to do it).
-    if (!isHashed(row.password)) {
-      const upgraded = hashPassword(password);
-      db.run("UPDATE users SET password=? WHERE id=?", [upgraded, row.id], (upErr) => {
-        if (upErr) console.log("Password upgrade failed:", upErr.message);
-      });
-    }
-
-    const user = { username: row.username, name: row.name, role: row.role, farm: row.farm };
-    const token = createSession(user);
-
-    res.json({ success: true, token, user });
-  });
 });
 
-// LOGOUT — invalidate the session token so it can't be reused.
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
 router.post("/logout", (req, res) => {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  revokeSession(token);
-  res.json({ success: true });
+
+    try {
+
+        const header =
+            req.headers.authorization || "";
+
+        const token =
+            header.startsWith("Bearer ")
+                ? header.slice(7)
+                : null;
+
+
+        if (token) {
+            revokeSession(token);
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            message: "Logged out successfully"
+
+        });
+
+    } catch (err) {
+
+        console.error(
+            "LOGOUT ERROR:",
+            err
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Logout failed"
+
+        });
+
+    }
+
 });
+
 
 module.exports = router;

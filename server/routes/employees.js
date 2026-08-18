@@ -6,154 +6,228 @@ const fs = require("fs");
 
 const db = require("../database/database");
 
-// ===================================
-// FILE UPLOAD SETUP (employee photo + CNIC copy)
-// ===================================
+// ==========================================
+// FILE UPLOAD SETUP
+// ==========================================
+
 const uploadDir = path.join(__dirname, "..", "..", "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e6) + path.extname(file.originalname);
-    cb(null, unique);
-  },
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+
+    filename: (req, file, cb) => {
+        const unique =
+            Date.now() +
+            "-" +
+            Math.round(Math.random() * 1e6) +
+            path.extname(file.originalname);
+
+        cb(null, unique);
+    }
 });
 
-// Only allow image/PDF documents (photo, CNIC, police verification) and cap
-// size at 8MB — an open upload with no filter/limit lets anyone push any
-// file type (including executables) or oversized files to the server.
-const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+
+// ==========================================
+// ALLOWED FILE TYPES
+// ==========================================
+
+const ALLOWED_MIME = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf"
+];
+
 const upload = multer({
-  storage,
-  limits: { fileSize: 8 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_MIME.includes(file.mimetype)) return cb(null, true);
-    cb(new Error("Only JPG, PNG, WEBP or PDF files are allowed"));
-  },
+    storage,
+
+    limits: {
+        fileSize: 8 * 1024 * 1024
+    },
+
+    fileFilter: (req, file, cb) => {
+
+        if (ALLOWED_MIME.includes(file.mimetype)) {
+            return cb(null, true);
+        }
+
+        cb(
+            new Error(
+                "Only JPG, PNG, WEBP or PDF files are allowed"
+            )
+        );
+    }
 });
+
+
+// ==========================================
+// EMPLOYEE UPLOAD FIELDS
+// ==========================================
 
 const employeeUpload = upload.fields([
-  { name: "photo", maxCount: 1 },
-  { name: "cnicCopy", maxCount: 1 },
-  { name: "policeVerification", maxCount: 1 },
+    {
+        name: "photo",
+        maxCount: 1
+    },
+    {
+        name: "cnicCopy",
+        maxCount: 1
+    },
+    {
+        name: "policeVerification",
+        maxCount: 1
+    }
 ]);
 
-// ===================================
-// GET ALL EMPLOYEES (supports ?farm= and ?search=)
-// ===================================
-router.get("/", (req, res) => {
 
-    const farm = req.query.farm;
-    const search = req.query.search;
+// ==========================================
+// GET ALL EMPLOYEES
+// GET /api/employees
+//
+// Optional:
+// ?farm=Blue Farm
+// ?search=Kamran
+// ==========================================
 
-    let sql = "SELECT * FROM employees WHERE 1=1";
-    let params = [];
+router.get("/", async (req, res) => {
 
-    if (farm) {
-        sql += " AND farm=?";
-        params.push(farm);
-    }
+    try {
 
-    if (search) {
-        sql += " AND (name LIKE ? OR cnic LIKE ? OR employeeNo LIKE ? OR mobile LIKE ?)";
-        const term = `%${search}%`;
-        params.push(term, term, term, term);
-    }
+        const farm = req.query.farm;
+        const search = req.query.search;
 
-    sql += " ORDER BY id DESC";
+        let sql = `
+            SELECT *
+            FROM employees
+            WHERE 1=1
+        `;
 
-    db.all(sql, params, (err, rows) => {
+        const params = [];
+        let paramIndex = 1;
 
-        if (err) {
-            return res.status(500).json({
-                success: false,
-                message: err.message
-            });
+
+        // ------------------------------------------
+        // FARM FILTER
+        // ------------------------------------------
+
+        if (farm) {
+
+            sql += ` AND farm = $${paramIndex}`;
+
+            params.push(farm);
+
+            paramIndex++;
         }
 
-        res.json(rows);
 
-    });
+        // ------------------------------------------
+        // SEARCH
+        // ------------------------------------------
 
+        if (search) {
+
+            sql += `
+                AND (
+                    name ILIKE $${paramIndex}
+                    OR cnic ILIKE $${paramIndex}
+                    OR employeeNo ILIKE $${paramIndex}
+                    OR mobile ILIKE $${paramIndex}
+                )
+            `;
+
+            const term = `%${search}%`;
+
+            params.push(term);
+
+            paramIndex++;
+        }
+
+
+        sql += `
+            ORDER BY id DESC
+        `;
+
+
+        const result = await db.query(sql, params);
+
+
+        return res.json(result.rows);
+
+    } catch (err) {
+
+        console.error("❌ Get employees error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
 });
 
-// ===================================
+
+// ==========================================
 // GET SINGLE EMPLOYEE
-// ===================================
-router.get("/:id", (req, res) => {
+// GET /api/employees/:id
+// ==========================================
 
-    db.get(
-        "SELECT * FROM employees WHERE id=?",
-        [req.params.id],
-        (err, row) => {
+router.get("/:id", async (req, res) => {
 
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
+    try {
 
-            if (!row) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found"
-                });
-            }
+        const result = await db.query(
+            `
+            SELECT *
+            FROM employees
+            WHERE id = $1
+            LIMIT 1
+            `,
+            [req.params.id]
+        );
 
-            res.json(row);
 
+        if (result.rows.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
         }
-    );
 
+
+        return res.json(result.rows[0]);
+
+    } catch (err) {
+
+        console.error("❌ Get employee error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
 });
 
-// ===================================
+
+// ==========================================
 // ADD EMPLOYEE
-// ===================================
-router.post("/", employeeUpload, (req, res) => {
+// POST /api/employees
+// ==========================================
 
-    console.log("BODY RECEIVED:");
-    console.log(req.body);
+router.post("/", employeeUpload, async (req, res) => {
 
-    const {
-        employeeNo,
-        name,
-        fatherName,
-        cnic,
-        mobile,
-        familyMobile,
-        address,
-        appointment,
-        department,
-        farm,
-        joiningDate,
-        employeeType,
-        maritalStatus,
-        status,
-        grossSalary,
-        bankName,
-        accountTitle,
-        iban,
-        remarks
-    } = req.body;
+    try {
 
-    const photo = req.files?.photo?.[0]
-        ? `/uploads/${req.files.photo[0].filename}`
-        : (req.body.photo || null);
+        console.log("BODY RECEIVED:");
+        console.log(req.body);
 
-    const cnicCopy = req.files?.cnicCopy?.[0]
-        ? `/uploads/${req.files.cnicCopy[0].filename}`
-        : (req.body.cnicCopy || null);
 
-    const policeVerification = req.files?.policeVerification?.[0]
-        ? `/uploads/${req.files.policeVerification[0].filename}`
-        : (req.body.policeVerification || null);
-
-    const sql = `
-        INSERT INTO employees (
-            photo,
+        const {
             employeeNo,
             name,
             fatherName,
@@ -172,130 +246,123 @@ router.post("/", employeeUpload, (req, res) => {
             bankName,
             accountTitle,
             iban,
-            cnicCopy,
-            policeVerification,
             remarks
-        )
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `;
+        } = req.body;
 
-    db.run(
-        sql,
-        [
-            photo,
-            employeeNo,
-            name,
-            fatherName,
-            cnic,
-            mobile,
-            familyMobile,
-            address,
-            appointment,
-            department,
-            farm,
-            joiningDate,
-            employeeType,
-            maritalStatus,
-            status,
-            grossSalary,
-            bankName,
-            accountTitle,
-            iban,
-            cnicCopy,
-            policeVerification,
-            remarks
-        ],
-        function(err){
 
-            if(err){
+        // ------------------------------------------
+        // FILE PATHS
+        // ------------------------------------------
 
-                console.log("DATABASE ERROR:");
-                console.log(err);
+        const photo = req.files?.photo?.[0]
+            ? `/uploads/${req.files.photo[0].filename}`
+            : (req.body.photo || null);
 
-                return res.status(500).json(err);
-            }
 
-            res.json({
-                success:true,
-                id:this.lastID
-            });
+        const cnicCopy = req.files?.cnicCopy?.[0]
+            ? `/uploads/${req.files.cnicCopy[0].filename}`
+            : (req.body.cnicCopy || null);
 
-        }
-    );
 
+        const policeVerification =
+            req.files?.policeVerification?.[0]
+                ? `/uploads/${req.files.policeVerification[0].filename}`
+                : (req.body.policeVerification || null);
+
+
+        // ------------------------------------------
+        // INSERT
+        // ------------------------------------------
+
+        const result = await db.query(
+            `
+            INSERT INTO employees (
+                photo,
+                employeeNo,
+                name,
+                fatherName,
+                cnic,
+                mobile,
+                familyMobile,
+                address,
+                appointment,
+                department,
+                farm,
+                joiningDate,
+                employeeType,
+                maritalStatus,
+                status,
+                grossSalary,
+                bankName,
+                accountTitle,
+                iban,
+                cnicCopy,
+                policeVerification,
+                remarks
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, $6,
+                $7, $8, $9, $10, $11, $12,
+                $13, $14, $15, $16, $17, $18,
+                $19, $20, $21, $22
+            )
+            RETURNING id
+            `,
+            [
+                photo,
+                employeeNo,
+                name,
+                fatherName,
+                cnic,
+                mobile,
+                familyMobile,
+                address,
+                appointment,
+                department,
+                farm,
+                joiningDate,
+                employeeType,
+                maritalStatus,
+                status,
+                grossSalary,
+                bankName,
+                accountTitle,
+                iban,
+                cnicCopy,
+                policeVerification,
+                remarks
+            ]
+        );
+
+
+        return res.json({
+            success: true,
+            message: "Employee added successfully",
+            id: result.rows[0].id
+        });
+
+    } catch (err) {
+
+        console.error("❌ Add employee error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
 });
 
-// ===================================
+
+// ==========================================
 // UPDATE EMPLOYEE
-// ===================================
-router.put("/:id", employeeUpload, (req, res) => {
+// PUT /api/employees/:id
+// ==========================================
 
-    const {
-        employeeNo,
-        name,
-        fatherName,
-        cnic,
-        mobile,
-        familyMobile,
-        address,
-        appointment,
-        department,
-        farm,
-        joiningDate,
-        employeeType,
-        maritalStatus,
-        status,
-        grossSalary,
-        bankName,
-        accountTitle,
-        iban,
-        remarks
-    } = req.body;
+router.put("/:id", employeeUpload, async (req, res) => {
 
-    const photo = req.files?.photo?.[0]
-        ? `/uploads/${req.files.photo[0].filename}`
-        : (req.body.photo || null);
+    try {
 
-    const cnicCopy = req.files?.cnicCopy?.[0]
-        ? `/uploads/${req.files.cnicCopy[0].filename}`
-        : (req.body.cnicCopy || null);
-
-    const policeVerification = req.files?.policeVerification?.[0]
-        ? `/uploads/${req.files.policeVerification[0].filename}`
-        : (req.body.policeVerification || null);
-
-    const sql = `
-        UPDATE employees SET
-            photo=?,
-            employeeNo=?,
-            name=?,
-            fatherName=?,
-            cnic=?,
-            mobile=?,
-            familyMobile=?,
-            address=?,
-            appointment=?,
-            department=?,
-            farm=?,
-            joiningDate=?,
-            employeeType=?,
-            maritalStatus=?,
-            status=?,
-            grossSalary=?,
-            bankName=?,
-            accountTitle=?,
-            iban=?,
-            cnicCopy=?,
-            policeVerification=?,
-            remarks=?,
-            updatedAt=CURRENT_TIMESTAMP
-        WHERE id=?
-    `;
-
-    db.run(
-        sql,
-        [
-            photo,
+        const {
             employeeNo,
             name,
             fatherName,
@@ -314,113 +381,290 @@ router.put("/:id", employeeUpload, (req, res) => {
             bankName,
             accountTitle,
             iban,
-            cnicCopy,
-            policeVerification,
-            remarks,
-            req.params.id
-        ],
-        function (err) {
+            remarks
+        } = req.body;
 
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
 
-            if (this.changes === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found"
-                });
-            }
+        // ------------------------------------------
+        // CHECK EMPLOYEE
+        // ------------------------------------------
 
-            res.json({
-                success: true,
-                message: "Employee Updated Successfully"
+        const existing = await db.query(
+            `
+            SELECT *
+            FROM employees
+            WHERE id = $1
+            `,
+            [req.params.id]
+        );
+
+
+        if (existing.rows.length === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
             });
-
         }
-    );
 
+
+        const old = existing.rows[0];
+
+
+        // ------------------------------------------
+        // KEEP OLD FILE IF NEW FILE NOT UPLOADED
+        // ------------------------------------------
+
+        const photo = req.files?.photo?.[0]
+            ? `/uploads/${req.files.photo[0].filename}`
+            : (req.body.photo !== undefined
+                ? req.body.photo
+                : old.photo);
+
+
+        const cnicCopy = req.files?.cnicCopy?.[0]
+            ? `/uploads/${req.files.cnicCopy[0].filename}`
+            : (req.body.cnicCopy !== undefined
+                ? req.body.cnicCopy
+                : old.cniccopy);
+
+
+        const policeVerification =
+            req.files?.policeVerification?.[0]
+                ? `/uploads/${req.files.policeVerification[0].filename}`
+                : (req.body.policeVerification !== undefined
+                    ? req.body.policeVerification
+                    : old.policeverification);
+
+
+        // ------------------------------------------
+        // UPDATE
+        // ------------------------------------------
+
+        await db.query(
+            `
+            UPDATE employees
+            SET
+                photo = $1,
+                employeeNo = $2,
+                name = $3,
+                fatherName = $4,
+                cnic = $5,
+                mobile = $6,
+                familyMobile = $7,
+                address = $8,
+                appointment = $9,
+                department = $10,
+                farm = $11,
+                joiningDate = $12,
+                employeeType = $13,
+                maritalStatus = $14,
+                status = $15,
+                grossSalary = $16,
+                bankName = $17,
+                accountTitle = $18,
+                iban = $19,
+                cnicCopy = $20,
+                policeVerification = $21,
+                remarks = $22,
+                updatedAt = CURRENT_TIMESTAMP
+            WHERE id = $23
+            `,
+            [
+                photo,
+                employeeNo,
+                name,
+                fatherName,
+                cnic,
+                mobile,
+                familyMobile,
+                address,
+                appointment,
+                department,
+                farm,
+                joiningDate,
+                employeeType,
+                maritalStatus,
+                status,
+                grossSalary,
+                bankName,
+                accountTitle,
+                iban,
+                cnicCopy,
+                policeVerification,
+                remarks,
+                req.params.id
+            ]
+        );
+
+
+        return res.json({
+            success: true,
+            message: "Employee updated successfully"
+        });
+
+    } catch (err) {
+
+        console.error("❌ Update employee error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
 });
 
-// ===================================
-// DELETE ONE EMPLOYEE DOCUMENT (photo / cnicCopy / policeVerification)
-// ===================================
-router.delete("/:id/document/:type", (req, res) => {
 
-    const allowedTypes = ["photo", "cnicCopy", "policeVerification"];
-    const type = req.params.type;
+// ==========================================
+// DELETE EMPLOYEE DOCUMENT
+//
+// DELETE /api/employees/:id/document/photo
+// DELETE /api/employees/:id/document/cnicCopy
+// DELETE /api/employees/:id/document/policeVerification
+// ==========================================
 
-    if (!allowedTypes.includes(type)) {
+router.delete("/:id/document/:type", async (req, res) => {
+
+    try {
+
+        const allowedTypes = [
+            "photo",
+            "cnicCopy",
+            "policeVerification"
+        ];
+
+        const type = req.params.type;
+
+
+        if (!allowedTypes.includes(type)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid document type"
+            });
+        }
+
+
+        // ------------------------------------------
+        // PostgreSQL column names are inserted only
+        // after checking against allowedTypes above.
+        // ------------------------------------------
+
+        const result = await db.query(
+            `
+            UPDATE employees
+            SET "${type}" = NULL,
+                updatedAt = CURRENT_TIMESTAMP
+            WHERE id = $1
+            `,
+            [req.params.id]
+        );
+
+
+        if (result.rowCount === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+
+
+        return res.json({
+            success: true,
+            message: "Document deleted successfully"
+        });
+
+    } catch (err) {
+
+        console.error("❌ Delete document error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
+
+// ==========================================
+// DELETE EMPLOYEE
+// DELETE /api/employees/:id
+// ==========================================
+
+router.delete("/:id", async (req, res) => {
+
+    try {
+
+        const result = await db.query(
+            `
+            DELETE FROM employees
+            WHERE id = $1
+            `,
+            [req.params.id]
+        );
+
+
+        if (result.rowCount === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+
+
+        return res.json({
+            success: true,
+            message: "Employee deleted successfully"
+        });
+
+    } catch (err) {
+
+        console.error("❌ Delete employee error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
+
+// ==========================================
+// MULTER ERROR HANDLER
+// ==========================================
+
+router.use((err, req, res, next) => {
+
+    if (err instanceof multer.MulterError) {
+
+        if (err.code === "LIMIT_FILE_SIZE") {
+
+            return res.status(400).json({
+                success: false,
+                message: "File is too large. Maximum size is 8MB."
+            });
+        }
+
         return res.status(400).json({
             success: false,
-            message: "Invalid document type"
+            message: err.message
         });
     }
 
-    db.run(
-        `UPDATE employees SET ${type}=NULL, updatedAt=CURRENT_TIMESTAMP WHERE id=?`,
-        [req.params.id],
-        function (err) {
 
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
+    if (err) {
 
-            if (this.changes === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found"
-                });
-            }
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
 
-            res.json({
-                success: true,
-                message: "Document deleted successfully"
-            });
 
-        }
-    );
-
+    next();
 });
 
-// ===================================
-// DELETE EMPLOYEE
-// ===================================
-router.delete("/:id", (req, res) => {
-
-    db.run(
-        "DELETE FROM employees WHERE id=?",
-        [req.params.id],
-        function (err) {
-
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
-
-            if (this.changes === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found"
-                });
-            }
-
-            res.json({
-                success: true,
-                message: "Employee Deleted Successfully"
-            });
-
-        }
-    );
-
-});
 
 module.exports = router;
