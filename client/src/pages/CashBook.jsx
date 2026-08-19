@@ -30,6 +30,8 @@ export default function CashBook() {
   const navigate = useNavigate();
   const location = useLocation();
   const [tab, setTab] = useState(location.state?.tab ?? 0);
+  const isMainCashBook = typeof location.state?.tab !== "number";
+  const showCards = isMainCashBook || tab === 5;
   const [summary, setSummary] = useState(null);
 
   const loadSummary = useCallback(async () => {
@@ -102,7 +104,8 @@ export default function CashBook() {
   return (
     <MainLayout>
       <Box sx={{ p: 1 }}>
-        {/* Colorful Welcome Banner — matches Employees / Finance dashboards */}
+        {showCards && (
+        <>{/* Colorful Welcome Banner — matches Employees / Finance dashboards */}
         <Box sx={{
           textAlign: "center",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
@@ -169,6 +172,8 @@ export default function CashBook() {
             </Grid>
           ))}
         </Grid>
+
+        </>)}
 
         <Box sx={{
           borderRadius: 4, background: "linear-gradient(135deg, #0F4C81 0%, #16608f 100%)", mb: 3, p: 1,
