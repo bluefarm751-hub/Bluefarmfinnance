@@ -31,6 +31,7 @@ export default function CashBook() {
   const location = useLocation();
   const [tab, setTab] = useState(location.state?.tab ?? 0);
   const isMainCashBook = typeof location.state?.tab !== "number";
+  const showWelcome = isMainCashBook;
   const showCards = isMainCashBook || tab === 5;
   const [summary, setSummary] = useState(null);
 
@@ -104,8 +105,8 @@ export default function CashBook() {
   return (
     <MainLayout>
       <Box sx={{ p: 1 }}>
-        {showCards && (
-        <>{/* Colorful Welcome Banner — matches Employees / Finance dashboards */}
+        {showWelcome && (
+
         <Box sx={{
           textAlign: "center",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
@@ -137,7 +138,9 @@ export default function CashBook() {
             Blue Farm and Blue Remounts share one bank account — all transactions of both farms appear here automatically
           </Typography>
         </Box>
+        )}
 
+        {showCards && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           {cards.map((c) => (
             <Grid item xs={12} sm={6} md={2} key={c.label}>
@@ -172,8 +175,7 @@ export default function CashBook() {
             </Grid>
           ))}
         </Grid>
-
-        </>)}
+        )}
 
         <Box sx={{
           borderRadius: 4, background: "linear-gradient(135deg, #0F4C81 0%, #16608f 100%)", mb: 3, p: 1,
