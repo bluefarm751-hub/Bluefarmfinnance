@@ -136,7 +136,7 @@ router.get("/", async (req, res) => {
                 AND (
                     name ILIKE $${paramIndex}
                     OR cnic ILIKE $${paramIndex}
-                    OR employeeNo ILIKE $${paramIndex}
+                    OR "employeeNo" ILIKE $${paramIndex}
                     OR mobile ILIKE $${paramIndex}
                 )
             `;
@@ -278,26 +278,26 @@ router.post("/", employeeUpload, async (req, res) => {
             `
             INSERT INTO employees (
                 photo,
-                employeeNo,
+                "employeeNo",
                 name,
-                fatherName,
+                "fatherName",
                 cnic,
                 mobile,
-                familyMobile,
+                "familyMobile",
                 address,
                 appointment,
                 department,
                 farm,
-                joiningDate,
-                employeeType,
-                maritalStatus,
+                "joiningDate",
+                "employeeType",
+                "maritalStatus",
                 status,
-                grossSalary,
-                bankName,
-                accountTitle,
+                "grossSalary",
+                "bankName",
+                "accountTitle",
                 iban,
-                cnicCopy,
-                policeVerification,
+                "cnicCopy",
+                "policeVerification",
                 remarks
             )
             VALUES (
@@ -310,26 +310,26 @@ router.post("/", employeeUpload, async (req, res) => {
             `,
             [
                 photo,
-                employeeNo,
+                "employeeNo",
                 name,
-                fatherName,
+                "fatherName",
                 cnic,
                 mobile,
-                familyMobile,
+                "familyMobile",
                 address,
                 appointment,
                 department,
                 farm,
-                joiningDate,
-                employeeType,
-                maritalStatus,
+                "joiningDate",
+                "employeeType",
+                "maritalStatus",
                 status,
-                grossSalary,
-                bankName,
-                accountTitle,
+                "grossSalary",
+                "bankName",
+                "accountTitle",
                 iban,
-                cnicCopy,
-                policeVerification,
+                "cnicCopy",
+                "policeVerification",
                 remarks
             ]
         );
@@ -426,7 +426,7 @@ router.put("/:id", employeeUpload, async (req, res) => {
             ? `/uploads/${req.files.cnicCopy[0].filename}`
             : (req.body.cnicCopy !== undefined
                 ? req.body.cnicCopy
-                : old.cniccopy);
+                : old.cnicCopy);
 
 
         const policeVerification =
@@ -434,7 +434,7 @@ router.put("/:id", employeeUpload, async (req, res) => {
                 ? `/uploads/${req.files.policeVerification[0].filename}`
                 : (req.body.policeVerification !== undefined
                     ? req.body.policeVerification
-                    : old.policeverification);
+                    : old.policeVerification);
 
 
         // ------------------------------------------
@@ -446,52 +446,52 @@ router.put("/:id", employeeUpload, async (req, res) => {
             UPDATE employees
             SET
                 photo = $1,
-                employeeNo = $2,
+                "employeeNo" = $2,
                 name = $3,
-                fatherName = $4,
+                "fatherName" = $4,
                 cnic = $5,
                 mobile = $6,
-                familyMobile = $7,
+                "familyMobile" = $7,
                 address = $8,
                 appointment = $9,
                 department = $10,
                 farm = $11,
-                joiningDate = $12,
-                employeeType = $13,
-                maritalStatus = $14,
+                "joiningDate" = $12,
+                "employeeType" = $13,
+                "maritalStatus" = $14,
                 status = $15,
-                grossSalary = $16,
-                bankName = $17,
-                accountTitle = $18,
+                "grossSalary" = $16,
+                "bankName" = $17,
+                "accountTitle" = $18,
                 iban = $19,
-                cnicCopy = $20,
-                policeVerification = $21,
+                "cnicCopy" = $20,
+                "policeVerification" = $21,
                 remarks = $22,
-                updatedAt = CURRENT_TIMESTAMP
+                "updatedAt" = CURRENT_TIMESTAMP
             WHERE id = $23
             `,
             [
                 photo,
-                employeeNo,
+                "employeeNo",
                 name,
-                fatherName,
+                "fatherName",
                 cnic,
                 mobile,
-                familyMobile,
+                "familyMobile",
                 address,
                 appointment,
                 department,
                 farm,
-                joiningDate,
-                employeeType,
-                maritalStatus,
+                "joiningDate",
+                "employeeType",
+                "maritalStatus",
                 status,
-                grossSalary,
-                bankName,
-                accountTitle,
+                "grossSalary",
+                "bankName",
+                "accountTitle",
                 iban,
-                cnicCopy,
-                policeVerification,
+                "cnicCopy",
+                "policeVerification",
                 remarks,
                 req.params.id
             ]
@@ -554,7 +554,7 @@ router.delete("/:id/document/:type", async (req, res) => {
             `
             UPDATE employees
             SET "${type}" = NULL,
-                updatedAt = CURRENT_TIMESTAMP
+                "updatedAt" = CURRENT_TIMESTAMP
             WHERE id = $1
             `,
             [req.params.id]
