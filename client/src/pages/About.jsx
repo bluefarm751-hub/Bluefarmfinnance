@@ -19,31 +19,32 @@ export default function About() {
 
   return (
     <MainLayout>
-      {/* ================= PAGE CARD (wraps the whole page, no scroll) ================= */}
+      {/* ================= PAGE CARD — fills the content area as one big card ================= */}
       <Box
         sx={{
           height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
           p: { xs: 1, sm: 2 },
         }}
       >
         <Box
           sx={{
             width: "100%",
-            maxWidth: 480,
+            height: "100%",
             borderRadius: 5,
             background: "#ffffff",
             boxShadow: shadowCard,
             border: "1px solid rgba(15,76,129,0.08)",
-            p: { xs: 1.5, sm: 2 },
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            p: { xs: 2, sm: 4 },
           }}
         >
-          {/* ================= ABOUT CARD (small, fits without scrolling) ================= */}
+          {/* ================= SMALL ABOUT CARD, centered inside the big page card ================= */}
           <Box
             sx={{
               width: "100%",
+              maxWidth: 480,
               borderRadius: 4,
               overflow: "hidden",
               background: gradients.brand,
