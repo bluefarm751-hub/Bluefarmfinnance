@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaUsers,
   FaUserPlus,
@@ -89,11 +89,26 @@ export default function Sidebar() {
     { key: "ledger", title: "Ledger", icon: <FaBalanceScale />, to: isAdmin ? "/ledger" : null, links: ledgerLinks },
   ];
 
-  const payrollActive = payrollLinks.some((l) => l.to && location.pathname.startsWith(l.to));
-  const financeActive = location.pathname.startsWith("/finance");
-  const [open, setOpen] = useState({ payroll: payrollActive || true, finance: financeActive });
+  const [open, setOpen] = useState({ payroll: true });
 
   const toggle = (key) => setOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Whenever the route changes (including clicking a group's own title,
+  // like "Ledger" or "Cash Book", which navigates but previously did NOT
+  // expand its sub-menu), auto-expand whichever group matches the new
+  // route. This is only additive — it never force-closes a group the user
+  // has manually opened/closed for a route that doesn't match any group.
+  useEffect(() => {
+    const matchedGroup = groups.find(
+      (g) =>
+        (g.to && location.pathname.startsWith(g.to)) ||
+        g.links.some((l) => l.to && location.pathname.startsWith(l.to))
+    );
+    if (matchedGroup) {
+      setOpen((prev) => (prev[matchedGroup.key] ? prev : { ...prev, [matchedGroup.key]: true }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return (
     <div

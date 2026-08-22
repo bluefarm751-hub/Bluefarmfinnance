@@ -24,7 +24,7 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ImageIcon from "@mui/icons-material/Image";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -73,6 +73,12 @@ export default function EditBill() {
   const [viewPic, setViewPic] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  // Same pattern used for Employee Documents: if the stored path is
+  // already an absolute URL (e.g. cloud storage), use it as-is; otherwise
+  // treat it as relative to this app's own origin.
+  const fullUrl = (p) => (p && p.startsWith("http") ? p : `${API_BASE}${p}`);
+  const isPdfPath = (p) => /\.pdf($|\?)/i.test(p || "");
+
   // Track if user manually edited amount
   const manualAmountRef = useRef(false);
 
@@ -96,7 +102,7 @@ export default function EditBill() {
   const openEdit = (b) => {
     setEditing(b);
     setBillPic(null);
-    setPreview(b.billPic ? `${API_BASE}${b.billPic}` : null);
+    setPreview(b.billPic ? fullUrl(b.billPic) : null);
     setRemovePic(false);
     manualAmountRef.current = false; // reset flag when opening edit
     setFormData({
@@ -284,15 +290,11 @@ export default function EditBill() {
                         <IconButton
                           size="small"
                           disabled={!b.billPic}
-                          onClick={() =>
-                            /\.pdf($|\?)/i.test(b.billPic || "")
-                              ? window.open(`${API_BASE}${b.billPic}`, "_blank", "noopener,noreferrer")
-                              : setViewPic(`${API_BASE}${b.billPic}`)
-                          }
+                          onClick={() => setViewPic(b.billPic)}
                           sx={{ color: brand.goldDark }}
-                          title={/\.pdf($|\?)/i.test(b.billPic || "") ? "Open bill PDF" : "View bill picture"}
+                          title="View bill"
                         >
-                          {/\.pdf($|\?)/i.test(b.billPic || "") ? <PictureAsPdfIcon fontSize="small" /> : <ImageIcon fontSize="small" />}
+                          <VisibilityIcon fontSize="small" />
                         </IconButton>
                         <IconButton size="small" onClick={() => openEdit(b)} sx={{ color: brand.blueDeep }} title="Edit">
                           <EditIcon fontSize="small" />
@@ -467,14 +469,36 @@ export default function EditBill() {
         </DialogContent>
       </Dialog>
 
-      {/* View bill picture */}
-      <Dialog open={!!viewPic} onClose={() => setViewPic(null)} maxWidth="md"
-        PaperProps={{ sx: { borderRadius: 4 } }}>
-        <DialogContent sx={{ p: 1 }}>
-          {viewPic && (
-            <Box component="img" src={viewPic} alt="Bill" sx={{ maxWidth: "80vw", maxHeight: "80vh", display: "block" }} />
+      {/* View bill — shown inside the app, same as Employee Documents */}
+      <Dialog open={!!viewPic} onClose={() => setViewPic(null)} maxWidth="lg" fullWidth
+        PaperProps={{ sx: { borderRadius: 4, overflow: "hidden" } }}>
+        <Box sx={{ background: gradients.brand, px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography fontWeight={800} sx={{ color: "#fff" }}>Bill</Typography>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button size="small" onClick={() => viewPic && window.open(fullUrl(viewPic), "_blank", "noopener,noreferrer")}
+              sx={{ color: "#fff", borderColor: "#ffffff66" }} variant="outlined">
+              Open in new tab
+            </Button>
+            <IconButton size="small" onClick={() => setViewPic(null)} sx={{ color: "#fff" }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </Box>
+        <Box sx={{ background: "#f4f7fc", p: 2, minHeight: 420 }}>
+          {viewPic && isPdfPath(viewPic) && (
+            <iframe
+              title="Bill"
+              src={fullUrl(viewPic)}
+              style={{ width: "100%", height: "72vh", border: "none", borderRadius: 12, background: "#fff" }}
+            />
           )}
-        </DialogContent>
+          {viewPic && !isPdfPath(viewPic) && (
+            <Box sx={{ textAlign: "center" }}>
+              <Box component="img" src={fullUrl(viewPic)} alt="Bill"
+                sx={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 12, background: "#fff" }} />
+            </Box>
+          )}
+        </Box>
       </Dialog>
 
       <ConfirmDialog

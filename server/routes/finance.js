@@ -7,6 +7,12 @@ const fs = require("fs");
 const db = require("../database/database");
 const { buildSourceTag } = require("../utils/sourceTag");
 const { balances: getCashbookBalances } = require("./cashbook");
+const {
+    makeStorage,
+    storedPathOf,
+    deleteStoredFile,
+    localFileMissing,
+} = require("../utils/fileStorage");
 
 // ============================================================
 // HELPERS
@@ -41,20 +47,7 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-
-        const filename =
-            `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-
-        cb(null, filename);
-    },
-});
+const storage = makeStorage("bills");
 
 const ALLOWED_MIME = [
     "image/jpeg",
@@ -785,9 +778,7 @@ router.post("/bills", billUpload, async (req, res) => {
             }
         }
 
-        const billPic = req.file
-            ? `/uploads/${req.file.filename}`
-            : null;
+        const billPic = storedPathOf(req.file);
 
         const sourceTag =
             buildSourceTag(farm, "BILL");
@@ -804,10 +795,7 @@ router.post("/bills", billUpload, async (req, res) => {
 
         if (headCheck.rows.length === 0) {
             if (req.file) {
-                fs.unlink(
-                    path.join(uploadDir, req.file.filename),
-                    () => {}
-                );
+                deleteStoredFile(billPic);
             }
 
             return res.status(404).json({
@@ -890,10 +878,7 @@ router.post("/bills", billUpload, async (req, res) => {
         console.error("POST /finance/bills:", err);
 
         if (req.file) {
-            fs.unlink(
-                path.join(uploadDir, req.file.filename),
-                () => {}
-            );
+            deleteStoredFile(storedPathOf(req.file));
         }
 
         res.status(500).json({
@@ -987,15 +972,15 @@ router.put("/bills/:id", billUpload, async (req, res) => {
 
         const newBillPic =
             req.file
-                ? `/uploads/${req.file.filename}`
+                ? storedPathOf(req.file)
                 : wantsRemove
                     ? null
                     : row.billPic;
 
-        // If new file uploaded, verify it exists before DB update.
-        if (req.file && !fs.existsSync(
-            path.join(uploadDir, req.file.filename)
-        )) {
+        // If new file uploaded, verify it exists before DB update
+        // (only meaningful for local disk storage; a Cloudinary upload
+        // is already confirmed by the time we get here).
+        if (localFileMissing(req.file)) {
             return res.status(500).json({
                 success: false,
                 message: "Uploaded bill file could not be saved",
@@ -1070,13 +1055,7 @@ router.put("/bills/:id", billUpload, async (req, res) => {
             (req.file || wantsRemove) &&
             row.billPic
         ) {
-            fs.unlink(
-                path.join(
-                    uploadDir,
-                    path.basename(row.billPic)
-                ),
-                () => {}
-            );
+            deleteStoredFile(row.billPic);
         }
 
         res.json({
@@ -1088,10 +1067,7 @@ router.put("/bills/:id", billUpload, async (req, res) => {
         console.error("PUT /finance/bills:", err);
 
         if (req.file) {
-            fs.unlink(
-                path.join(uploadDir, req.file.filename),
-                () => {}
-            );
+            deleteStoredFile(storedPathOf(req.file));
         }
 
         res.status(500).json({
@@ -1139,13 +1115,7 @@ router.delete("/bills/:id", async (req, res) => {
         }
 
         if (billPic) {
-            fs.unlink(
-                path.join(
-                    uploadDir,
-                    path.basename(billPic)
-                ),
-                () => {}
-            );
+            deleteStoredFile(billPic);
         }
 
         res.json({

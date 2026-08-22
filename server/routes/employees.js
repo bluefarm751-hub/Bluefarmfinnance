@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 const db = require("../database/database");
+const { makeStorage, storedPathOf } = require("../utils/fileStorage");
 
 // ==========================================
 // FILE UPLOAD SETUP
@@ -16,21 +17,7 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-
-    filename: (req, file, cb) => {
-        const unique =
-            Date.now() +
-            "-" +
-            Math.round(Math.random() * 1e6) +
-            path.extname(file.originalname);
-
-        cb(null, unique);
-    }
-});
+const storage = makeStorage("employees");
 
 
 // ==========================================
@@ -255,18 +242,18 @@ router.post("/", employeeUpload, async (req, res) => {
         // ------------------------------------------
 
         const photo = req.files?.photo?.[0]
-            ? `/uploads/${req.files.photo[0].filename}`
+            ? storedPathOf(req.files.photo[0])
             : (req.body.photo || null);
 
 
         const cnicCopy = req.files?.cnicCopy?.[0]
-            ? `/uploads/${req.files.cnicCopy[0].filename}`
+            ? storedPathOf(req.files.cnicCopy[0])
             : (req.body.cnicCopy || null);
 
 
         const policeVerification =
             req.files?.policeVerification?.[0]
-                ? `/uploads/${req.files.policeVerification[0].filename}`
+                ? storedPathOf(req.files.policeVerification[0])
                 : (req.body.policeVerification || null);
 
 
@@ -416,14 +403,14 @@ router.put("/:id", employeeUpload, async (req, res) => {
         // ------------------------------------------
 
         const photo = req.files?.photo?.[0]
-            ? `/uploads/${req.files.photo[0].filename}`
+            ? storedPathOf(req.files.photo[0])
             : (req.body.photo !== undefined
                 ? req.body.photo
                 : old.photo);
 
 
         const cnicCopy = req.files?.cnicCopy?.[0]
-            ? `/uploads/${req.files.cnicCopy[0].filename}`
+            ? storedPathOf(req.files.cnicCopy[0])
             : (req.body.cnicCopy !== undefined
                 ? req.body.cnicCopy
                 : old.cnicCopy);
@@ -431,7 +418,7 @@ router.put("/:id", employeeUpload, async (req, res) => {
 
         const policeVerification =
             req.files?.policeVerification?.[0]
-                ? `/uploads/${req.files.policeVerification[0].filename}`
+                ? storedPathOf(req.files.policeVerification[0])
                 : (req.body.policeVerification !== undefined
                     ? req.body.policeVerification
                     : old.policeVerification);

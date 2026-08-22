@@ -29,8 +29,13 @@ export default function CashBook() {
   const { showToast, ToastUI } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tab, setTab] = useState(location.state?.tab ?? 0);
-  const isMainCashBook = typeof location.state?.tab !== "number";
+  // tab === null means "landing on the main Cash Book tab" — nothing
+  // under it should appear selected/active until the user actually
+  // clicks a specific tab (Receipt Side, Payment Side, etc).
+  const [tab, setTab] = useState(
+    typeof location.state?.tab === "number" ? location.state.tab : null
+  );
+  const isMainCashBook = tab === null;
   const showWelcome = isMainCashBook;
   const showCards = isMainCashBook || tab === 5;
   const [summary, setSummary] = useState(null);
@@ -47,7 +52,11 @@ export default function CashBook() {
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
   useEffect(() => {
-    if (typeof location.state?.tab === "number") setTab(location.state.tab);
+    // Only follow an explicit tab request from the sidebar (e.g. clicking
+    // "Receipt Side"). Navigating to the main "Cash Book" link itself
+    // carries no tab in state, so go back to the neutral landing view
+    // instead of silently keeping whatever tab was last selected.
+    setTab(typeof location.state?.tab === "number" ? location.state.tab : null);
   }, [location.state]);
 
   const cards = [
@@ -182,7 +191,7 @@ export default function CashBook() {
           boxShadow: "0 10px 28px rgba(8,33,63,0.22)",
         }}>
           <Tabs
-            value={tab}
+            value={tab === null ? false : tab}
             onChange={changeTab}
             variant="scrollable"
             scrollButtons="auto"

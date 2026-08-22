@@ -9,3 +9,17 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Optional — set these to enable persistent file storage (Cloudinary)
+      # for employee documents and bill pictures. Without them, uploaded
+      # files are stored on local disk, which Render's free plan does NOT
+      # persist across redeploys/restarts (this is what caused bill
+      # pictures to 404 after a deploy). Get free credentials at
+      # https://cloudinary.com — then set the 3 values below in the
+      # Render dashboard (Environment tab). sync: false means Render will
+      # NOT fail the build if they're left unset.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
