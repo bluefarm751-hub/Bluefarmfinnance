@@ -397,6 +397,22 @@ router.put("/:id", employeeUpload, async (req, res) => {
 
         const old = existing.rows[0];
 
+        // ------------------------------------------
+        // SALARY / BANK FIELDS ARE ADMIN-ONLY
+        // ------------------------------------------
+        // The Sidebar only shows "Update Salary" (and Finance/Payroll in
+        // general) to admin accounts, but this same PUT endpoint is also
+        // used by the ordinary, non-admin-accessible "Edit Employee" form.
+        // Without this check, a non-admin user could reuse this endpoint
+        // directly to change salary or bank details even though the UI
+        // never lets them do that. Non-admin edits keep the existing
+        // values for these fields no matter what was sent.
+        const isAdmin = req.user?.role === "admin";
+        const effectiveGrossSalary = isAdmin ? grossSalary : old.grossSalary;
+        const effectiveBankName = isAdmin ? bankName : old.bankName;
+        const effectiveAccountTitle = isAdmin ? accountTitle : old.accountTitle;
+        const effectiveIban = isAdmin ? iban : old.iban;
+
 
         // ------------------------------------------
         // KEEP OLD FILE IF NEW FILE NOT UPLOADED
@@ -473,10 +489,10 @@ router.put("/:id", employeeUpload, async (req, res) => {
                 employeeType,
                 maritalStatus,
                 status,
-                grossSalary,
-                bankName,
-                accountTitle,
-                iban,
+                effectiveGrossSalary,
+                effectiveBankName,
+                effectiveAccountTitle,
+                effectiveIban,
                 cnicCopy,
                 policeVerification,
                 remarks,

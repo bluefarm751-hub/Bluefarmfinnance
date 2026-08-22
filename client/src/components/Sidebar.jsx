@@ -118,6 +118,7 @@ export default function Sidebar() {
         background: gradients.sidebar,
         display: "flex",
         flexDirection: "column",
+        minHeight: 0,
         color: "#fff",
         boxShadow: "6px 0 28px rgba(4, 18, 36, 0.35)",
         borderRight: "1px solid rgba(212,175,55,0.18)",
@@ -178,7 +179,7 @@ export default function Sidebar() {
       </div>
 
       {/* Menu */}
-      <div style={{ flex: 1, padding: "14px 12px", overflowY: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, padding: "14px 12px", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {groups.map((group) => (
           <div key={group.key} style={{ marginBottom: 8 }}>
             <GroupHeader
@@ -291,10 +292,14 @@ function GroupHeader({ icon, title, to, open, onToggle }) {
 function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
   const [hover, setHover] = useState(false);
   const loc = useLocation();
-  // Cash Book tabs all share /cashbook, so match on the tab index too
+  // Cash Book tabs all share /cashbook, so match on the tab index too.
+  // IMPORTANT: don't default a missing loc.state.tab to 0 — landing on the
+  // plain "Cash Book" group link carries no tab in state, and defaulting to
+  // 0 made "Receipt Side" light up as if it were the active tab even though
+  // nothing was actually selected.
   const tabActive =
     state && typeof state.tab === "number"
-      ? loc.pathname === to && (loc.state?.tab ?? 0) === state.tab
+      ? loc.pathname === to && loc.state?.tab === state.tab
       : null;
 
   if (locked || !to) {

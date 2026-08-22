@@ -14,7 +14,7 @@ const initLedger = require("./database/initLedger");
 // UTILITIES
 // ============================================================
 const { loginLimiter } = require("./utils/rateLimiter");
-const { requireAuth } = require("./middleware/authMiddleware");
+const { requireAuth, requireAdmin } = require("./middleware/authMiddleware");
 
 // ============================================================
 // ROUTES
@@ -25,6 +25,8 @@ const payrollRoutes = require("./routes/payroll");
 const financeRoutes = require("./routes/finance");
 const cashbookRoutes = require("./routes/cashbook");
 const ledgerRoutes = require("./routes/ledger");
+const adminRoutes = require("./routes/admin");
+const { startScheduledBackups } = require("./utils/backupPostgres");
 
 // ============================================================
 // APP
@@ -33,12 +35,33 @@ const app = express();
 
 const PORT = Number(process.env.PORT || 3001);
 
+// Render (and most hosts) put the app behind a reverse proxy. Without this,
+// req.ip and req.secure reflect the proxy's connection, not the real
+// visitor — which quietly breaks the login rate limiter (every user would
+// appear to share the proxy's IP) and any "is this HTTPS" checks.
+app.set("trust proxy", 1);
+
 // ============================================================
 // CORS
 // ============================================================
+// The client is served from this same Express server (see the static
+// `dist` mount below), so normal use of the app never needs cross-origin
+// requests at all. Previously this defaulted to `origin: true`, which
+// reflects and allows ANY origin — combined with `credentials: true` that
+// let any website's JavaScript make authenticated-looking requests to this
+// API from a visitor's browser. In production we now default to blocking
+// cross-origin requests entirely unless CORS_ORIGIN is explicitly set
+// (comma-separated list) for a legitimate separate frontend deployment.
+// Local development (Vite dev server on a different port) keeps the old
+// permissive behavior automatically.
+const isProd = process.env.NODE_ENV === "production";
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || true,
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+      : isProd
+        ? false
+        : true,
     credentials: true,
   })
 );
@@ -55,6 +78,13 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "same-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // Force HTTPS on every future request once a browser has seen this over
+  // HTTPS (Render terminates TLS at the proxy, so req.secure only works
+  // correctly now that "trust proxy" is set above).
+  if (isProd) {
+    res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+  }
   next();
 });
 
@@ -105,10 +135,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api", requireAuth);
 
 app.use("/api/employees", employeeRoutes);
-app.use("/api/payroll", payrollRoutes);
-app.use("/api/finance", financeRoutes);
-app.use("/api/cashbook", cashbookRoutes);
-app.use("/api/ledger", ledgerRoutes);
+// Payroll, Finance, Cash Book and Ledger are admin-only in the UI (the
+// Sidebar shows them locked for non-admin "farm" accounts) — requireAdmin
+// enforces that same rule on the server, so a non-admin session token
+// can't be used to call these endpoints directly and bypass the UI lock.
+app.use("/api/payroll", requireAdmin, payrollRoutes);
+app.use("/api/finance", requireAdmin, financeRoutes);
+app.use("/api/cashbook", requireAdmin, cashbookRoutes);
+app.use("/api/ledger", requireAdmin, ledgerRoutes);
+// Backup status/trigger — admin only, see routes/admin.js.
+app.use("/api/admin", requireAdmin, adminRoutes);
 
 // ============================================================
 // FRONTEND
@@ -158,6 +194,14 @@ async function startServer() {
       console.log("✅ PostgreSQL mode enabled");
       console.log("======================================");
     });
+
+    // Automated database backups (JSON snapshot, gzipped, uploaded to
+    // Cloudinary when configured). Runs shortly after startup and then
+    // every 6 hours. Deliberately NOT awaited — a slow/failed first
+    // backup should never block the server from coming up and serving
+    // requests; failures are logged and visible via
+    // GET /api/admin/backup-status.
+    startScheduledBackups();
   } catch (err) {
     console.error("❌ Server startup failed:", err);
     process.exit(1);

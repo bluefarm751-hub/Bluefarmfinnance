@@ -63,6 +63,20 @@ if (CLOUD_ENABLED) {
     );
 }
 
+// Map of the mimetypes this app accepts to a safe, fixed extension. Used so
+// the file saved on local disk never trusts the extension in the
+// attacker-controlled `originalname` (a client can send any bytes as
+// "photo.png" while lying about its real type in other ways, but it can no
+// longer choose the extension the file is saved under, e.g. ".html" or
+// ".php" — the mimetype fileFilter in each route still decides what's
+// accepted at all, this only decides what extension a good file gets).
+const EXT_BY_MIME = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "application/pdf": ".pdf",
+};
+
 /**
  * Build a multer storage engine for a given logical folder
  * (e.g. "bills", "employees"). Uses Cloudinary when configured,
@@ -83,7 +97,7 @@ function makeStorage(folder) {
     return multer.diskStorage({
         destination: (req, file, cb) => cb(null, uploadDir),
         filename: (req, file, cb) => {
-            const ext = path.extname(file.originalname).toLowerCase();
+            const ext = EXT_BY_MIME[file.mimetype] || ".bin";
             const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
             cb(null, unique);
         },

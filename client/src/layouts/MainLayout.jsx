@@ -18,6 +18,7 @@ export default function MainLayout({ children }) {
           width: "250px",
           minWidth: "250px",
           height: "100%",
+          minHeight: 0,
           overflow: "hidden",
         }}
       >
@@ -31,6 +32,8 @@ export default function MainLayout({ children }) {
           display: "flex",
           flexDirection: "column",
           height: "100%",
+          minHeight: 0,
+          minWidth: 0,
           overflow: "hidden",
         }}
       >
@@ -39,7 +42,10 @@ export default function MainLayout({ children }) {
         <div
           style={{
             flex: 1,
-            overflow: "auto",
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
             padding: "26px 30px",
             background: "transparent",
           }}
