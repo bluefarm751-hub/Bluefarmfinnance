@@ -7,8 +7,14 @@ import {
   FaCodeBranch,
   FaLayerGroup,
   FaShieldAlt,
+  FaMoneyCheckAlt,
+  FaChartLine,
+  FaBook,
+  FaBalanceScale,
+  FaUsers,
+  FaCloudUploadAlt,
 } from "react-icons/fa";
-import { brand, gradients, diagonalPattern } from "../theme";
+import { brand, gradients, diagonalPattern, shadowCard } from "../theme";
 
 export default function About() {
   const farm = localStorage.getItem("farm") || "Blue Farm";
@@ -17,21 +23,56 @@ export default function About() {
   const farmGradient = isRemounts ? gradients.blueRemounts : gradients.blueFarm;
   const glow = isRemounts ? "rgba(184,134,11,0.55)" : "rgba(30,142,90,0.55)";
 
+  const modules = [
+    {
+      icon: <FaUsers size={20} />,
+      title: "Payroll & HR",
+      desc: "Manage employees, appointments, departments and monthly salary generation end to end.",
+    },
+    {
+      icon: <FaMoneyCheckAlt size={20} />,
+      title: "Finance",
+      desc: "Track bills, contingent expenses and income with full allocation and head-wise reporting.",
+    },
+    {
+      icon: <FaBook size={20} />,
+      title: "Cash Book",
+      desc: "Daily cash inflow/outflow entries with running balances, always audit-ready.",
+    },
+    {
+      icon: <FaBalanceScale size={20} />,
+      title: "Ledger",
+      desc: "Party-wise ledgers with automatic postings, balances and statement generation.",
+    },
+    {
+      icon: <FaChartLine size={20} />,
+      title: "Reports",
+      desc: "Salary, bill and info reports that summarize activity across the whole system instantly.",
+    },
+    {
+      icon: <FaCloudUploadAlt size={20} />,
+      title: "Secure Storage",
+      desc: "Employee documents and bill pictures are stored persistently and never lost on redeploy.",
+    },
+  ];
+
   return (
     <MainLayout>
       <Box
         sx={{
           minHeight: "100%",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
+          flexDirection: "column",
+          alignItems: "center",
           p: { xs: 1, sm: 3 },
+          gap: { xs: 3, sm: 4 },
         }}
       >
+        {/* ================= HERO CARD ================= */}
         <Box
           sx={{
             width: "100%",
-            maxWidth: 600,
+            maxWidth: 640,
             borderRadius: 6,
             overflow: "hidden",
             background: gradients.brand,
@@ -114,6 +155,41 @@ export default function About() {
           </Box>
         </Box>
 
+        {/* ================= MODULES SECTION ================= */}
+        <Box sx={{ width: "100%", maxWidth: 980 }}>
+          <Box sx={{ textAlign: "center", mb: 2.5 }}>
+            <Typography sx={{
+              fontSize: 11.5, letterSpacing: 2.4, fontWeight: 800,
+              color: brand.blueDeep, opacity: 0.75, mb: 0.6,
+            }}>
+              WHAT THIS SYSTEM COVERS
+            </Typography>
+            <Typography variant="h5" fontWeight={800} color={brand.ink}>
+              System Modules
+            </Typography>
+          </Box>
+
+          <Box sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(3, 1fr)" },
+            gap: 2.2,
+          }}>
+            {modules.map((m) => (
+              <ModuleCard key={m.title} {...m} accentGradient={farmGradient} />
+            ))}
+          </Box>
+        </Box>
+
+        {/* ================= FOOTER STRIP ================= */}
+        <Box sx={{
+          width: "100%", maxWidth: 980, textAlign: "center",
+          pt: 1, pb: 3, opacity: 0.6,
+        }}>
+          <Typography sx={{ fontSize: 12.5, color: brand.slate }}>
+            © {new Date().getFullYear()} {farm} — All rights reserved.
+          </Typography>
+        </Box>
+
         <style>{`
           @keyframes aboutShimmer {
             0% { background-position: 0% 0%; }
@@ -149,6 +225,41 @@ function InfoLine({ icon, label, value }) {
         <Typography sx={{ fontSize: 12.5, letterSpacing: 0.5, opacity: 0.85 }}>{label}</Typography>
       </Box>
       <Typography sx={{ fontWeight: 700, fontSize: 14 }}>{value}</Typography>
+    </Box>
+  );
+}
+
+function ModuleCard({ icon, title, desc, accentGradient }) {
+  return (
+    <Box sx={{
+      background: "#fff",
+      borderRadius: 4,
+      p: 2.6,
+      boxShadow: shadowCard,
+      border: "1px solid rgba(15,76,129,0.08)",
+      display: "flex",
+      flexDirection: "column",
+      gap: 1.4,
+      transition: "transform 0.2s, box-shadow 0.2s",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: "0 26px 60px rgba(8,33,63,0.22)",
+      },
+    }}>
+      <Box sx={{
+        width: 44, height: 44, borderRadius: 2.5,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: accentGradient, color: "#fff",
+        boxShadow: "0 10px 22px rgba(15,76,129,0.28)",
+      }}>
+        {icon}
+      </Box>
+      <Typography sx={{ fontWeight: 800, fontSize: 15.5, color: brand.ink }}>
+        {title}
+      </Typography>
+      <Typography sx={{ fontSize: 13, color: brand.slate, lineHeight: 1.55 }}>
+        {desc}
+      </Typography>
     </Box>
   );
 }

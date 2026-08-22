@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 const db = require("../database/database");
-const { makeStorage, storedPathOf } = require("../utils/fileStorage");
+const { makeStorage, storedPathOf, friendlyUploadError } = require("../utils/fileStorage");
 
 // ==========================================
 // FILE UPLOAD SETUP
@@ -661,7 +661,7 @@ router.use((err, req, res, next) => {
 
         return res.status(400).json({
             success: false,
-            message: err.message
+            message: friendlyUploadError(err)
         });
     }
 

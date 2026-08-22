@@ -23,12 +23,40 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 
-const CLOUD_ENABLED = !!(
-    process.env.CLOUDINARY_URL ||
-    (process.env.CLOUDINARY_CLOUD_NAME &&
-        process.env.CLOUDINARY_API_KEY &&
-        process.env.CLOUDINARY_API_SECRET)
+// A Cloudinary cloud name is only ever lowercase letters, numbers, and
+// hyphens/underscores — no spaces, slashes, or punctuation. If someone pastes
+// the wrong value into the Render dashboard (an API key, a full URL, a typo
+// like "Root", etc.) the Cloudinary SDK throws "Invalid cloud_name <value>"
+// on every single upload. We validate the shape up front so a bad value
+// falls back to local disk storage (with a loud console warning) instead of
+// breaking every "Save Employee" / "Add Bill" click in production.
+const CLOUD_NAME_RE = /^[a-zA-Z0-9_-]+$/;
+
+function cloudNameLooksValid(name) {
+    return !!name && CLOUD_NAME_RE.test(name.trim());
+}
+
+const rawCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const hasCloudUrl = !!process.env.CLOUDINARY_URL;
+const hasCloudKeys = !!(
+    rawCloudName &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
 );
+
+let CLOUD_ENABLED = hasCloudUrl || hasCloudKeys;
+
+if (CLOUD_ENABLED && !hasCloudUrl && !cloudNameLooksValid(rawCloudName)) {
+    console.error(
+        `[fileStorage] CLOUDINARY_CLOUD_NAME is set to "${rawCloudName}", which is not a ` +
+        "valid Cloudinary cloud name (letters/numbers/hyphens/underscores only, no spaces " +
+        "or slashes). Falling back to local disk storage until this is corrected in the " +
+        "Render dashboard's Environment tab. Find the correct value on your Cloudinary " +
+        "dashboard (cloudinary.com/console) under 'Cloud name' — do NOT use your API key, " +
+        "API secret, or account name here."
+    );
+    CLOUD_ENABLED = false;
+}
 
 const uploadDir = path.join(__dirname, "..", "..", "uploads");
 
@@ -155,6 +183,19 @@ function localFileMissing(file) {
     return !fs.existsSync(path.join(uploadDir, file.filename));
 }
 
+/**
+ * Turn a raw upload error into a message that's safe and useful to show a
+ * user, instead of a raw Cloudinary/SDK string like "Invalid cloud_name
+ * Root". Returns the original message for anything else.
+ */
+function friendlyUploadError(err) {
+    if (err && /cloud_name/i.test(err.message || "")) {
+        return "File storage isn't configured correctly on the server (Cloudinary cloud name). " +
+            "Please contact the system administrator — no file was saved.";
+    }
+    return err && err.message;
+}
+
 module.exports = {
     CLOUD_ENABLED,
     uploadDir,
@@ -162,4 +203,5 @@ module.exports = {
     storedPathOf,
     deleteStoredFile,
     localFileMissing,
+    friendlyUploadError,
 };

@@ -52,12 +52,24 @@ const LOCAL_BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, "..", ".
 const MAX_LOCAL_BACKUPS = 20;
 const MAX_CLOUD_BACKUPS = 60; // ~2 weeks at 4/day, or ~2 months at 1/day
 
-const CLOUD_ENABLED = !!(
-    process.env.CLOUDINARY_URL ||
-    (process.env.CLOUDINARY_CLOUD_NAME &&
-        process.env.CLOUDINARY_API_KEY &&
-        process.env.CLOUDINARY_API_SECRET)
+const CLOUD_NAME_RE = /^[a-zA-Z0-9_-]+$/;
+const rawCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const hasCloudUrl = !!process.env.CLOUDINARY_URL;
+const hasCloudKeys = !!(
+    rawCloudName &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
 );
+
+let CLOUD_ENABLED = hasCloudUrl || hasCloudKeys;
+
+if (CLOUD_ENABLED && !hasCloudUrl && !CLOUD_NAME_RE.test((rawCloudName || "").trim())) {
+    console.error(
+        `[backupPostgres] CLOUDINARY_CLOUD_NAME is set to "${rawCloudName}", which is not a ` +
+        "valid Cloudinary cloud name. Cloud backups are disabled until this is corrected."
+    );
+    CLOUD_ENABLED = false;
+}
 
 let cloudinary = null;
 if (CLOUD_ENABLED) {
