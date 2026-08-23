@@ -218,12 +218,11 @@ export default function DailyClosingTab({ onChanged, showToast }) {
   return (
     <>
       <SectionCard title="Daily Closing — Physical Cash Verification">
-        <Grid container spacing={{ xs: 4, md: 7 }}>
+        <Grid container spacing={4}>
           {/* Cash counting comes first — count the drawer before checking it against the expected total */}
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
             <Box sx={{
               mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
-              boxShadow: "0 6px 18px rgba(15,76,129,0.08)",
               background: "rgba(212,175,55,0.06)",
             }}>
               <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>Count Physical Cash</Typography>
@@ -277,11 +276,10 @@ export default function DailyClosingTab({ onChanged, showToast }) {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={5}>
-            {/* CLOSING SECTION — own full border on all sides, no more partial divider line */}
+          <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
+            {/* CLOSING SECTION — now with more spacing and proper bordered container */}
             <Box sx={{
               p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
-              boxShadow: "0 6px 18px rgba(15,76,129,0.08)",
               background: "#fff", mt: { xs: 4, md: 0 }, mb: 2,
             }}>
               <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink, fontSize: 15 }}>

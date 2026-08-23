@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import {
   Box,
@@ -63,10 +63,16 @@ const sortRowsByDate = (rows) =>
 
 export default function AddContingentBill() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast, ToastUI } = useToast();
   const farm = localStorage.getItem("farm") || "Blue Farm";
 
   const [saving, setSaving] = useState(false);
+
+  // Rows can arrive pre-filled from "Add Contingent Bill (From Existing Bill /
+  // HQ Remittance)" — the user ticked existing Bills / HQ Remittances there
+  // and they land here ready to review before saving.
+  const prefillRows = location.state?.prefillRows;
 
   const now = new Date();
 
@@ -84,7 +90,9 @@ export default function AddContingentBill() {
     receivedByRank: "",
   });
 
-  const [rows, setRows] = useState([emptyRow()]);
+  const [rows, setRows] = useState(
+    prefillRows && prefillRows.length ? prefillRows : [emptyRow()]
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,7 +103,9 @@ export default function AddContingentBill() {
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r)));
   };
 
-  const addRow = () => setRows((prev) => [...prev, emptyRow()]);
+  // New rows are added to the TOP of the list — the bill you're entering now
+  // shows up first, with previously added rows pushed further down.
+  const addRow = () => setRows((prev) => [emptyRow(), ...prev]);
 
   const removeRow = (idx) => {
     setRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)));
@@ -204,6 +214,16 @@ export default function AddContingentBill() {
           Records a Contingent Bill (Bills Payment Summary Voucher). This does not deduct from any
           head's balance — it's a standalone record you can print or report on later.
         </Typography>
+
+        {prefillRows && prefillRows.length > 0 && (
+          <Box sx={{
+            mb: 3, p: 2, borderRadius: 3, background: `${brand.gold}1a`,
+            border: `1px solid ${brand.gold}`, fontSize: 13.5, color: brand.ink, fontWeight: 600,
+          }}>
+            {prefillRows.length} row(s) were brought in from your selected Bills / HQ Remittances.
+            Review or edit them below before saving.
+          </Box>
+        )}
 
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 3.5 }}>

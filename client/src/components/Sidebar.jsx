@@ -59,6 +59,7 @@ export default function Sidebar() {
     { to: "/finance/add-bill", icon: <FaReceipt />, text: "Add Bill", locked: !isAdmin },
     { to: "/finance/edit-bill", icon: <FaEdit />, text: "Edit Bill", locked: !isAdmin },
     { to: "/finance/add-contingent-bill", icon: <FaFileContract />, text: "Add Contingent Bill", locked: !isAdmin },
+    { to: "/finance/add-contingent-bill-from-existing", icon: <FaExchangeAlt />, text: "Add Contingent Bill (From Existing)", locked: !isAdmin },
     { to: "/finance/temporary-receipt", icon: <FaReceipt />, text: "Temporary Receipt", locked: !isAdmin },
     { to: "/finance/bill-report", icon: <FaFileAlt />, text: "Bill Report", locked: !isAdmin },
     { to: "/finance/contingent-bill-report", icon: <FaFileAlt />, text: "Report Contingent Bill", locked: !isAdmin },

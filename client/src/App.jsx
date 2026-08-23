@@ -22,6 +22,7 @@ import AddAllocation from "./pages/AddAllocation";
 import AddIncome from "./pages/AddIncome";
 import ReportAllocation from "./pages/ReportAllocation";
 import AddContingentBill from "./pages/AddContingentBill";
+import AddContingentBillFromExisting from "./pages/AddContingentBillFromExisting";
 import EditContingentBill from "./pages/EditContingentBill";
 import ContingentBillReport from "./pages/ContingentBillReport";
 import CashBook from "./pages/CashBook";
@@ -106,6 +107,7 @@ function App() {
       <Route path="/finance/add-allocation" element={pAdmin(<AddAllocation />)} />
       <Route path="/finance/report-allocation" element={pAdmin(<ReportAllocation />)} />
       <Route path="/finance/add-contingent-bill" element={pAdmin(<AddContingentBill />)} />
+      <Route path="/finance/add-contingent-bill-from-existing" element={pAdmin(<AddContingentBillFromExisting />)} />
       <Route path="/finance/edit-contingent-bill/:id" element={pAdmin(<EditContingentBill />)} />
       <Route path="/finance/contingent-bill-report" element={pAdmin(<ContingentBillReport />)} />
 
