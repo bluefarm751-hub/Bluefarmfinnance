@@ -1,17 +1,57 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography, IconButton, Collapse } from "@mui/material";
-import { FaTrashAlt, FaFileExcel, FaPrint, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTrashAlt, FaFileExcel, FaFilePdf, FaPrint, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { SectionCard, DataTable, money } from "./ui";
 import {
   getMonthlySummary,
   getMonthlyClosings,
   saveMonthlyClosing,
   deleteMonthlyClosing,
+  getReceipts,
+  getPayments,
+  getTRs,
+  getClosingSummary,
+  getCashSummary,
+  getClosings,
 } from "../../api/cashbookApi";
 import { exportExcel } from "../../utils/exportExcel";
+import { exportXlsxMultiSheet } from "../../utils/xlsxWriter";
+import { downloadMultiSectionPdf } from "../../utils/multiSectionPdf";
 import { printDocument } from "../../utils/print";
 import { brand } from "../../theme";
 import ConfirmDialog from "../ConfirmDialog";
+
+// Same columns used across the Receipt / Payment side reports elsewhere in
+// the app, so the monthly workbook's sheets match what the daily side tabs
+// already show.
+const sideCols = [
+  { key: "date", label: "Date", width: 12 },
+  { key: "voucherNo", label: "Voucher No", width: 14 },
+  { key: "party", label: "Contractor / Party", width: 22 },
+  { key: "description", label: "Description", width: 26 },
+  { key: "head", label: "Head", width: 16 },
+  { key: "farm", label: "Farm", width: 14 },
+  { key: "sourceTag", label: "Source", width: 12 },
+  { key: "cash", label: "Cash", width: 14 },
+  { key: "bank", label: "Bank", width: 14 },
+];
+
+const trCols = [
+  { key: "entryDate", label: "Date", width: 12 },
+  { key: "description", label: "Description", width: 26 },
+  { key: "issuedTo", label: "Issued To", width: 20 },
+  { key: "amount", label: "Amount", width: 14 },
+  { key: "authority", label: "Authority", width: 18 },
+  { key: "status", label: "Status", width: 14 },
+];
+
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+// Same denomination list as the Daily Closing tab, so the physical cash
+// count block on the Closing Summary sheet matches it note-for-note.
+const NOTES = [5000, 1000, 500, 100, 50, 20, 10];
+const COINS = [5, 2, 1];
+const DENOMS = [...NOTES, ...COINS];
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -30,6 +70,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
   const [history, setHistory] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const loadPreview = async () => {
     setLoading(true);
@@ -53,6 +95,170 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
 
   useEffect(() => { loadPreview(); /* eslint-disable-next-line */ }, [month, year]);
   useEffect(() => { loadHistory(); }, []);
+
+  // Builds the shared data for the 4-section "Monthly Closing Main Report":
+  //   1. Receipt Side  — every receipt entry for the month
+  //   2. Payment Side  — every payment entry for the month
+  //   3. Outstanding TRs — Temporary Receipts still not cleared, as of month end
+  //   4. Closing Summary — same page/formula as Daily Closing, run as of the
+  //      month's last date: physical cash count (denominations), Cash,
+  //      TR, Cash In Hand, Cash In Bank, TOTAL — using the Daily Closing
+  //      saved for that date if one exists.
+  // Used by both the Excel (multi-sheet workbook) and PDF (multi-section)
+  // exports below, so the two formats always show the exact same figures
+  // from one API round-trip, and returns a `sheets` array whose shape
+  // (name/title/subtitle/columns/rows) each exporter consumes directly.
+  const buildMonthlyReportSheets = async () => {
+    if (!preview) return null;
+    const { fromDate, toDate } = preview;
+    const num = (v) => Number(v || 0);
+
+    const [receiptsRes, paymentsRes, trsRes, closingSummaryRes, bankInfoRes, savedClosingsRes] = await Promise.all([
+      getReceipts({ from: fromDate, to: toDate }),
+      getPayments({ from: fromDate, to: toDate }),
+      getTRs({ to: toDate, status: "Not Cleared" }),
+      getClosingSummary(toDate),
+      getCashSummary(toDate),
+      getClosings({ from: toDate, to: toDate }),
+    ]);
+
+    const receiptRows = (receiptsRes.data || []).map((r) => ({ ...r, cash: num(r.cash), bank: num(r.bank) }));
+    const paymentRows = (paymentsRes.data || []).map((r) => ({ ...r, cash: num(r.cash), bank: num(r.bank) }));
+    const trRows = (trsRes.data || []).map((r) => ({ ...r, amount: num(r.amount) }));
+
+    const receiptTotalRow = { date: "", voucherNo: "", party: "", description: "", head: "", farm: "", sourceTag: "TOTAL", cash: round2(receiptRows.reduce((t, r) => t + r.cash, 0)), bank: round2(receiptRows.reduce((t, r) => t + r.bank, 0)), __bold: true };
+    const paymentTotalRow = { date: "", voucherNo: "", party: "", description: "", head: "", farm: "", sourceTag: "TOTAL", cash: round2(paymentRows.reduce((t, r) => t + r.cash, 0)), bank: round2(paymentRows.reduce((t, r) => t + r.bank, 0)), __bold: true };
+    const trTotalRow = { entryDate: "", description: "", issuedTo: "", amount: round2(trRows.reduce((t, r) => t + r.amount, 0)), authority: "", status: "TOTAL OUTSTANDING", __bold: true };
+
+    // ---- Section 4: same page as Daily Closing, run as of the month's last date ----
+    const cs = closingSummaryRes.data || {};
+    const bankInfo = bankInfoRes.data || {};
+    const savedClosing = (savedClosingsRes.data || [])
+      .filter((r) => String(r.closingDate).slice(0, 10) === toDate)
+      .sort((a, b) => b.id - a.id)[0] || null;
+
+    const expected = round2(cs.expectedCash);
+    const trAmt = round2(cs.trIssued); // outstanding TR, as returned by the daily closing-summary endpoint
+    const cashInBank = round2(bankInfo.cashInBank);
+    const cashInHandGross = round2(expected + trAmt);
+    const grandTotal = round2(bankInfo.totalBalance ?? cashInHandGross + cashInBank);
+
+    let counts = {};
+    let actualCash = null;
+    let difference = null;
+    if (savedClosing) {
+      try { counts = JSON.parse(savedClosing.denominations || "{}"); } catch { counts = {}; }
+      actualCash = round2(savedClosing.actualCash);
+      difference = round2(savedClosing.difference);
+    }
+
+    const closingCols = [
+      { key: "particulars", label: "Particulars", width: 30 },
+      { key: "qty", label: "Qty", width: 10 },
+      { key: "amount", label: "Amount", width: 16 },
+    ];
+
+    const denomRows = DENOMS.map((d) => {
+      const qty = Number(counts[d]) || 0;
+      return { particulars: `Rs. ${d.toLocaleString()}`, qty, amount: round2(d * qty) };
+    });
+
+    const closingRows = [
+      { particulars: "CASH IN HAND — PHYSICAL COUNT", qty: "", amount: "", __bold: true },
+      ...denomRows,
+      { particulars: "Total", qty: "", amount: actualCash !== null ? actualCash : "", __bold: true },
+      { particulars: "Differ", qty: "", amount: difference !== null ? difference : "", __bold: true },
+      { particulars: "", qty: "", amount: "" },
+      { particulars: "Cash", qty: "", amount: expected, __bold: true },
+      { particulars: "TR", qty: "", amount: trAmt, __bold: true },
+      { particulars: "Cash In Hand", qty: "", amount: cashInHandGross, __bold: true },
+      { particulars: "", qty: "", amount: "" },
+      { particulars: "Cash In Bank", qty: "", amount: cashInBank, __bold: true },
+      { particulars: "", qty: "", amount: "" },
+      { particulars: "TOTAL", qty: "", amount: grandTotal, __bold: true },
+      { particulars: "", qty: "", amount: "" },
+      {
+        particulars: savedClosing
+          ? `Physical count from Daily Closing saved on ${toDate}`
+          : `No Daily Closing saved on ${toDate} — physical count not available; Total/Differ left blank`,
+        qty: "", amount: "",
+      },
+    ];
+
+    return {
+      fromDate,
+      toDate,
+      sheets: [
+        {
+          name: "Receipt Side",
+          title: `Receipt Side — ${MONTHS[month - 1]} ${year}`,
+          subtitle: `${fromDate} to ${toDate}`,
+          columns: sideCols,
+          rows: [...receiptRows, receiptTotalRow],
+        },
+        {
+          name: "Payment Side",
+          title: `Payment Side — ${MONTHS[month - 1]} ${year}`,
+          subtitle: `${fromDate} to ${toDate}`,
+          columns: sideCols,
+          rows: [...paymentRows, paymentTotalRow],
+        },
+        {
+          name: "Outstanding TRs",
+          title: `Outstanding TRs — as of ${toDate}`,
+          subtitle: `${MONTHS[month - 1]} ${year} Closing`,
+          columns: trCols,
+          rows: [...trRows, trTotalRow],
+        },
+        {
+          name: "Closing Summary",
+          title: `Daily Closing — ${toDate}`,
+          subtitle: `Month-end Cash Book Closing for ${MONTHS[month - 1]} ${year}`,
+          columns: closingCols,
+          rows: closingRows,
+        },
+      ],
+    };
+  };
+
+  const exportMonthlyReport = async () => {
+    if (!preview) return;
+    setExporting(true);
+    try {
+      const data = await buildMonthlyReportSheets();
+      if (!data) return;
+      await exportXlsxMultiSheet({
+        filename: `Monthly_Closing_Report_${MONTHS[month - 1]}_${year}`,
+        sheets: data.sheets,
+      });
+      showToast?.("Monthly closing report downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to build monthly closing report", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportMonthlyReportPdf = async () => {
+    if (!preview) return;
+    setExportingPdf(true);
+    try {
+      const data = await buildMonthlyReportSheets();
+      if (!data) return;
+      downloadMultiSectionPdf({
+        filename: `Monthly_Closing_Report_${MONTHS[month - 1]}_${year}`,
+        docTitle: `Monthly Closing Report — ${MONTHS[month - 1]} ${year}`,
+        sections: data.sheets.map((s) => ({ title: s.title, subtitle: s.subtitle, columns: s.columns, rows: s.rows })),
+      });
+      showToast?.("Monthly closing PDF downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to build monthly closing PDF", "error");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -153,7 +359,25 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
 
   return (
     <>
-      <SectionCard title="Monthly Closing — Full Month Cash Book Summary">
+      <SectionCard
+        title="Monthly Closing — Full Month Cash Book Summary"
+        action={
+          <>
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel />}
+              disabled={!preview || exporting || exportingPdf}
+              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)", mr: 1 }}
+              onClick={exportMonthlyReport}>
+              {exporting ? "Building…" : "Monthly Closing Report (Excel)"}
+            </Button>
+            <Button size="small" variant="outlined" startIcon={<FaFilePdf />}
+              disabled={!preview || exporting || exportingPdf}
+              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+              onClick={exportMonthlyReportPdf}>
+              {exportingPdf ? "Building…" : "Monthly Closing Report (PDF)"}
+            </Button>
+          </>
+        }
+      >
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={4} md={3}>
             <TextField select fullWidth size="small" label="Month" value={month} onChange={(e) => setMonth(Number(e.target.value))}>

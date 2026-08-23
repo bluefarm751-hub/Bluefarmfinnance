@@ -338,3 +338,189 @@ export async function exportXlsx({ filename, columns, rows, title, subtitle, bac
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// ---------- Multi-sheet workbook ----------
+// Same hand-built OOXML approach as exportXlsx above, extended to write
+// several worksheets into one .xlsx file (e.g. Receipts / Payments / TRs /
+// Closing Summary, all in a single downloadable workbook).
+//
+// sheets: [{ name, columns, rows, title?, subtitle? }]
+//   - columns: [{ key, label, width?, bold? }]  (bold -> bold body cell, for total/label rows)
+//   - rows: array of plain objects
+function sanitizeSheetName(name, fallback) {
+  const s = String(name || fallback || "Sheet").replace(/[:\\/?*[\]]/g, "-").trim();
+  return (s || fallback || "Sheet").slice(0, 31);
+}
+
+function buildSheetPart(sheet) {
+  const { columns, rows, title, subtitle } = sheet;
+
+  const titleRow = 1;
+  const subtitleRow = 2;
+  const headerRow = title || subtitle ? 4 : 1;
+  const firstDataRow = headerRow + 1;
+
+  let sheetDataXml = "";
+
+  if (title) {
+    sheetDataXml += `<row r="${titleRow}"><c r="A${titleRow}" t="inlineStr" s="3"><is><t>${xmlEscape(title)}</t></is></c></row>`;
+  }
+  if (subtitle) {
+    sheetDataXml += `<row r="${subtitleRow}"><c r="A${subtitleRow}" t="inlineStr" s="4"><is><t>${xmlEscape(subtitle)}</t></is></c></row>`;
+  }
+
+  let headerCells = "";
+  columns.forEach((col, i) => {
+    const ref = `${colLetter(i)}${headerRow}`;
+    headerCells += `<c r="${ref}" t="inlineStr" s="1"><is><t>${xmlEscape(col.label)}</t></is></c>`;
+  });
+  sheetDataXml += `<row r="${headerRow}">${headerCells}</row>`;
+
+  rows.forEach((row, rIdx) => {
+    const r = firstDataRow + rIdx;
+    let cells = "";
+    columns.forEach((col, cIdx) => {
+      const ref = `${colLetter(cIdx)}${r}`;
+      const raw = col.key === "__sno" ? rIdx + 1 : row[col.key];
+      const isNumber = typeof raw === "number" && Number.isFinite(raw);
+      const rowBold = col.bold || row.__bold;
+      const s = isNumber ? (rowBold ? 5 : 2) : rowBold ? 6 : 2;
+      if (isNumber) {
+        cells += `<c r="${ref}" s="${s}"><v>${raw}</v></c>`;
+      } else {
+        cells += `<c r="${ref}" t="inlineStr" s="${s}"><is><t>${xmlEscape(raw)}</t></is></c>`;
+      }
+    });
+    sheetDataXml += `<row r="${r}">${cells}</row>`;
+  });
+
+  const colsXml =
+    "<cols>" +
+    columns
+      .map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.width || 18}" customWidth="1"/>`)
+      .join("") +
+    "</cols>";
+
+  const lastCol = colLetter(Math.max(columns.length - 1, 0));
+  const lastRow = Math.max(firstDataRow + rows.length - 1, headerRow);
+
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <dimension ref="A1:${lastCol}${lastRow}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="18"/>
+  ${colsXml}
+  <sheetData>${sheetDataXml}</sheetData>
+  <pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>
+  <pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/>
+</worksheet>`;
+
+  return sheetXml;
+}
+
+// options: { filename, sheets }
+export async function exportXlsxMultiSheet({ filename, sheets }) {
+  const zipFiles = [];
+  const usedNames = new Set();
+
+  const sheetEntries = sheets.map((sheet, idx) => {
+    let name = sanitizeSheetName(sheet.name, `Sheet${idx + 1}`);
+    let n = name;
+    let suffix = 2;
+    while (usedNames.has(n)) {
+      n = `${name.slice(0, 28)} ${suffix++}`;
+    }
+    usedNames.add(n);
+    return { ...sheet, name: n, index: idx + 1 };
+  });
+
+  sheetEntries.forEach((sheet) => {
+    const xml = buildSheetPart(sheet);
+    zipFiles.push({ name: `xl/worksheets/sheet${sheet.index}.xml`, data: strToBytes(xml) });
+  });
+
+  // Styles: shared across all sheets. Adds bold-body variants (5 numeric, 6 text)
+  // on top of the base set used by the single-sheet exporter.
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="5">
+    <font><sz val="12"/><name val="Arial"/></font>
+    <font><b/><sz val="16"/><name val="Arial"/></font>
+    <font><sz val="12"/><name val="Arial"/></font>
+    <font><b/><sz val="16"/><name val="Arial"/></font>
+    <font><b/><sz val="12"/><name val="Arial"/></font>
+  </fonts>
+  <fills count="2">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFB9C2D0"/></left>
+      <right style="thin"><color rgb="FFB9C2D0"/></right>
+      <top style="thin"><color rgb="FFB9C2D0"/></top>
+      <bottom style="thin"><color rgb="FFB9C2D0"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="7">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="4" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="4" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    ${sheetEntries.map((s) => `<sheet name="${xmlEscape(s.name)}" sheetId="${s.index}" r:id="rId${s.index}"/>`).join("\n    ")}
+  </sheets>
+</workbook>`;
+
+  const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${sheetEntries.map((s) => `<Relationship Id="rId${s.index}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${s.index}.xml"/>`).join("\n  ")}
+  <Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  ${sheetEntries.map((s) => `<Override PartName="/xl/worksheets/sheet${s.index}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("\n  ")}
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+
+  zipFiles.push({ name: "[Content_Types].xml", data: strToBytes(contentTypesXml) });
+  zipFiles.push({ name: "_rels/.rels", data: strToBytes(rootRelsXml) });
+  zipFiles.push({ name: "xl/workbook.xml", data: strToBytes(workbookXml) });
+  zipFiles.push({ name: "xl/_rels/workbook.xml.rels", data: strToBytes(workbookRelsXml) });
+  zipFiles.push({ name: "xl/styles.xml", data: strToBytes(stylesXml) });
+
+  const zipBytes = buildZip(zipFiles);
+
+  const blob = new Blob([zipBytes], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Grid, TextField, Typography, IconButton } from "@mui/material";
-import { FaTrashAlt, FaFileExcel, FaPrint } from "react-icons/fa";
+import { FaTrashAlt, FaFileExcel, FaFilePdf, FaPrint } from "react-icons/fa";
 import { SectionCard, DataTable, money, signedMoney, today } from "./ui";
-import { getClosingSummary, getClosings, saveClosing, deleteClosing, getCashSummary } from "../../api/cashbookApi";
+import {
+  getClosingSummary, getClosings, saveClosing, deleteClosing, getCashSummary,
+  getReceipts, getPayments, getTRs,
+} from "../../api/cashbookApi";
 import { exportExcel } from "../../utils/exportExcel";
+import { exportXlsxMultiSheet } from "../../utils/xlsxWriter";
+import { downloadMultiSectionPdf } from "../../utils/multiSectionPdf";
 import { printDocument, tableHtml } from "../../utils/print";
 import { brand } from "../../theme";
 import DateFieldDMY from "../DateFieldDMY";
@@ -12,6 +17,36 @@ import ConfirmDialog from "../ConfirmDialog";
 const NOTES = [5000, 1000, 500, 100, 50, 20, 10];
 const COINS = [5, 2, 1];
 const DENOMS = [...NOTES, ...COINS];
+
+// Same columns used across the Receipt / Payment side reports elsewhere in
+// the app (Monthly Closing report, etc.), so the daily workbook's sheets
+// match what those already show.
+const sideCols = [
+  { key: "date", label: "Date", width: 12 },
+  { key: "voucherNo", label: "Voucher No", width: 14 },
+  { key: "party", label: "Contractor / Party", width: 22 },
+  { key: "description", label: "Description", width: 26 },
+  { key: "head", label: "Head", width: 16 },
+  { key: "farm", label: "Farm", width: 14 },
+  { key: "sourceTag", label: "Source", width: 12 },
+  { key: "cash", label: "Cash", width: 14 },
+  { key: "bank", label: "Bank", width: 14 },
+];
+
+const trCols = [
+  { key: "entryDate", label: "Date", width: 12 },
+  { key: "description", label: "Description", width: 26 },
+  { key: "issuedTo", label: "Issued To", width: 20 },
+  { key: "amount", label: "Amount", width: 14 },
+  { key: "authority", label: "Authority", width: 18 },
+  { key: "status", label: "Status", width: 14 },
+];
+
+const closingCols = [
+  { key: "particulars", label: "Particulars", width: 30 },
+  { key: "qty", label: "Qty", width: 10 },
+  { key: "amount", label: "Amount", width: 16 },
+];
 
 const STATUS_STYLE = {
   Balanced: { bg: "linear-gradient(135deg,#2FBF71,#1B8A50)", label: "BALANCED" },
@@ -35,6 +70,8 @@ export default function DailyClosingTab({ onChanged, showToast }) {
   const [remarks, setRemarks] = useState("");
   const [history, setHistory] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [exportingReport, setExportingReport] = useState(false);
+  const [exportingReportPdf, setExportingReportPdf] = useState(false);
 
   const load = async () => {
     try {
@@ -165,6 +202,119 @@ export default function DailyClosingTab({ onChanged, showToast }) {
     });
   };
 
+  // Builds the same 4-section "Daily Closing Main Report" pattern used by
+  // Monthly Closing (Receipt Side / Payment Side / Outstanding TRs / Closing
+  // Summary), scoped to just the selected closing date, using the physical
+  // cash count currently on screen (not necessarily saved yet) so the report
+  // always matches what's shown above.
+  const buildDailyReportSheets = () => {
+    const num = (v) => Number(v || 0);
+    return (async () => {
+      const [receiptsRes, paymentsRes, trsRes] = await Promise.all([
+        getReceipts({ from: date, to: date }),
+        getPayments({ from: date, to: date }),
+        getTRs({ to: date, status: "Not Cleared" }),
+      ]);
+
+      const receiptRows = (receiptsRes.data || []).map((r) => ({ ...r, cash: num(r.cash), bank: num(r.bank) }));
+      const paymentRows = (paymentsRes.data || []).map((r) => ({ ...r, cash: num(r.cash), bank: num(r.bank) }));
+      const trRows = (trsRes.data || []).map((r) => ({ ...r, amount: num(r.amount) }));
+
+      const receiptTotalRow = { date: "", voucherNo: "", party: "", description: "", head: "", farm: "", sourceTag: "TOTAL", cash: round2(receiptRows.reduce((t, r) => t + r.cash, 0)), bank: round2(receiptRows.reduce((t, r) => t + r.bank, 0)), __bold: true };
+      const paymentTotalRow = { date: "", voucherNo: "", party: "", description: "", head: "", farm: "", sourceTag: "TOTAL", cash: round2(paymentRows.reduce((t, r) => t + r.cash, 0)), bank: round2(paymentRows.reduce((t, r) => t + r.bank, 0)), __bold: true };
+      const trTotalRow = { entryDate: "", description: "", issuedTo: "", amount: round2(trRows.reduce((t, r) => t + r.amount, 0)), authority: "", status: "TOTAL OUTSTANDING", __bold: true };
+
+      const denomRows = DENOMS.map((d) => {
+        const qty = Number(counts[d]) || 0;
+        return { particulars: `Rs. ${d.toLocaleString()}`, qty, amount: round2(d * qty) };
+      });
+
+      const closingRows = [
+        { particulars: "CASH IN HAND — PHYSICAL COUNT", qty: "", amount: "", __bold: true },
+        ...denomRows,
+        { particulars: "Total", qty: "", amount: actualCash, __bold: true },
+        { particulars: "Differ", qty: "", amount: difference, __bold: true },
+        { particulars: "", qty: "", amount: "" },
+        { particulars: "Cash", qty: "", amount: expected, __bold: true },
+        { particulars: "TR", qty: "", amount: trAmt, __bold: true },
+        { particulars: "Cash In Hand", qty: "", amount: cashInHandGross, __bold: true },
+        { particulars: "", qty: "", amount: "" },
+        { particulars: "Cash In Bank", qty: "", amount: cashInBank, __bold: true },
+        { particulars: "", qty: "", amount: "" },
+        { particulars: "TOTAL", qty: "", amount: grandTotal, __bold: true },
+        ...(remarks ? [{ particulars: "", qty: "", amount: "" }, { particulars: `Remarks: ${remarks}`, qty: "", amount: "" }] : []),
+      ];
+
+      return {
+        sheets: [
+          {
+            name: "Receipt Side",
+            title: `Receipt Side — ${formatDMY(date)}`,
+            subtitle: date,
+            columns: sideCols,
+            rows: [...receiptRows, receiptTotalRow],
+          },
+          {
+            name: "Payment Side",
+            title: `Payment Side — ${formatDMY(date)}`,
+            subtitle: date,
+            columns: sideCols,
+            rows: [...paymentRows, paymentTotalRow],
+          },
+          {
+            name: "Outstanding TRs",
+            title: `Outstanding TRs — as of ${formatDMY(date)}`,
+            subtitle: "Daily Closing",
+            columns: trCols,
+            rows: [...trRows, trTotalRow],
+          },
+          {
+            name: "Closing Summary",
+            title: `Daily Closing — ${formatDMY(date)}`,
+            subtitle: "Cash Book Closing",
+            columns: closingCols,
+            rows: closingRows,
+          },
+        ],
+      };
+    })();
+  };
+
+  const exportDailyReport = async () => {
+    setExportingReport(true);
+    try {
+      const data = await buildDailyReportSheets();
+      await exportXlsxMultiSheet({
+        filename: `Daily_Closing_Report_${date}`,
+        sheets: data.sheets,
+      });
+      showToast("Daily closing report downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast("Failed to build daily closing report", "error");
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const exportDailyReportPdf = async () => {
+    setExportingReportPdf(true);
+    try {
+      const data = await buildDailyReportSheets();
+      downloadMultiSectionPdf({
+        filename: `Daily_Closing_Report_${date}`,
+        docTitle: `Daily Closing Report — ${formatDMY(date)}`,
+        sections: data.sheets.map((s) => ({ title: s.title, subtitle: s.subtitle, columns: s.columns, rows: s.rows })),
+      });
+      showToast("Daily closing PDF downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast("Failed to build daily closing PDF", "error");
+    } finally {
+      setExportingReportPdf(false);
+    }
+  };
+
   const lines = [
     { label: "Receipt Side — Cash Column Total", value: money(summary?.cashReceipts) },
     { label: "Less: Payment Side — Cash Column Total", value: `- ${money(summary?.cashBills)}` },
@@ -217,7 +367,25 @@ export default function DailyClosingTab({ onChanged, showToast }) {
 
   return (
     <>
-      <SectionCard title="Daily Closing — Physical Cash Verification">
+      <SectionCard
+        title="Daily Closing — Physical Cash Verification"
+        action={
+          <>
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel />}
+              disabled={exportingReport || exportingReportPdf}
+              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)", mr: 1 }}
+              onClick={exportDailyReport}>
+              {exportingReport ? "Building…" : "Daily Closing Report (Excel)"}
+            </Button>
+            <Button size="small" variant="outlined" startIcon={<FaFilePdf />}
+              disabled={exportingReport || exportingReportPdf}
+              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+              onClick={exportDailyReportPdf}>
+              {exportingReportPdf ? "Building…" : "Daily Closing Report (PDF)"}
+            </Button>
+          </>
+        }
+      >
         <Grid container spacing={4}>
           {/* Cash counting comes first — count the drawer before checking it against the expected total */}
           <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
