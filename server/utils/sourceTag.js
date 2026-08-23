@@ -1,25 +1,24 @@
-// Builds the fixed "BLUE FARM — BILL" / "BLUE REMOUNTS — ALLOCATION" style
-// source tags used throughout the Cash Book so every automatic entry always
-// shows exactly which software (farm) and which module (Bill / Income /
-// Allocation / Contra) it was generated from. This is computed from the
-// `farm` value that is already persisted on each row, so the tag itself is
-// also written into the database at creation time (see the `sourceTag`
-// column added to finance_bills, finance_allocations, cashbook_receipts,
-// cash_withdrawals and bank_deposits) — it is not just a screen label.
+// Builds the "Source" tag shown throughout the Cash Book / Ledger tables.
+// This used to append the module name too (e.g. "BLUE FARM — CONTRA",
+// "BLUE FARM — ALLOCATION"), but the Source column should only ever show
+// which farm/software the entry came from — so this now returns just
+// "Blue Farm" or "Blue Remounts", nothing else. The `type` argument is
+// still accepted (and still passed in by every caller) so none of the
+// call sites elsewhere in the codebase need to change, but it is no
+// longer used to build the tag.
 
 const FARM_LABELS = {
-  "Blue Farm": "BLUE FARM",
-  "Blue Remounts": "BLUE REMOUNTS",
+  "Blue Farm": "Blue Farm",
+  "Blue Remounts": "Blue Remounts",
 };
 
 function farmLabel(farm) {
   if (!farm) return "";
-  return FARM_LABELS[farm] || String(farm).trim().toUpperCase();
+  return FARM_LABELS[farm] || String(farm).trim();
 }
 
-function buildSourceTag(farm, type) {
-  const fl = farmLabel(farm);
-  return fl ? `${fl} — ${type}` : type;
+function buildSourceTag(farm /*, type — intentionally unused, see note above */) {
+  return farmLabel(farm);
 }
 
 module.exports = { farmLabel, buildSourceTag };

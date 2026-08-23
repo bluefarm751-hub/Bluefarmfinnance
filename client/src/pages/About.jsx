@@ -1,5 +1,5 @@
 import MainLayout from "../layouts/MainLayout";
-import { Box, Typography } from "@mui/material";
+import { Box, Card, Typography } from "@mui/material";
 import { GiCow, GiHorseHead } from "react-icons/gi";
 import {
   FaUserTie,
@@ -58,17 +58,20 @@ export default function About() {
 
   return (
     <MainLayout>
+      <Box sx={{ p: { xs: 1, sm: 3 } }}>
+        {/* ================= OUTER PAGE CARD ================= */}
+        <Card elevation={4} sx={{ borderRadius: 6, overflow: "hidden" }}>
       <Box
         sx={{
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          p: { xs: 1, sm: 3 },
+          p: { xs: 2, sm: 4 },
           gap: { xs: 3, sm: 4 },
         }}
       >
-        {/* ================= HERO CARD ================= */}
+        {/* ================= HERO CARD (nested) ================= */}
         <Box
           sx={{
             width: "100%",
@@ -200,6 +203,8 @@ export default function About() {
             50% { opacity: 0.5; transform: scale(1.08); }
           }
         `}</style>
+      </Box>
+        </Card>
       </Box>
     </MainLayout>
   );

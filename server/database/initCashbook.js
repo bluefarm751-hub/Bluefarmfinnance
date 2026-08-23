@@ -121,6 +121,37 @@ async function initCashbook() {
       )
     `);
 
+    // ============================================================
+    // MONTHLY CLOSINGS — a saved snapshot of one full month's Cash Book,
+    // so the whole month's picture can be reopened later from Reports
+    // without recalculating it from the daily entries again.
+    // ============================================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS monthly_closings (
+        id SERIAL PRIMARY KEY,
+        farm TEXT,
+        month INTEGER,
+        year INTEGER,
+        "fromDate" TEXT,
+        "toDate" TEXT,
+        "openingCash" NUMERIC DEFAULT 0,
+        "openingBank" NUMERIC DEFAULT 0,
+        "cashReceipts" NUMERIC DEFAULT 0,
+        "cashPayments" NUMERIC DEFAULT 0,
+        "bankReceipts" NUMERIC DEFAULT 0,
+        "bankPayments" NUMERIC DEFAULT 0,
+        "totalWithdrawn" NUMERIC DEFAULT 0,
+        "totalBankDeposited" NUMERIC DEFAULT 0,
+        "totalHoRemittance" NUMERIC DEFAULT 0,
+        "trIssued" NUMERIC DEFAULT 0,
+        "closingCash" NUMERIC DEFAULT 0,
+        "closingBank" NUMERIC DEFAULT 0,
+        summary TEXT,
+        remarks TEXT,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await client.query("COMMIT");
 
     console.log("======================================");

@@ -73,13 +73,15 @@ export default function Sidebar() {
     { to: "/cashbook", state: { tab: 3 }, icon: <FaExchangeAlt />, text: "Bank Deposit", locked: !isAdmin },
     { to: "/cashbook", state: { tab: 4 }, icon: <FaUniversity />, text: "HQ Remittance", locked: !isAdmin },
     { to: "/cashbook", state: { tab: 5 }, icon: <FaBalanceScale />, text: "Daily Closing", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 6 }, icon: <FaBook />, text: "Cash Reports", locked: !isAdmin },
+    { to: "/cashbook", state: { tab: 6 }, icon: <FaFileInvoiceDollar />, text: "Monthly Closing", locked: !isAdmin },
+    { to: "/cashbook", state: { tab: 7 }, icon: <FaBook />, text: "Reports", locked: !isAdmin },
   ];
 
   const ledgerLinks = [
     { to: "/ledger/general", icon: <FaBook />, text: "General Ledger", locked: !isAdmin },
     { to: "/ledger/party", icon: <FaBalanceScale />, text: "Party Ledger", locked: !isAdmin },
     { to: "/ledger/add-entry", icon: <FaEdit />, text: "Add Ledger Entry", locked: !isAdmin },
+    { to: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, text: "Balance Sheet", locked: !isAdmin },
     { to: "/ledger/parties", icon: <FaUsers />, text: "Manage Parties", locked: !isAdmin },
   ];
 

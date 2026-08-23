@@ -42,7 +42,6 @@ export default function FarmSourceBadge({ type }) {
         </Typography>
         <Typography sx={{ fontSize: 19, fontWeight: 900, letterSpacing: 0.5, lineHeight: 1.3 }}>
           {label}
-          {type ? ` — ${type}` : ""}
         </Typography>
       </Box>
 

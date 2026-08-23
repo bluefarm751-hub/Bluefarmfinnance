@@ -42,4 +42,13 @@ export const saveClosing = (data) =>
   axios.post(`${API}/closings`, { ...data, farm: data.farm || localStorage.getItem("farm") });
 export const deleteClosing = (id) => axios.delete(`${API}/closings/${id}`);
 
+// ---------- MONTHLY CLOSING ----------
+export const getMonthlySummary = (month, year) =>
+  axios.get(`${API}/monthly-summary`, { params: { month, year } });
+export const getMonthlyClosings = (params) => axios.get(`${API}/monthly-closings`, { params });
+export const getMonthlyClosing = (id) => axios.get(`${API}/monthly-closings/${id}`);
+export const saveMonthlyClosing = (data) =>
+  axios.post(`${API}/monthly-closings`, { ...data, farm: data.farm || localStorage.getItem("farm") });
+export const deleteMonthlyClosing = (id) => axios.delete(`${API}/monthly-closings/${id}`);
+
 export const getStatement = (params) => axios.get(`${API}/statement`, { params });

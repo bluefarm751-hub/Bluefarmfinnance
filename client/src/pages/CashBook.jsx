@@ -9,6 +9,7 @@ import WithdrawalTab from "../components/CashBook/WithdrawalTab";
 import BankDepositTab from "../components/CashBook/BankDepositTab";
 import HORemittanceTab from "../components/CashBook/HORemittanceTab";
 import DailyClosingTab from "../components/CashBook/DailyClosingTab";
+import MonthlyClosingTab from "../components/CashBook/MonthlyClosingTab";
 import ReportsTab from "../components/CashBook/ReportsTab";
 import { money } from "../components/CashBook/ui";
 import { getCashSummary } from "../api/cashbookApi";
@@ -22,7 +23,8 @@ const TABS = [
   "Bank Deposit",
   "HQ Remittance",
   "Daily Closing",
-  "Cash Reports",
+  "Monthly Closing",
+  "Reports",
 ];
 
 export default function CashBook() {
@@ -218,7 +220,8 @@ export default function CashBook() {
         {tab === 3 && <BankDepositTab summary={summary} onChanged={refresh} showToast={showToast} />}
         {tab === 4 && <HORemittanceTab summary={summary} onChanged={refresh} showToast={showToast} />}
         {tab === 5 && <DailyClosingTab onChanged={refresh} showToast={showToast} />}
-        {tab === 6 && <ReportsTab />}
+        {tab === 6 && <MonthlyClosingTab onChanged={refresh} showToast={showToast} />}
+        {tab === 7 && <ReportsTab />}
       </Box>
       {ToastUI}
     </MainLayout>

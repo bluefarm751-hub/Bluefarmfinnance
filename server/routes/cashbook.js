@@ -2097,6 +2097,285 @@ router.delete(
 );
 
 // ============================================================
+// MONTHLY CLOSING — helper to compute one calendar month's Cash Book
+// picture. Reuses the same cumulative balances() snapshots as the Daily
+// Closing above (balances "as of" the day before the month starts, and
+// "as of" the last day of the month) and takes the difference, so the
+// monthly figures always agree exactly with the daily ones.
+// ============================================================
+
+function monthRange(month, year) {
+    const m = Number(month);
+    const y = Number(year);
+
+    const fromDate =
+        `${y}-${String(m).padStart(2, "0")}-01`;
+
+    const lastDay =
+        new Date(y, m, 0).getDate();
+
+    const toDate =
+        `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
+    const prevDayDate =
+        new Date(y, m - 1, 0);
+
+    const dayBefore =
+        prevDayDate.toISOString().slice(0, 10);
+
+    return { fromDate, toDate, dayBefore };
+}
+
+async function computeMonthlySummary(month, year) {
+    const { fromDate, toDate, dayBefore } = monthRange(month, year);
+
+    const opening = await balances(dayBefore);
+    const closing = await balances(toDate);
+
+    return {
+        month: Number(month),
+        year: Number(year),
+        fromDate,
+        toDate,
+
+        openingCash: opening.cashInHand,
+        openingBank: opening.cashInBank,
+
+        cashReceipts: round2(closing.receiptCash - opening.receiptCash),
+        cashPayments: round2(closing.paymentCash - opening.paymentCash),
+        bankReceipts: round2(closing.receiptBank - opening.receiptBank),
+        bankPayments: round2(closing.paymentBank - opening.paymentBank),
+        totalWithdrawn: round2(closing.totalWithdrawn - opening.totalWithdrawn),
+        totalBankDeposited: round2(closing.totalBankDeposited - opening.totalBankDeposited),
+        totalHoRemittance: round2(closing.totalHoRemitted - opening.totalHoRemitted),
+        trIssued: round2(closing.trIssued - opening.trIssued),
+
+        closingCash: closing.cashInHand,
+        closingBank: closing.cashInBank,
+        closingTotal: closing.totalBalance,
+    };
+}
+
+// ============================================================
+// MONTHLY CLOSING SUMMARY (preview — not saved yet)
+// ============================================================
+
+router.get("/monthly-summary", async (req, res) => {
+
+    try {
+
+        const { month, year } = req.query;
+
+        if (!month || !year) {
+            return res.status(400).json({
+                success: false,
+                message: "month and year are required",
+            });
+        }
+
+        const summary = await computeMonthlySummary(month, year);
+
+        res.json(summary);
+
+    } catch (error) {
+
+        console.error("MONTHLY SUMMARY ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+// ============================================================
+// GET SAVED MONTHLY CLOSINGS
+// ============================================================
+
+router.get("/monthly-closings", async (req, res) => {
+
+    try {
+
+        const { farm } = req.query;
+
+        let rows = await all(`
+            SELECT * FROM monthly_closings
+            ORDER BY year DESC, month DESC, id DESC
+        `);
+
+        if (farm) {
+            rows = rows.filter((r) => String(r.farm || "") === String(farm));
+        }
+
+        res.json(rows);
+
+    } catch (error) {
+
+        console.error("GET MONTHLY CLOSINGS ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+// ============================================================
+// GET ONE SAVED MONTHLY CLOSING (full snapshot)
+// ============================================================
+
+router.get("/monthly-closings/:id", async (req, res) => {
+
+    try {
+
+        const rows = await all(
+            `SELECT * FROM monthly_closings WHERE id=$1`,
+            [req.params.id]
+        );
+
+        if (!rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Monthly closing not found.",
+            });
+        }
+
+        const row = rows[0];
+        row.summary = row.summary ? JSON.parse(row.summary) : null;
+
+        res.json(row);
+
+    } catch (error) {
+
+        console.error("GET MONTHLY CLOSING ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+// ============================================================
+// SAVE MONTHLY CLOSING — recomputes the summary server-side (never
+// trusts numbers from the browser) and stores it as a fixed snapshot,
+// so the saved month can be reopened later from Reports exactly as it
+// was at save time, even if entries are added afterwards.
+// ============================================================
+
+router.post("/monthly-closings", async (req, res) => {
+
+    try {
+
+        const { farm, month, year, remarks } = req.body;
+
+        if (!month || !year) {
+            return res.status(400).json({
+                success: false,
+                message: "month and year are required",
+            });
+        }
+
+        const s = await computeMonthlySummary(month, year);
+
+        await db.query(
+            `DELETE FROM monthly_closings WHERE farm=$1 AND month=$2 AND year=$3`,
+            [farm || null, s.month, s.year]
+        );
+
+        const result = await db.query(
+            `
+            INSERT INTO monthly_closings
+            (
+                farm, month, year, "fromDate", "toDate",
+                "openingCash", "openingBank",
+                "cashReceipts", "cashPayments",
+                "bankReceipts", "bankPayments",
+                "totalWithdrawn", "totalBankDeposited",
+                "totalHoRemittance", "trIssued",
+                "closingCash", "closingBank",
+                summary, remarks
+            )
+            VALUES
+            (
+                $1,$2,$3,$4,$5,
+                $6,$7,
+                $8,$9,
+                $10,$11,
+                $12,$13,
+                $14,$15,
+                $16,$17,
+                $18,$19
+            )
+            RETURNING id
+            `,
+            [
+                farm || null, s.month, s.year, s.fromDate, s.toDate,
+                s.openingCash, s.openingBank,
+                s.cashReceipts, s.cashPayments,
+                s.bankReceipts, s.bankPayments,
+                s.totalWithdrawn, s.totalBankDeposited,
+                s.totalHoRemittance, s.trIssued,
+                s.closingCash, s.closingBank,
+                JSON.stringify(s), remarks || "",
+            ]
+        );
+
+        res.json({
+            success: true,
+            message: `Monthly closing saved for ${s.month}/${s.year}`,
+            id: result.rows[0].id,
+            summary: s,
+        });
+
+    } catch (error) {
+
+        console.error("SAVE MONTHLY CLOSING ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+// ============================================================
+// DELETE MONTHLY CLOSING
+// ============================================================
+
+router.delete("/monthly-closings/:id", async (req, res) => {
+
+    try {
+
+        const result = await db.query(
+            `DELETE FROM monthly_closings WHERE id=$1`,
+            [req.params.id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Monthly closing not found.",
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Monthly closing deleted successfully.",
+        });
+
+    } catch (error) {
+
+        console.error("DELETE MONTHLY CLOSING ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+// ============================================================
 // CASH BOOK STATEMENT
 // ============================================================
 

@@ -142,7 +142,7 @@ export default function AddContingentBillFromExisting() {
     const billRows = selectedBills.map((b) => ({
       billNo: b.sNo != null ? String(b.sNo) : "",
       billDate: b.billDate || "",
-      description: [b.item, b.contractorName].filter(Boolean).join(" — ") || (b.headName || "Bill"),
+      description: b.item || b.headName || "Bill",
       amount: String(b.amount ?? ""),
     }));
 
@@ -213,7 +213,7 @@ export default function AddContingentBillFromExisting() {
                     <TableCell padding="checkbox" />
                     <TableCell>S No</TableCell>
                     <TableCell>Head</TableCell>
-                    <TableCell>Item / Contractor</TableCell>
+                    <TableCell>Item</TableCell>
                     <TableCell>Date</TableCell>
                     <TableCell align="right">Amount</TableCell>
                   </TableRow>
@@ -229,7 +229,7 @@ export default function AddContingentBillFromExisting() {
                       </TableCell>
                       <TableCell>{b.sNo}</TableCell>
                       <TableCell>{b.headName || "—"}</TableCell>
-                      <TableCell>{[b.item, b.contractorName].filter(Boolean).join(" — ") || "—"}</TableCell>
+                      <TableCell>{b.item || "—"}</TableCell>
                       <TableCell>{b.billDate || "—"}</TableCell>
                       <TableCell align="right">{fmtMoney(b.amount)}</TableCell>
                     </TableRow>

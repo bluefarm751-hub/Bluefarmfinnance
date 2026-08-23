@@ -120,6 +120,7 @@ function App() {
       <Route path="/ledger/party" element={pAdmin(<PartyLedger />)} />
       <Route path="/ledger/add-entry" element={pAdmin(<AddLedgerEntry />)} />
       <Route path="/ledger/parties" element={pAdmin(<ManageParties />)} />
+      <Route path="/ledger/balance-sheet" element={pAdmin(<ComingSoon title="Balance Sheet" />)} />
 
       {/* Tab 9: About */}
       <Route path="/about" element={p(<About />)} />
