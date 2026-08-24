@@ -30,6 +30,12 @@ import LockedDialog from "./LockedDialog";
 import blueFarmLogo from "../assets/blue-farm-logo.png";
 import blueRemountsLogo from "../assets/blue-remounts-logo.png";
 
+// Single shared hover colour for EVERY sidebar tab (group headers, About,
+// and individual links) so hovering anywhere in the sidebar behaves the
+// same way — a light golden highlight — instead of some tabs going blue
+// and others not reacting to hover at all.
+const NAV_HOVER_GOLD = "rgba(212,175,55,0.32)";
+
 export default function Sidebar() {
   const [lockedTab, setLockedTab] = useState(null);
   const location = useLocation();
@@ -250,7 +256,7 @@ function GroupHeader({ icon, title, to, open, onToggle }) {
     fontWeight: 700,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    background: hover ? "rgba(10,143,220,0.35)" : "rgba(10,143,220,0.18)",
+    background: hover ? NAV_HOVER_GOLD : "rgba(10,143,220,0.18)",
     borderLeft: `3px solid ${isActive ? brand.gold : "transparent"}`,
     border: "1px solid rgba(255,255,255,0.14)",
     borderLeftWidth: 3,
@@ -322,7 +328,7 @@ function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
           fontSize: 13.5,
           color: "rgba(255,255,255,0.55)",
           cursor: "pointer",
-          background: hover ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.14)",
+          background: hover ? NAV_HOVER_GOLD : "rgba(0,0,0,0.14)",
           transition: "0.25s",
         }}
       >
@@ -339,6 +345,8 @@ function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
     <NavLink
       to={to}
       state={state}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={({ isActive: navActive }) => {
         const isActive = tabActive === null ? navActive : tabActive;
         return {
@@ -352,6 +360,8 @@ function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
         textDecoration: "none",
         background: isActive
           ? "linear-gradient(90deg, #d9b64a 0%, #b8912c 100%)"
+          : hover
+          ? NAV_HOVER_GOLD
           : "rgba(10,143,220,0.16)",
         color: isActive ? "#12283f" : "#e8eef7",
         borderLeft: isActive ? `3px solid ${brand.gold}` : "3px solid transparent",
@@ -387,7 +397,7 @@ function MainTabLink({ to, icon, title }) {
         fontWeight: 700,
         letterSpacing: 0.4,
         textTransform: "uppercase",
-        background: hover ? "rgba(10,143,220,0.35)" : "rgba(10,143,220,0.18)",
+        background: hover ? NAV_HOVER_GOLD : "rgba(10,143,220,0.18)",
         border: "1px solid rgba(255,255,255,0.14)",
         borderLeftWidth: 3,
         borderLeftColor: isActive ? brand.gold : "transparent",

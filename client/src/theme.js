@@ -127,7 +127,9 @@ export const dataGridThemeSx = {
   "& .MuiDataGrid-row": { borderBottom: "1px solid rgba(8,33,63,0.10)" },
   "& .MuiDataGrid-row.row-even, & .MuiDataGrid-row.row-even .MuiDataGrid-cell": { background: brand.rowBlue, color: brand.rowText },
   "& .MuiDataGrid-row.row-odd, & .MuiDataGrid-row.row-odd .MuiDataGrid-cell": { background: brand.rowWhiteGradient, color: brand.rowTextOnWhite },
-  "& .MuiDataGrid-row:hover, & .MuiDataGrid-row:hover .MuiDataGrid-cell": { background: `${brand.blueDeep} !important`, color: "#fff" },
+  // Row hover — a light golden highlight (matching the rest of the app's
+  // gold accent) instead of the dark blue that used to swallow the row.
+  "& .MuiDataGrid-row:hover, & .MuiDataGrid-row:hover .MuiDataGrid-cell": { background: `${brand.goldLight} !important`, color: `${brand.rowText} !important` },
   "& .MuiDataGrid-footerContainer": { background: brand.panel },
 };
 

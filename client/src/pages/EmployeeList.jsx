@@ -104,20 +104,44 @@ export default function EmployeeList() {
       width: 150,
       sortable: false,
       renderCell: (params) => (
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.5, width: "100%", height: "100%" }}>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0.7, width: "100%", height: "100%" }}>
           <Tooltip title="View">
-            <IconButton color="success" size="small" onClick={() => navigate(`/employees/view/${params.row.id}`)}>
-              <VisibilityIcon fontSize="small" />
+            <IconButton
+              size="small"
+              onClick={() => navigate(`/employees/view/${params.row.id}`)}
+              sx={{
+                width: 30, height: 30,
+                background: brand.success, color: "#fff",
+                "&:hover": { background: "#166a44" },
+              }}
+            >
+              <VisibilityIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Edit">
-            <IconButton color="primary" size="small" onClick={() => navigate(`/employees/edit/${params.row.id}`)}>
-              <EditIcon fontSize="small" />
+            <IconButton
+              size="small"
+              onClick={() => navigate(`/employees/edit/${params.row.id}`)}
+              sx={{
+                width: 30, height: 30,
+                background: brand.blueDeep, color: "#fff",
+                "&:hover": { background: brand.navy },
+              }}
+            >
+              <EditIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
-            <IconButton color="error" size="small" onClick={() => setConfirmId(params.row.id)}>
-              <DeleteIcon fontSize="small" />
+            <IconButton
+              size="small"
+              onClick={() => setConfirmId(params.row.id)}
+              sx={{
+                width: 30, height: 30,
+                background: brand.danger, color: "#fff",
+                "&:hover": { background: "#8e281c" },
+              }}
+            >
+              <DeleteIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
         </Box>

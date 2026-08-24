@@ -199,40 +199,53 @@ export default function UndoSalary() {
                       <Typography color="text.secondary" sx={{ py: 2 }}>No employees left in this batch.</Typography>
                     )}
 
-                    {!loadingEmployees && batchEmployees.map((emp) => (
-                      <Box
-                        key={emp.id}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "nowrap",
-                          gap: 1,
-                          py: 1.2,
-                          borderBottom: "1px solid #EEF2F8",
-                        }}
-                      >
-                        <Box sx={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
-                          <Typography fontWeight={700} noWrap title={emp.employeeName}>
-                            {emp.employeeName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
-                            {emp.employeeNo} • Net Salary: Rs. {Number(emp.netSalary || 0).toLocaleString()}
-                          </Typography>
-                        </Box>
-
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<UndoIcon fontSize="small" />}
-                          onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}
-                          sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                      {!loadingEmployees && batchEmployees.map((emp, i) => (
+                        <Box
+                          key={emp.id}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "nowrap",
+                            gap: 1,
+                            px: 1.5,
+                            py: 1.2,
+                            borderRadius: 2,
+                            background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue,
+                          }}
                         >
-                          Undo
-                        </Button>
-                      </Box>
-                    ))}
+                          <Box sx={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
+                            <Typography
+                              fontWeight={700}
+                              noWrap
+                              title={emp.employeeName}
+                              sx={{ color: i % 2 ? brand.rowTextOnWhite : brand.rowText }}
+                            >
+                              {emp.employeeName}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              noWrap
+                              sx={{ display: "block", color: i % 2 ? brand.rowTextOnWhite : brand.rowText, opacity: 0.75 }}
+                            >
+                              {emp.employeeNo} • Net Salary: Rs. {Number(emp.netSalary || 0).toLocaleString()}
+                            </Typography>
+                          </Box>
+
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<UndoIcon fontSize="small" />}
+                            onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}
+                            sx={{ flexShrink: 0, whiteSpace: "nowrap", background: "rgba(255,255,255,0.6)" }}
+                          >
+                            Undo
+                          </Button>
+                        </Box>
+                      ))}
+                    </Box>
                   </Collapse>
                 </CardContent>
               </Card>
