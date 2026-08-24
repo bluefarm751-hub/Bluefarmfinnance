@@ -35,7 +35,7 @@ import {
   deleteAllocation,
 } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
-import { brand, gradients } from "../theme";
+import { brand, gradients, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 export default function AddAllocation() {
   const navigate = useNavigate();
@@ -321,7 +321,7 @@ export default function AddAllocation() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ background: brand.panel }}>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell sx={{ fontWeight: 800 }}>#</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Head</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Amount (Rs.)</TableCell>
@@ -340,7 +340,7 @@ export default function AddAllocation() {
                     </TableRow>
                   )}
                   {allocations.map((a, i) => (
-                    <TableRow key={a.id} hover>
+                    <TableRow key={a.id} hover sx={tableBodyRowSx(i)}>
                       <TableCell>{allocations.length - i}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{a.headName || "—"}</TableCell>
                       <TableCell>{Number(a.amount || 0).toLocaleString()}</TableCell>

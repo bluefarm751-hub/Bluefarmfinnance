@@ -55,6 +55,44 @@ export const gradients = {
 
 export const shadowCard = "0 20px 50px rgba(8, 33, 63, 0.35)";
 
+// ---- Shared MUI <TableRow> styling — keeps every data table across the
+// app (AddAllocation, BillReport, EditBill, EditHead, ReportAllocation,
+// AddContingentBillFromExisting, etc.) matching the Cash Book table look:
+// dark blue header + gold underline, alternating rowBlue / rowWhiteGradient body rows.
+export const tableHeadRowSx = {
+  background: brand.tableCardBg,
+  "& .MuiTableCell-root": {
+    color: brand.tableCardHeaderText,
+    fontWeight: 800,
+    borderBottom: `2px solid ${brand.gold}`,
+  },
+};
+
+// Pass the row index; spreads onto a MUI <TableRow sx={{...}}>.
+export const tableBodyRowSx = (i) => ({
+  background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue,
+  "& .MuiTableCell-root": {
+    color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
+    borderBottom: "none",
+  },
+});
+
+// MUI DataGrid equivalent — spread into the DataGrid's sx prop.
+export const dataGridThemeSx = {
+  border: 0,
+  "& .MuiDataGrid-columnHeaders": {
+    background: brand.tableCardBg,
+    color: brand.tableCardHeaderText,
+    borderBottom: `2px solid ${brand.gold}`,
+  },
+  "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 800 },
+  "& .MuiDataGrid-cell": { borderBottom: "none" },
+  "& .MuiDataGrid-row.row-even": { background: brand.rowBlue, color: brand.rowText },
+  "& .MuiDataGrid-row.row-odd": { background: brand.rowWhiteGradient, color: brand.rowTextOnWhite },
+  "& .MuiDataGrid-row:hover": { background: brand.blueDeep, color: "#fff" },
+  "& .MuiDataGrid-footerContainer": { background: brand.panel },
+};
+
 // Fine diagonal hairline texture — used behind hero/dark panels for a
 // premium, engraved-paper feel instead of a flat gradient.
 export const diagonalPattern =

@@ -24,7 +24,7 @@ import MainLayout from "../layouts/MainLayout";
 import { getFinanceHeads, getAllocations } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
 import { exportExcel } from "../utils/exportExcel";
-import { brand } from "../theme";
+import { brand, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 export default function ReportAllocation() {
   const { showToast, ToastUI } = useToast();
@@ -163,7 +163,7 @@ export default function ReportAllocation() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ background: brand.panel }}>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell sx={{ fontWeight: 800 }}>S.No</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Head Name</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Amount (Rs.)</TableCell>
@@ -181,7 +181,7 @@ export default function ReportAllocation() {
                     </TableRow>
                   )}
                   {allocations.map((a, i) => (
-                    <TableRow key={a.id} hover>
+                    <TableRow key={a.id} hover sx={tableBodyRowSx(i)}>
                       <TableCell>{allocations.length - i}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{a.headName || "—"}</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: "#7A1FA2" }}>

@@ -26,7 +26,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { brand, gradients, shadowCard } from "../theme";
+import { brand, gradients, shadowCard, dataGridThemeSx } from "../theme";
 
 export default function EmployeeList() {
   const navigate = useNavigate();
@@ -188,7 +188,8 @@ export default function EmployeeList() {
                 disableRowSelectionOnClick
                 pageSizeOptions={[10, 20, 50]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                sx={{ width: "100%", border: 0 }}
+                getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? "row-even" : "row-odd")}
+                sx={{ width: "100%", ...dataGridThemeSx }}
               />
             </Box>
           </CardContent>

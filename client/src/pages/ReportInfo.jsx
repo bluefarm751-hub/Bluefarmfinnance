@@ -10,7 +10,7 @@ import { Box, Card, CardContent, Typography, Button } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import { brand, gradients, shadowCard } from "../theme";
+import { brand, gradients, shadowCard, dataGridThemeSx } from "../theme";
 
 const REPORT_COLUMNS = [
   { key: "__sno", label: "S No", width: 8 },
@@ -113,7 +113,8 @@ export default function ReportInfo() {
                 getRowId={(r) => r.id}
                 pageSizeOptions={[10, 25, 50]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                sx={{ border: 0 }}
+                getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? "row-even" : "row-odd")}
+                sx={dataGridThemeSx}
               />
             </Box>
           </CardContent>

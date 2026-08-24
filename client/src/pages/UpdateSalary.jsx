@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import { brand, gradients, shadowCard } from "../theme";
+import { brand, gradients, shadowCard, dataGridThemeSx } from "../theme";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -394,7 +394,8 @@ export default function UpdateSalary() {
                 columns={columns}
                 pageSizeOptions={[10, 25]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                sx={{ border: 0, "& .MuiDataGrid-cell": { background: "#f7f9fc" } }}
+                getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? "row-even" : "row-odd")}
+                sx={dataGridThemeSx}
                 rowHeight={64}
               />
             </Box>

@@ -31,7 +31,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import DateFieldDMY from "../components/DateFieldDMY";
 import { getFinanceHeads, updateFinanceHead, deleteFinanceHead } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
-import { brand, gradients } from "../theme";
+import { brand, gradients, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 const EMPTY = {
   headName: "",
@@ -146,7 +146,7 @@ export default function EditHead() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ background: brand.panel }}>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell sx={{ fontWeight: 800 }}>S No</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Head Name</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Amount</TableCell>
@@ -166,7 +166,7 @@ export default function EditHead() {
                     </TableRow>
                   )}
                   {heads.map((h, i) => (
-                    <TableRow key={h.id} hover>
+                    <TableRow key={h.id} hover sx={tableBodyRowSx(i)}>
                       <TableCell>{i + 1}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{h.headName}</TableCell>
                       <TableCell>Rs. {Number(h.amount || 0).toLocaleString()}</TableCell>

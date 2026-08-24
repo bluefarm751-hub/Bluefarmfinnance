@@ -28,7 +28,7 @@ import MainLayout from "../layouts/MainLayout";
 import { getFinanceHeads, getBills } from "../api/financeApi";
 import { getHoRemittances } from "../api/cashbookApi";
 import { useToast } from "../utils/useToast";
-import { brand, gradients } from "../theme";
+import { brand, gradients, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 function fmtMoney(n) {
   return `Rs. ${Number(n || 0).toLocaleString()}`;
@@ -209,7 +209,7 @@ export default function AddContingentBillFromExisting() {
             <Box sx={{ overflowX: "auto" }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell padding="checkbox" />
                     <TableCell>S No</TableCell>
                     <TableCell>Head</TableCell>
@@ -222,8 +222,8 @@ export default function AddContingentBillFromExisting() {
                   {filteredBills.length === 0 && !loading && (
                     <TableRow><TableCell colSpan={6} align="center" sx={{ color: brand.slate }}>No bills found</TableCell></TableRow>
                   )}
-                  {filteredBills.map((b) => (
-                    <TableRow key={b.id} hover selected={selectedBillIds.has(b.id)}>
+                  {filteredBills.map((b, i) => (
+                    <TableRow key={b.id} hover selected={selectedBillIds.has(b.id)} sx={tableBodyRowSx(i)}>
                       <TableCell padding="checkbox">
                         <Checkbox checked={selectedBillIds.has(b.id)} onChange={() => toggleBill(b.id)} />
                       </TableCell>
@@ -254,7 +254,7 @@ export default function AddContingentBillFromExisting() {
             <Box sx={{ overflowX: "auto" }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell padding="checkbox" />
                     <TableCell>Voucher No</TableCell>
                     <TableCell>Bank Ref / UTR</TableCell>
@@ -268,8 +268,8 @@ export default function AddContingentBillFromExisting() {
                   {remittances.length === 0 && !loading && (
                     <TableRow><TableCell colSpan={7} align="center" sx={{ color: brand.slate }}>No HQ remittances found</TableCell></TableRow>
                   )}
-                  {remittances.map((r) => (
-                    <TableRow key={r.id} hover selected={selectedRemitIds.has(r.id)}>
+                  {remittances.map((r, i) => (
+                    <TableRow key={r.id} hover selected={selectedRemitIds.has(r.id)} sx={tableBodyRowSx(i)}>
                       <TableCell padding="checkbox">
                         <Checkbox checked={selectedRemitIds.has(r.id)} onChange={() => toggleRemit(r.id)} />
                       </TableCell>

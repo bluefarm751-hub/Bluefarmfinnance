@@ -25,7 +25,7 @@ import { getBills, getFinanceHeads } from "../api/financeApi";
 import DateFieldDMY from "../components/DateFieldDMY";
 import { useToast } from "../utils/useToast";
 import { exportExcel } from "../utils/exportExcel";
-import { brand, gradients } from "../theme";
+import { brand, gradients, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 export default function BillReport() {
   const { showToast, ToastUI } = useToast();
@@ -206,7 +206,7 @@ export default function BillReport() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ background: brand.panel }}>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell sx={{ fontWeight: 800 }}>S No</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Date</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Head</TableCell>
@@ -227,8 +227,8 @@ export default function BillReport() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {filtered.map((b) => (
-                    <TableRow key={b.id} hover>
+                  {filtered.map((b, i) => (
+                    <TableRow key={b.id} hover sx={tableBodyRowSx(i)}>
                       <TableCell>{b.sNo}</TableCell>
                       <TableCell>{b.billDate || "—"}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{b.headName || "—"}</TableCell>

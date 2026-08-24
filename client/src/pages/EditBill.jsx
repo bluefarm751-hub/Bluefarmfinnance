@@ -39,7 +39,7 @@ import {
   deleteBill,
 } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
-import { brand, gradients } from "../theme";
+import { brand, gradients, tableHeadRowSx, tableBodyRowSx } from "../theme";
 import DateFieldDMY from "../components/DateFieldDMY";
 
 export default function EditBill() {
@@ -224,7 +224,7 @@ export default function EditBill() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ background: brand.panel }}>
+                  <TableRow sx={tableHeadRowSx}>
                     <TableCell sx={{ fontWeight: 800 }}>S No</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Date</TableCell>
                     <TableCell sx={{ fontWeight: 800 }}>Head</TableCell>
@@ -246,8 +246,8 @@ export default function EditBill() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {bills.map((b) => (
-                    <TableRow key={b.id} hover>
+                  {bills.map((b, i) => (
+                    <TableRow key={b.id} hover sx={tableBodyRowSx(i)}>
                       <TableCell>{b.sNo}</TableCell>
                       <TableCell>{b.billDate || "—"}</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>{b.headName || "—"}</TableCell>

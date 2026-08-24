@@ -8,7 +8,7 @@ import { generateSalary, checkBatchExists, getActiveEmployees } from "../api/pay
 import { Box, Card, CardContent, Typography, Button, Chip, Grid } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import BoltIcon from "@mui/icons-material/Bolt";
-import { brand, gradients, shadowCard } from "../theme";
+import { brand, gradients, shadowCard, dataGridThemeSx } from "../theme";
 
 export default function GenerateSalary() {
   const navigate = useNavigate();
@@ -192,7 +192,8 @@ export default function GenerateSalary() {
                     getRowId={(r) => r.id}
                     pageSizeOptions={[10, 25]}
                     initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                    sx={{ border: 0 }}
+                    getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? "row-even" : "row-odd")}
+                    sx={dataGridThemeSx}
                     disableRowSelectionOnClick
                     isCellEditable={() => false}
                   />
