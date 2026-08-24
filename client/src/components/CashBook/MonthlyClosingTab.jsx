@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography, IconButton, Collapse } from "@mui/material";
-import { FaTrashAlt, FaFileExcel, FaFilePdf, FaPrint, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTrashAlt, FaFileExcel, FaFilePdf, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { SectionCard, DataTable, money, signedMoney } from "./ui";
 import {
   getMonthlySummary,
@@ -10,14 +10,9 @@ import {
   getReceipts,
   getPayments,
   getTRs,
-  getClosingSummary,
-  getCashSummary,
-  getClosings,
 } from "../../api/cashbookApi";
-import { exportExcel } from "../../utils/exportExcel";
 import { exportXlsxMultiSheet } from "../../utils/xlsxWriter";
 import { downloadMultiSectionPdf } from "../../utils/multiSectionPdf";
-import { printDocument } from "../../utils/print";
 import { brand } from "../../theme";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -45,10 +40,16 @@ const trCols = [
   { key: "status", label: "Status", width: 14 },
 ];
 
+const closingCols = [
+  { key: "particulars", label: "Particulars", width: 30 },
+  { key: "qty", label: "Qty", width: 10 },
+  { key: "amount", label: "Amount", width: 16 },
+];
+
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 // Same denomination list as the Daily Closing tab, so the physical cash
-// count block on the Closing Summary sheet matches it note-for-note.
+// count block here matches it note-for-note.
 const NOTES = [5000, 1000, 500, 100, 50, 20, 10];
 const COINS = [5, 2, 1];
 const DENOMS = [...NOTES, ...COINS];
@@ -59,7 +60,7 @@ const MONTHS = [
 ];
 
 // Same status colors as the Daily Closing tab, so the difference badge
-// shown here (pulled from that day's saved Daily Closing) matches it.
+// shown here matches it.
 const STATUS_STYLE = {
   Balanced: { bg: "linear-gradient(135deg,#2FBF71,#1B8A50)", label: "BALANCED" },
   Excess: { bg: "linear-gradient(135deg,#E9B949,#B8860B)", label: "EXCESS CASH" },
@@ -74,73 +75,29 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  // Physical cash count for the month's last date, pulled from that date's
-  // saved Daily Closing — shown on this main page the same way Daily
-  // Closing shows its own count, per request.
-  const [closingSnapshot, setClosingSnapshot] = useState(null);
+
+  // Physical cash count for the month — entered directly here, the same
+  // way Daily Closing counts its drawer. Actual Cash Counted below adds
+  // itself up as the quantities are typed in.
+  const [counts, setCounts] = useState({});
 
   const [history, setHistory] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportingRowId, setExportingRowId] = useState(null);
 
   const loadPreview = async () => {
     setLoading(true);
     try {
       const res = await getMonthlySummary(month, year);
       setPreview(res.data);
-      loadClosingSnapshot(res.data?.toDate);
     } catch (e) {
       console.log(e);
       showToast?.("Failed to load monthly summary", "error");
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Same "physical count vs expected" numbers used in the Closing Summary
-  // sheet of the Excel/PDF export, but loaded up-front so they can also be
-  // shown directly on this page, matching how Daily Closing shows its count.
-  const loadClosingSnapshot = async (toDate) => {
-    if (!toDate) { setClosingSnapshot(null); return; }
-    try {
-      const [closingSummaryRes, bankInfoRes, savedClosingsRes] = await Promise.all([
-        getClosingSummary(toDate),
-        getCashSummary(toDate),
-        getClosings({ from: toDate, to: toDate }),
-      ]);
-      const cs = closingSummaryRes.data || {};
-      const bankInfo = bankInfoRes.data || {};
-      const savedClosing = (savedClosingsRes.data || [])
-        .filter((r) => String(r.closingDate).slice(0, 10) === toDate)
-        .sort((a, b) => b.id - a.id)[0] || null;
-
-      const expected = round2(cs.expectedCash);
-      const trAmt = round2(cs.trIssued);
-      const cashInBank = round2(bankInfo.cashInBank);
-      const cashInHandGross = round2(expected + trAmt);
-      const grandTotal = round2(bankInfo.totalBalance ?? cashInHandGross + cashInBank);
-
-      let counts = {};
-      let actualCash = null;
-      let difference = null;
-      let status = null;
-      if (savedClosing) {
-        try { counts = JSON.parse(savedClosing.denominations || "{}"); } catch { counts = {}; }
-        actualCash = round2(savedClosing.actualCash);
-        difference = round2(savedClosing.difference);
-        status = difference === 0 ? "Balanced" : difference > 0 ? "Excess" : "Shortage";
-      }
-
-      setClosingSnapshot({
-        toDate, counts, actualCash, difference, status,
-        expected, trAmt, cashInHandGross, cashInBank, grandTotal,
-        hasSavedClosing: !!savedClosing,
-      });
-    } catch (e) {
-      console.log(e);
-      setClosingSnapshot(null);
     }
   };
 
@@ -151,33 +108,44 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     } catch (e) { console.log(e); }
   };
 
-  useEffect(() => { loadPreview(); /* eslint-disable-next-line */ }, [month, year]);
+  useEffect(() => { loadPreview(); setCounts({}); /* eslint-disable-next-line */ }, [month, year]);
   useEffect(() => { loadHistory(); }, []);
 
-  // Builds the shared data for the 4-section "Monthly Closing Main Report":
-  //   1. Receipt Side  — every receipt entry for the month
-  //   2. Payment Side  — every payment entry for the month
-  //   3. Outstanding TRs — Temporary Receipts still not cleared, as of month end
-  //   4. Closing Summary — same page/formula as Daily Closing, run as of the
-  //      month's last date: physical cash count (denominations), Cash,
-  //      TR, Cash In Hand, Cash In Bank, TOTAL — using the Daily Closing
-  //      saved for that date if one exists.
-  // Used by both the Excel (multi-sheet workbook) and PDF (multi-section)
-  // exports below, so the two formats always show the exact same figures
-  // from one API round-trip, and returns a `sheets` array whose shape
-  // (name/title/subtitle/columns/rows) each exporter consumes directly.
+  const actualCash = useMemo(
+    () => DENOMS.reduce((t, d) => t + d * (Number(counts[d]) || 0), 0),
+    [counts]
+  );
+
+  // Expected Cash In Hand for the month, straight from the monthly summary
+  // (Receipt Side cash - Payment Side cash - outstanding TR, as of the
+  // month's last date) — no extra lookups needed.
+  const expected = round2(preview?.closingCash);
+  const cashInBank = round2(preview?.closingBank);
+  const grandTotal = round2(preview?.closingTotal);
+  // Outstanding TR = whatever's left once cash-in-hand and cash-in-bank are
+  // taken out of the month-end total.
+  const trAmt = round2(grandTotal - expected - cashInBank);
+  const cashInHandGross = round2(expected + trAmt);
+
+  // Difference = Cash Counted - Expected Cash (0 = Balanced, +ve = Excess, -ve = Shortage)
+  const difference = round2(actualCash - expected);
+  const status = difference === 0 ? "Balanced" : difference > 0 ? "Excess" : "Shortage";
+  const style = STATUS_STYLE[status];
+
+  // Builds the same 4-sheet pattern as Daily Closing (Receipt Side / Payment
+  // Side / Outstanding TRs / Cash Counting), scoped to the selected month,
+  // using the physical cash count currently on screen. Used by both the
+  // Excel and PDF exports below, and saved with the record itself so a
+  // saved month can always be reopened exactly as it was.
   const buildMonthlyReportSheets = async () => {
     if (!preview) return null;
     const { fromDate, toDate } = preview;
     const num = (v) => Number(v || 0);
 
-    const [receiptsRes, paymentsRes, trsRes, closingSummaryRes, bankInfoRes, savedClosingsRes] = await Promise.all([
+    const [receiptsRes, paymentsRes, trsRes] = await Promise.all([
       getReceipts({ from: fromDate, to: toDate }),
       getPayments({ from: fromDate, to: toDate }),
       getTRs({ to: toDate, status: "Not Cleared" }),
-      getClosingSummary(toDate),
-      getCashSummary(toDate),
-      getClosings({ from: toDate, to: toDate }),
     ]);
 
     const receiptRows = (receiptsRes.data || []).map((r) => ({ ...r, cash: num(r.cash), bank: num(r.bank) }));
@@ -188,34 +156,6 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     const paymentTotalRow = { date: "", voucherNo: "", party: "", description: "", head: "", farm: "", sourceTag: "TOTAL", cash: round2(paymentRows.reduce((t, r) => t + r.cash, 0)), bank: round2(paymentRows.reduce((t, r) => t + r.bank, 0)), __bold: true };
     const trTotalRow = { entryDate: "", description: "", issuedTo: "", amount: round2(trRows.reduce((t, r) => t + r.amount, 0)), authority: "", status: "TOTAL OUTSTANDING", __bold: true };
 
-    // ---- Section 4: same page as Daily Closing, run as of the month's last date ----
-    const cs = closingSummaryRes.data || {};
-    const bankInfo = bankInfoRes.data || {};
-    const savedClosing = (savedClosingsRes.data || [])
-      .filter((r) => String(r.closingDate).slice(0, 10) === toDate)
-      .sort((a, b) => b.id - a.id)[0] || null;
-
-    const expected = round2(cs.expectedCash);
-    const trAmt = round2(cs.trIssued); // outstanding TR, as returned by the daily closing-summary endpoint
-    const cashInBank = round2(bankInfo.cashInBank);
-    const cashInHandGross = round2(expected + trAmt);
-    const grandTotal = round2(bankInfo.totalBalance ?? cashInHandGross + cashInBank);
-
-    let counts = {};
-    let actualCash = null;
-    let difference = null;
-    if (savedClosing) {
-      try { counts = JSON.parse(savedClosing.denominations || "{}"); } catch { counts = {}; }
-      actualCash = round2(savedClosing.actualCash);
-      difference = round2(savedClosing.difference);
-    }
-
-    const closingCols = [
-      { key: "particulars", label: "Particulars", width: 30 },
-      { key: "qty", label: "Qty", width: 10 },
-      { key: "amount", label: "Amount", width: 16 },
-    ];
-
     const denomRows = DENOMS.map((d) => {
       const qty = Number(counts[d]) || 0;
       return { particulars: `Rs. ${d.toLocaleString()}`, qty, amount: round2(d * qty) };
@@ -224,8 +164,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     const closingRows = [
       { particulars: "CASH IN HAND — PHYSICAL COUNT", qty: "", amount: "", __bold: true },
       ...denomRows,
-      { particulars: "Total", qty: "", amount: actualCash !== null ? actualCash : "", __bold: true },
-      { particulars: "Differ", qty: "", amount: difference !== null ? difference : "", __bold: true },
+      { particulars: "Total", qty: "", amount: actualCash, __bold: true },
+      { particulars: "Differ", qty: "", amount: difference, __bold: true },
       { particulars: "", qty: "", amount: "" },
       { particulars: "Cash", qty: "", amount: expected, __bold: true },
       { particulars: "TR", qty: "", amount: trAmt, __bold: true },
@@ -234,13 +174,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
       { particulars: "Cash In Bank", qty: "", amount: cashInBank, __bold: true },
       { particulars: "", qty: "", amount: "" },
       { particulars: "TOTAL", qty: "", amount: grandTotal, __bold: true },
-      { particulars: "", qty: "", amount: "" },
-      {
-        particulars: savedClosing
-          ? `Physical count from Daily Closing saved on ${toDate}`
-          : `No Daily Closing saved on ${toDate} — physical count not available; Total/Differ left blank`,
-        qty: "", amount: "",
-      },
+      ...(remarks ? [{ particulars: "", qty: "", amount: "" }, { particulars: `Remarks: ${remarks}`, qty: "", amount: "" }] : []),
     ];
 
     return {
@@ -269,9 +203,9 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           rows: [...trRows, trTotalRow],
         },
         {
-          name: "Closing Summary",
-          title: `Daily Closing — ${toDate}`,
-          subtitle: `Month-end Cash Book Closing for ${MONTHS[month - 1]} ${year}`,
+          name: "Cash Counting",
+          title: `Monthly Closing — ${MONTHS[month - 1]} ${year}`,
+          subtitle: `Cash Counting as of ${toDate}`,
           columns: closingCols,
           rows: closingRows,
         },
@@ -321,9 +255,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
   const save = async () => {
     setSaving(true);
     try {
-      // Build the same 4-sheet snapshot used by the Excel/PDF export and
-      // save it along with the totals, so this exact month can be reopened
-      // later from History showing all 4 sheets, not just a single summary.
+      // Build the same 4-sheet snapshot used by the Excel/PDF export above
+      // and save it along with the record, so this exact month — including
+      // today's physical cash count — can be reopened later from History
+      // as Excel or PDF, showing the same 4 sheets, even after new entries
+      // are added afterwards.
       let sheets = null;
       try {
         const built = await buildMonthlyReportSheets();
@@ -332,7 +268,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         console.log(e);
       }
       const res = await saveMonthlyClosing({ month, year, remarks, sheets });
-      showToast?.(res.data.message, "success");
+      showToast?.(res.data.message, status === "Balanced" ? "success" : "warning");
       setRemarks("");
       loadPreview();
       loadHistory();
@@ -356,37 +292,50 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     }
   };
 
-  const summaryLines = (s) => ([
-    { label: "Opening Cash in Hand", value: money(s?.openingCash) },
-    { label: "Opening Cash in Bank", value: money(s?.openingBank) },
-    { label: "Cash Receipts (this month)", value: money(s?.cashReceipts) },
-    { label: "Cash Payments (this month)", value: `- ${money(s?.cashPayments)}` },
-    { label: "Bank Receipts (this month)", value: money(s?.bankReceipts) },
-    { label: "Bank Payments (this month)", value: `- ${money(s?.bankPayments)}` },
-    { label: "Cash Withdrawn (Bank→Hand)", value: money(s?.totalWithdrawn) },
-    { label: "Bank Deposited (Hand→Bank)", value: money(s?.totalBankDeposited) },
-    { label: "Sent to HQ", value: money(s?.totalHoRemittance) },
-    { label: "TR Outstanding (Issued)", value: money(s?.trIssued) },
-    { label: "Closing Cash in Hand", value: money(s?.closingCash), strong: true },
-    { label: "Closing Cash in Bank", value: money(s?.closingBank), strong: true },
-    { label: "Closing Total Balance", value: money(s?.closingTotal), strong: true },
-  ]);
+  // Re-opens a saved month's own 4-sheet snapshot (Receipt Side / Payment
+  // Side / Outstanding TRs / Cash Counting), exactly as it was at save
+  // time — no recalculation, so it always matches what was saved.
+  const savedSheetsOf = (r) => {
+    try {
+      const sheets = r.sheets ? JSON.parse(r.sheets) : null;
+      return sheets && sheets.length ? sheets : null;
+    } catch {
+      return null;
+    }
+  };
 
-  const printMonth = (s, remarksText) => {
-    const rows = summaryLines(s).map((l) => `
-      <tr>
-        <td style="${l.strong ? "font-weight:800;" : ""}">${l.label}</td>
-        <td style="text-align:right;${l.strong ? "font-weight:800;" : ""}">${l.value}</td>
-      </tr>`).join("");
+  const exportSavedExcel = async (r) => {
+    const sheets = savedSheetsOf(r);
+    if (!sheets) { showToast?.("No saved report available for this record", "error"); return; }
+    setExportingRowId(`${r.id}-xlsx`);
+    try {
+      await exportXlsxMultiSheet({ filename: `Monthly_Closing_Report_${MONTHS[r.month - 1]}_${r.year}`, sheets });
+      showToast?.("Monthly closing report downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to build monthly closing report", "error");
+    } finally {
+      setExportingRowId(null);
+    }
+  };
 
-    printDocument({
-      title: `Monthly Closing — ${MONTHS[s.month - 1]} ${s.year}`,
-      subtitle: "Cash Book",
-      bodyHtml: `
-        <table><tbody>${rows}</tbody></table>
-        ${remarksText ? `<div style="margin-top:16px;"><b>Remarks:</b> ${String(remarksText).replace(/</g, "&lt;")}</div>` : ""}
-      `,
-    });
+  const exportSavedPdf = async (r) => {
+    const sheets = savedSheetsOf(r);
+    if (!sheets) { showToast?.("No saved report available for this record", "error"); return; }
+    setExportingRowId(`${r.id}-pdf`);
+    try {
+      downloadMultiSectionPdf({
+        filename: `Monthly_Closing_Report_${MONTHS[r.month - 1]}_${r.year}`,
+        docTitle: `Monthly Closing Report — ${MONTHS[r.month - 1]} ${r.year}`,
+        sections: sheets.map((s) => ({ title: s.title, subtitle: s.subtitle, columns: s.columns, rows: s.rows })),
+      });
+      showToast?.("Monthly closing PDF downloaded", "success");
+    } catch (e) {
+      console.log(e);
+      showToast?.("Failed to build monthly closing PDF", "error");
+    } finally {
+      setExportingRowId(null);
+    }
   };
 
   const historyCols = [
@@ -402,8 +351,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           <IconButton size="small" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} sx={{ color: brand.blueDeep, mr: 0.5 }}>
             {expandedId === r.id ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
           </IconButton>
-          <IconButton size="small" onClick={() => { try { printMonth(JSON.parse(r.summary), r.remarks); } catch { showToast?.("Could not open this record", "error"); } }} sx={{ color: brand.blueDeep, mr: 0.5 }}>
-            <FaPrint size={12} />
+          <IconButton size="small" disabled={exportingRowId === `${r.id}-xlsx`} onClick={() => exportSavedExcel(r)} sx={{ color: brand.success, mr: 0.5 }}>
+            <FaFileExcel size={12} />
+          </IconButton>
+          <IconButton size="small" disabled={exportingRowId === `${r.id}-pdf`} onClick={() => exportSavedPdf(r)} sx={{ color: brand.danger, mr: 0.5 }}>
+            <FaFilePdf size={12} />
           </IconButton>
           <IconButton size="small" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
             <FaTrashAlt size={12} />
@@ -412,23 +364,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
       ),
     },
   ];
-  const exportCols = [
-    { key: "period", label: "Month" },
-    { key: "openingCash", label: "Opening Cash" },
-    { key: "closingCash", label: "Closing Cash" },
-    { key: "closingBank", label: "Closing Bank" },
-  ];
-  const exportRows = history.map((r) => ({
-    period: `${MONTHS[r.month - 1]} ${r.year}`,
-    openingCash: money(r.openingCash),
-    closingCash: money(r.closingCash),
-    closingBank: money(r.closingBank),
-  }));
 
   return (
     <>
       <SectionCard
-        title="Monthly Closing — Full Month Cash Book Summary"
+        title="Monthly Closing — Physical Cash Verification"
         action={
           <>
             <Button size="small" variant="contained" startIcon={<FaFileExcel />}
@@ -461,15 +401,14 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
 
         {!loading && preview && (
           <Grid container spacing={4}>
-            {/* Physical cash count — same shape as Daily Closing's own count,
-                pulled from the Daily Closing saved on the month's last date */}
+            {/* Cash counting comes first — count the drawer before checking it against the expected total */}
             <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
               <Box sx={{
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
                 <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
-                  Physical Cash Count — as of {preview.toDate}
+                  Count Physical Cash — as of {preview.toDate}
                 </Typography>
                 <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
@@ -488,14 +427,18 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                     </thead>
                     <tbody>
                       {DENOMS.map((d, i) => {
-                        const qty = Number(closingSnapshot?.counts?.[d]) || 0;
+                        const qty = Number(counts[d]) || 0;
                         return (
                           <tr key={d} style={{ background: qty ? "rgba(212,175,55,0.08)" : i % 2 ? "rgba(238,243,251,0.5)" : "#fff" }}>
                             <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", fontWeight: 800, color: brand.blueDeep }}>
                               Rs. {d.toLocaleString()}
                             </td>
-                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "center" }}>
-                              {qty || ""}
+                            <td style={{ padding: "6px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "center" }}>
+                              <TextField
+                                size="small" type="number" placeholder="Qty" value={counts[d] ?? ""}
+                                onChange={(e) => setCounts({ ...counts, [d]: e.target.value })}
+                                sx={{ width: 100 }}
+                              />
                             </td>
                             <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "right", fontWeight: 800, color: brand.ink }}>
                               {money(d * qty)}
@@ -512,70 +455,73 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
                   <Typography fontWeight={800} color={brand.ink}>Actual Cash Counted</Typography>
-                  <Typography variant="h6" fontWeight={900} color={brand.blueDeep}>
-                    {closingSnapshot?.hasSavedClosing ? money(closingSnapshot.actualCash) : "—"}
-                  </Typography>
+                  <Typography variant="h6" fontWeight={900} color={brand.blueDeep}>{money(actualCash)}</Typography>
                 </Box>
-
-                {closingSnapshot && !closingSnapshot.hasSavedClosing && (
-                  <Typography sx={{ mt: 1.5, fontSize: 12, color: brand.slate }}>
-                    No Daily Closing saved on {preview.toDate} yet — physical count not available.
-                  </Typography>
-                )}
               </Box>
             </Grid>
 
             <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
-              <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", mb: 2 }}>
-                {summaryLines(preview).map((l) => (
-                  <Box key={l.label} sx={{
-                    display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
-                    background: l.strong ? brand.blueDeep : "#fff",
-                    color: l.strong ? "#fff" : brand.ink,
-                    borderTop: "1px solid #E5E9F2",
-                  }}>
-                    <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
-                    <Typography fontSize={13} fontWeight={800}>{l.value}</Typography>
-                  </Box>
-                ))}
-              </Box>
+              <Box sx={{
+                p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
+                background: "#fff", mt: { xs: 4, md: 0 }, mb: 2,
+              }}>
+                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink, fontSize: 15 }}>
+                  Closing Summary
+                </Typography>
 
-              {closingSnapshot?.hasSavedClosing && closingSnapshot.status && (
+                <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2" }}>
+                  {[
+                    { label: "Receipt Side — Cash Column Total (month)", value: money(preview.cashReceipts) },
+                    { label: "Less: Payment Side — Cash Column Total (month)", value: `- ${money(preview.cashPayments)}` },
+                    { label: "Less: Outstanding TR (as of month end)", value: `- ${money(trAmt)}` },
+                    { label: "Expected Cash Balance", value: money(expected), strong: true },
+                  ].map((l) => (
+                    <Box key={l.label} sx={{
+                      display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
+                      background: l.strong ? brand.blueDeep : "#fff",
+                      color: l.strong ? "#fff" : brand.ink,
+                      borderTop: "1px solid #E5E9F2",
+                    }}>
+                      <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
+                      <Typography fontSize={13} fontWeight={800}>{l.value}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+
                 <Box sx={{
-                  mb: 2, p: 2.5, borderRadius: 3, background: STATUS_STYLE[closingSnapshot.status].bg,
-                  color: "#fff", textAlign: "center", border: "2px solid rgba(255,255,255,0.3)",
+                  mt: 2, p: 2.5, borderRadius: 3, background: style.bg, color: "#fff", textAlign: "center",
+                  border: "2px solid rgba(255,255,255,0.3)",
                 }}>
                   <Typography fontSize={12.5} fontWeight={700} sx={{ opacity: 0.9 }}>Cash Difference</Typography>
-                  <Typography variant="h5" fontWeight={900}>{signedMoney(closingSnapshot.difference)}</Typography>
-                  <Typography fontSize={13} fontWeight={800} letterSpacing={1}>{STATUS_STYLE[closingSnapshot.status].label}</Typography>
+                  <Typography variant="h4" fontWeight={900}>
+                    {signedMoney(difference)}
+                  </Typography>
+                  <Typography fontSize={13} fontWeight={800} letterSpacing={1}>{style.label}</Typography>
+                  <Typography fontSize={12} sx={{ mt: 0.5, opacity: 0.92 }}>
+                    Actual {money(actualCash)} vs Expected {money(expected)}
+                  </Typography>
                 </Box>
-              )}
 
-              <Typography sx={{ fontSize: 12.5, color: brand.slate, mb: 2 }}>
-                Covers {preview.fromDate} to {preview.toDate}. Saving records this exact snapshot (including
-                the 4-sheet Receipt Side / Payment Side / Outstanding TRs / Closing Summary breakdown) so you
-                can come back and view this month's Cash Book any time, even after new entries are added later.
-              </Typography>
+                <Typography sx={{ mt: 2, fontSize: 12, color: brand.slate }}>
+                  Covers {preview.fromDate} to {preview.toDate}. Saving records this exact snapshot (including
+                  the physical cash count above, and the 4-sheet Receipt Side / Payment Side / Outstanding TRs /
+                  Cash Counting breakdown) so you can come back and view this month's Cash Book any time, even
+                  after new entries are added later.
+                </Typography>
 
-              <TextField fullWidth size="small" label="Remarks" sx={{ mb: 2 }} value={remarks} onChange={(e) => setRemarks(e.target.value)} />
-              <Button fullWidth variant="contained" disabled={saving} onClick={save}
-                sx={{ height: 42, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
-                {saving ? "Saving..." : "Save Monthly Closing"}
-              </Button>
+                <TextField fullWidth size="small" label="Remarks" sx={{ mt: 2 }} value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)} />
+                <Button fullWidth variant="contained" disabled={saving} onClick={save}
+                  sx={{ height: 42, mt: 2, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
+                  {saving ? "Saving..." : "Save Monthly Closing"}
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         )}
       </SectionCard>
 
-      <SectionCard
-        title="Monthly Closing History"
-        action={
-          <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
-              onClick={() => exportExcel("Monthly_Closing_Report", exportCols, exportRows)}>Excel</Button>
-          </>
-        }
-      >
+      <SectionCard title="Monthly Closing History">
         <DataTable columns={historyCols} rows={history} empty="No monthly closings saved yet" />
         {history.map((r) => (
           <Collapse in={expandedId === r.id} key={r.id} unmountOnExit>
@@ -584,10 +530,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 {MONTHS[r.month - 1]} {r.year} — Saved Snapshot
               </Typography>
               {(() => {
-                let sheets = null;
-                try { sheets = r.sheets ? JSON.parse(r.sheets) : null; } catch { sheets = null; }
-
-                if (sheets && sheets.length) {
+                const sheets = savedSheetsOf(r);
+                if (sheets) {
                   // Permanent 4-sheet record, exactly as it was at save time.
                   return sheets.map((sheet) => (
                     <Box key={sheet.name} sx={{ mb: 2 }}>
@@ -606,25 +550,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                     </Box>
                   ));
                 }
-
-                // Older records saved before the 4-sheet snapshot existed —
-                // fall back to the flat totals that were stored for them.
-                let s = null;
-                try { s = JSON.parse(r.summary); } catch { s = null; }
-                if (!s) return <Typography sx={{ p: 2, color: brand.slate }}>Snapshot unavailable</Typography>;
-                return (
-                  <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", background: "#fff" }}>
-                    {summaryLines(s).map((l) => (
-                      <Box key={l.label} sx={{
-                        display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1,
-                        borderTop: "1px solid #E5E9F2",
-                      }}>
-                        <Typography fontSize={12.5} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
-                        <Typography fontSize={12.5} fontWeight={800}>{l.value}</Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                );
+                return <Typography sx={{ p: 2, color: brand.slate }}>Snapshot unavailable</Typography>;
               })()}
               {r.remarks && (
                 <Typography sx={{ mt: 1.5, fontSize: 12.5, color: brand.slate }}>
