@@ -78,18 +78,31 @@ export const tableBodyRowSx = (i) => ({
 });
 
 // MUI DataGrid equivalent — spread into the DataGrid's sx prop.
+// v9's column header cells each paint their own background, so the dark
+// fill + white text has to be set on the individual cell/title/icon
+// classes too, not just the row-level wrapper, or it falls back to a
+// pale default background with unreadable white text on top of it.
 export const dataGridThemeSx = {
   border: 0,
-  "& .MuiDataGrid-columnHeaders": {
-    background: brand.tableCardBg,
-    color: brand.tableCardHeaderText,
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeadersInner, & .MuiDataGrid-columnHeader": {
+    background: `${brand.tableCardBg} !important`,
     borderBottom: `2px solid ${brand.gold}`,
   },
-  "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 800 },
+  "& .MuiDataGrid-columnHeaderTitle": {
+    color: `${brand.tableCardHeaderText} !important`,
+    fontWeight: 800,
+  },
+  "& .MuiDataGrid-columnHeader, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+    outline: "none",
+  },
+  "& .MuiDataGrid-iconButtonContainer .MuiSvgIcon-root, & .MuiDataGrid-menuIcon .MuiSvgIcon-root, & .MuiDataGrid-sortIcon": {
+    color: brand.tableCardHeaderText,
+  },
+  "& .MuiDataGrid-columnSeparator": { color: "rgba(255,255,255,0.3)" },
   "& .MuiDataGrid-cell": { borderBottom: "none" },
-  "& .MuiDataGrid-row.row-even": { background: brand.rowBlue, color: brand.rowText },
-  "& .MuiDataGrid-row.row-odd": { background: brand.rowWhiteGradient, color: brand.rowTextOnWhite },
-  "& .MuiDataGrid-row:hover": { background: brand.blueDeep, color: "#fff" },
+  "& .MuiDataGrid-row.row-even, & .MuiDataGrid-row.row-even .MuiDataGrid-cell": { background: brand.rowBlue, color: brand.rowText },
+  "& .MuiDataGrid-row.row-odd, & .MuiDataGrid-row.row-odd .MuiDataGrid-cell": { background: brand.rowWhiteGradient, color: brand.rowTextOnWhite },
+  "& .MuiDataGrid-row:hover, & .MuiDataGrid-row:hover .MuiDataGrid-cell": { background: `${brand.blueDeep} !important`, color: "#fff" },
   "& .MuiDataGrid-footerContainer": { background: brand.panel },
 };
 
