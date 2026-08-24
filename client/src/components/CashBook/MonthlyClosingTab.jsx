@@ -16,6 +16,7 @@ import { downloadMultiSectionPdf } from "../../utils/multiSectionPdf";
 import { printDocument, tableHtml } from "../../utils/print";
 import { brand } from "../../theme";
 import ConfirmDialog from "../ConfirmDialog";
+import cashPattern from "../../assets/pay-report-pattern.png";
 
 // Same columns used across the Receipt / Payment side reports elsewhere in
 // the app, so the monthly workbook's sheets match what the daily side tabs
@@ -339,9 +340,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     }
   };
 
-  // Standalone print for just the physical cash count (denomination table +
-  // actual cash counted) — separate from the full 4-sheet Monthly Closing
-  // Report, for when only the cash-counting slip itself needs to be printed.
+  // Standalone print for just the physical cash count — built to match the
+  // office's own "Cash In Hand" sheet layout: denomination table, then
+  // Total / Differ, then the Cash / TR / Cash In Hand / Cash In Bank / TOTAL
+  // breakdown, all stacked in one column below the table (not a separate
+  // side panel) — with the same highlight colors that sheet uses.
   const printCashCounting = () => {
     if (!preview) return;
     const rows = DENOMS.map((d) => {
@@ -353,6 +356,32 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
       { key: "qty", label: "Qty" },
       { key: "amount", label: "Amount" },
     ];
+
+    const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const summaryRow = (label, value, opts = {}) => `
+      <tr>
+        <td colspan="2" style="padding:9px 12px;border:1px solid #C9D3E3;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(label)}</td>
+        <td style="padding:9px 12px;border:1px solid #C9D3E3;text-align:right;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(value)}</td>
+      </tr>`;
+    const spacer = `<tr><td colspan="3" style="border:none;background:transparent;height:10px;padding:0;"></td></tr>`;
+
+    const summaryHtml = `
+      <table style="width:100%;border-collapse:collapse;font-size:12pt;font-family:Arial,sans-serif;margin-top:10px;">
+        <tbody>
+          ${summaryRow("Total", money(actualCash))}
+          ${summaryRow("Differ", signedMoney(difference), { bg: brand.danger, color: "#fff" })}
+          ${spacer}
+          ${summaryRow("Cash", money(expected), { bold: false })}
+          ${summaryRow("TR", money(trAmt), { bold: false })}
+          ${summaryRow("Cash In Hand", money(cashInHandGross))}
+          ${spacer}
+          ${summaryRow("Cash In Bank", money(cashInBank), { bg: "#2FBF71", color: "#0a3319" })}
+          ${spacer}
+          ${summaryRow("TOTAL", money(grandTotal), { bg: brand.blueDeep, color: "#fff" })}
+          ${remarks ? spacer + summaryRow("Remarks", remarks, { bold: false }) : ""}
+        </tbody>
+      </table>`;
+
     const bodyHtml = `
       <div class="info-box">
         <div class="info-grid">
@@ -367,11 +396,13 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         </div>
       </div>
       ${tableHtml(cols, rows)}
+      ${summaryHtml}
     `;
     printDocument({
       title: "Cash Counting Slip",
       subtitle: `Monthly Closing — ${MONTHS[month - 1]} ${year} (as of ${preview.toDate})`,
       bodyHtml,
+      backgroundImageUrl: cashPattern,
     });
   };
 
@@ -439,21 +470,14 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         {!loading && preview && (
           <Grid container spacing={4}>
             {/* Cash counting comes first — count the drawer before checking it against the expected total */}
-            <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
+            <Grid item xs={12} md={7} sx={{ pr: { md: 2 }, flex: { xs: "1 1 100%", md: "0 0 58%" }, maxWidth: { xs: "100%", md: "58%" } }}>
               <Box sx={{
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                  <Typography fontWeight={800} sx={{ color: brand.ink }}>
-                    Count Physical Cash — as of {preview.toDate}
-                  </Typography>
-                  <Button size="small" variant="outlined" startIcon={<FaPrint size={11} />}
-                    onClick={printCashCounting}
-                    sx={{ borderColor: brand.gold, color: brand.goldDark, fontWeight: 700, fontSize: 11.5, height: 30 }}>
-                    Print Cash Counting
-                  </Button>
-                </Box>
+                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
+                  Count Physical Cash — as of {preview.toDate}
+                </Typography>
                 <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
                     <thead>
@@ -504,7 +528,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
+            <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" }, flex: { xs: "1 1 100%", md: "0 0 42%" }, maxWidth: { xs: "100%", md: "42%" } }}>
               <Box sx={{
                 p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
                 background: "#dfebfa", mt: { xs: 4, md: 0 }, mb: 2,
@@ -558,6 +582,12 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 <Button fullWidth variant="contained" disabled={saving} onClick={save}
                   sx={{ height: 42, mt: 2, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
                   {saving ? "Saving..." : "Save Monthly Closing"}
+                </Button>
+                <Button fullWidth variant="outlined" startIcon={<FaPrint size={12} />}
+                  onClick={printCashCounting}
+                  sx={{ mt: 1.5, height: 40, borderColor: brand.gold, color: brand.goldDark, fontWeight: 700,
+                    "&:hover": { borderColor: brand.goldDark, background: "rgba(212,175,55,0.08)" } }}>
+                  Print Cash Counting
                 </Button>
               </Box>
             </Grid>

@@ -13,6 +13,7 @@ import { printDocument, tableHtml } from "../../utils/print";
 import { brand } from "../../theme";
 import DateFieldDMY from "../DateFieldDMY";
 import ConfirmDialog from "../ConfirmDialog";
+import cashPattern from "../../assets/pay-report-pattern.png";
 
 const NOTES = [5000, 1000, 500, 100, 50, 20, 10];
 const COINS = [5, 2, 1];
@@ -241,9 +242,11 @@ export default function DailyClosingTab({ onChanged, showToast }) {
     }
   };
 
-  // Standalone print for just the physical cash count (denomination table +
-  // actual cash counted) — separate from the full 4-sheet Daily Closing
-  // Report, for when only the cash-counting slip itself needs to be printed.
+  // Standalone print for just the physical cash count — built to match the
+  // office's own "Cash In Hand" sheet layout: denomination table, then
+  // Total / Differ, then the Cash / TR / Cash In Hand / Cash In Bank / TOTAL
+  // breakdown, all stacked in one column below the table (not a separate
+  // side panel) — with the same highlight colors that sheet uses.
   const printCashCounting = () => {
     const rows = DENOMS.map((d) => {
       const qty = Number(counts[d]) || 0;
@@ -254,6 +257,32 @@ export default function DailyClosingTab({ onChanged, showToast }) {
       { key: "qty", label: "Qty" },
       { key: "amount", label: "Amount" },
     ];
+
+    const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const summaryRow = (label, value, opts = {}) => `
+      <tr>
+        <td colspan="2" style="padding:9px 12px;border:1px solid #C9D3E3;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(label)}</td>
+        <td style="padding:9px 12px;border:1px solid #C9D3E3;text-align:right;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(value)}</td>
+      </tr>`;
+    const spacer = `<tr><td colspan="3" style="border:none;background:transparent;height:10px;padding:0;"></td></tr>`;
+
+    const summaryHtml = `
+      <table style="width:100%;border-collapse:collapse;font-size:12pt;font-family:Arial,sans-serif;margin-top:10px;">
+        <tbody>
+          ${summaryRow("Total", money(actualCash))}
+          ${summaryRow("Differ", signedMoney(difference), { bg: brand.danger, color: "#fff" })}
+          ${spacer}
+          ${summaryRow("Cash", money(expected), { bold: false })}
+          ${summaryRow("TR", money(trAmt), { bold: false })}
+          ${summaryRow("Cash In Hand", money(cashInHandGross))}
+          ${spacer}
+          ${summaryRow("Cash In Bank", money(cashInBank), { bg: "#2FBF71", color: "#0a3319" })}
+          ${spacer}
+          ${summaryRow("TOTAL", money(grandTotal), { bg: brand.blueDeep, color: "#fff" })}
+          ${remarks ? spacer + summaryRow("Remarks", remarks, { bold: false }) : ""}
+        </tbody>
+      </table>`;
+
     const bodyHtml = `
       <div class="info-box">
         <div class="info-grid">
@@ -268,11 +297,13 @@ export default function DailyClosingTab({ onChanged, showToast }) {
         </div>
       </div>
       ${tableHtml(cols, rows)}
+      ${summaryHtml}
     `;
     printDocument({
       title: "Cash Counting Slip",
       subtitle: `Daily Closing — ${formatDMY(date)}`,
       bodyHtml,
+      backgroundImageUrl: cashPattern,
     });
   };
 
@@ -349,19 +380,12 @@ export default function DailyClosingTab({ onChanged, showToast }) {
       >
         <Grid container spacing={4}>
           {/* Cash counting comes first — count the drawer before checking it against the expected total */}
-          <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
+          <Grid item xs={12} md={7} sx={{ pr: { md: 2 }, flex: { xs: "1 1 100%", md: "0 0 58%" }, maxWidth: { xs: "100%", md: "58%" } }}>
             <Box sx={{
               mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
               background: "rgba(212,175,55,0.06)",
             }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                <Typography fontWeight={800} sx={{ color: brand.ink }}>Count Physical Cash</Typography>
-                <Button size="small" variant="outlined" startIcon={<FaPrint size={11} />}
-                  onClick={printCashCounting}
-                  sx={{ borderColor: brand.gold, color: brand.goldDark, fontWeight: 700, fontSize: 11.5, height: 30 }}>
-                  Print Cash Counting
-                </Button>
-              </Box>
+              <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>Count Physical Cash</Typography>
               <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
                   <thead>
@@ -412,7 +436,7 @@ export default function DailyClosingTab({ onChanged, showToast }) {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
+          <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" }, flex: { xs: "1 1 100%", md: "0 0 42%" }, maxWidth: { xs: "100%", md: "42%" } }}>
             {/* CLOSING SECTION — now with more spacing and proper bordered container */}
             <Box sx={{
               p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
@@ -459,6 +483,12 @@ export default function DailyClosingTab({ onChanged, showToast }) {
                   Save Daily Closing
                 </Button>
               </Box>
+              <Button fullWidth variant="outlined" startIcon={<FaPrint size={12} />}
+                onClick={printCashCounting}
+                sx={{ mt: 1.5, height: 40, borderColor: brand.gold, color: brand.goldDark, fontWeight: 700,
+                  "&:hover": { borderColor: brand.goldDark, background: "rgba(212,175,55,0.08)" } }}>
+                Print Cash Counting
+              </Button>
             </Box>
           </Grid>
         </Grid>

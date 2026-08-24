@@ -39,6 +39,7 @@ export function printDocument({ title, subtitle, bodyHtml, landscape, background
           border-bottom: 3px solid ${brand.gold};
           padding-bottom: 14px;
           margin-bottom: 22px;
+          ${backgroundImageUrl ? `background: rgba(255,255,255,0.94); border-radius: 10px; padding: 14px 16px 14px;` : ""}
         }
         .doc-header h1 {
           margin: 0;
@@ -50,7 +51,7 @@ export function printDocument({ title, subtitle, bodyHtml, landscape, background
           margin: 2px 0 0;
           font-size: 12pt;
           font-family: Arial, sans-serif;
-          color: #6B7280;
+          color: #4B5563;
         }
         .doc-badge {
           position: absolute;
@@ -86,9 +87,10 @@ export function printDocument({ title, subtitle, bodyHtml, landscape, background
           font-size: 12pt;
           font-family: Arial, sans-serif;
           border: 1px solid #C9D3E3;
+          background: rgba(255,255,255,0.9);
         }
         tr:nth-child(even) td {
-          background: rgba(247,250,255,0.85);
+          background: rgba(247,250,255,0.92);
         }
         .info-box {
           border: 1px solid #E5E9F2;
@@ -128,9 +130,10 @@ export function printDocument({ title, subtitle, bodyHtml, landscape, background
           padding-top: 10px;
           border-top: 1px solid #E5E9F2;
           font-size: 10.5px;
-          color: #9AA5B5;
+          color: #4B5563;
           display: flex;
           justify-content: space-between;
+          ${backgroundImageUrl ? `background: rgba(255,255,255,0.94); border-radius: 8px; padding: 10px 12px; border-top: none;` : ""}
         }
         @media print {
           .no-print { display: none; }
