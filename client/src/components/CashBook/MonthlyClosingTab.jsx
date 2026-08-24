@@ -466,30 +466,30 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         {loading && <Typography sx={{ color: brand.slate, mb: 2 }}>Loading…</Typography>}
 
         {!loading && preview && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2.5 }}>
             {/* Cash counting comes first — count the drawer before checking it against the expected total */}
-            <Box sx={{ flex: "1 1 480px", minWidth: 0, pr: { md: 2 } }}>
+            <Box sx={{ flex: "1 1 420px", minWidth: 0, pr: { md: 1.5 } }}>
               <Box sx={{
-                mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
+                mb: 1.5, p: 1.1, borderRadius: 2.5, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
                 <Box sx={{
-                  mb: 1.5, px: 1.5, py: 0.9, borderRadius: 2,
+                  mb: 1, px: 1.2, py: 0.6, borderRadius: 2,
                   background: brand.tableCardBg, borderBottom: `2px solid ${brand.gold}`,
                 }}>
-                  <Typography fontWeight={800} sx={{ color: "#ffffff" }}>
+                  <Typography fontWeight={800} fontSize={13} sx={{ color: "#ffffff" }}>
                     Count Physical Cash — as of {preview.toDate}
                   </Typography>
                 </Box>
-                <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+                <Box sx={{ borderRadius: 2, overflow: "hidden", border: "1px solid #E5E9F2" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr>
                         {["Denomination", "Qty", "Amount"].map((h, i) => (
                           <th key={h} style={{
                             background: brand.tableCardBg, color: brand.tableCardHeaderText,
                             textAlign: i === 0 ? "left" : i === 1 ? "center" : "right",
-                            padding: "9px 12px", fontWeight: 800, borderBottom: `2px solid ${brand.gold}`,
+                            padding: "5px 9px", fontWeight: 800, borderBottom: `2px solid ${brand.gold}`,
                           }}>
                             {h}
                           </th>
@@ -501,17 +501,17 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                         const qty = Number(counts[d]) || 0;
                         return (
                           <tr key={d} style={{ background: qty ? "rgba(244,197,66,0.35)" : i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>
-                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", fontWeight: 800, color: brand.blueDeep }}>
+                            <td style={{ padding: "4px 9px", borderBottom: "1px solid #E5E9F2", fontWeight: 800, color: brand.blueDeep }}>
                               Rs. {d.toLocaleString()}
                             </td>
-                            <td style={{ padding: "6px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "center" }}>
+                            <td style={{ padding: "3px 9px", borderBottom: "1px solid #E5E9F2", textAlign: "center" }}>
                               <TextField
                                 size="small" type="number" placeholder="Qty" value={counts[d] ?? ""}
                                 onChange={(e) => setCounts({ ...counts, [d]: e.target.value })}
-                                sx={{ width: 100 }}
+                                sx={{ width: 76, "& .MuiInputBase-input": { py: 0.5, fontSize: 12.5 } }}
                               />
                             </td>
-                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "right", fontWeight: 800, color: brand.ink }}>
+                            <td style={{ padding: "4px 9px", borderBottom: "1px solid #E5E9F2", textAlign: "right", fontWeight: 800, color: brand.ink }}>
                               {money(d * qty)}
                             </td>
                           </tr>
@@ -522,25 +522,25 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 </Box>
 
                 <Box sx={{
-                  mt: 2, p: 2, borderRadius: 3, background: `linear-gradient(135deg, ${brand.gold} 0%, ${brand.goldDark} 100%)`, border: `1px solid ${brand.goldDark}`,
+                  mt: 1.2, p: 1.2, borderRadius: 2.5, background: `linear-gradient(135deg, ${brand.gold} 0%, ${brand.goldDark} 100%)`, border: `1px solid ${brand.goldDark}`,
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <Typography fontWeight={800} color={brand.ink}>Actual Cash Counted</Typography>
-                  <Typography variant="h6" fontWeight={900} color={brand.ink}>{money(actualCash)}</Typography>
+                  <Typography fontWeight={800} fontSize={13} color={brand.ink}>Actual Cash Counted</Typography>
+                  <Typography fontSize={17} fontWeight={900} color={brand.ink}>{money(actualCash)}</Typography>
                 </Box>
               </Box>
             </Box>
 
-            <Box sx={{ flex: "1 1 380px", minWidth: 0, pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
+            <Box sx={{ flex: "1 1 340px", minWidth: 0, pl: { md: 2 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
               <Box sx={{
-                p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
-                background: "#dfebfa", mt: { xs: 4, md: 0 }, mb: 2,
+                p: 1.3, borderRadius: 2.5, border: `1.5px solid rgba(15,76,129,0.2)`,
+                background: "#dfebfa", mt: { xs: 3, md: 0 }, mb: 1.5,
               }}>
-                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink, fontSize: 15 }}>
+                <Typography fontWeight={800} sx={{ mb: 1, color: brand.ink, fontSize: 13.5 }}>
                   Closing Summary
                 </Typography>
 
-                <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2" }}>
+                <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   {[
                     { label: "Receipt Side — Cash Column Total (month)", value: money(preview.cashReceipts) },
                     { label: "Less: Payment Side — Cash Column Total (month)", value: `- ${money(preview.cashPayments)}` },
@@ -548,47 +548,47 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                     { label: "Expected Cash Balance", value: money(expected), strong: true },
                   ].map((l) => (
                     <Box key={l.label} sx={{
-                      display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
+                      display: "flex", justifyContent: "space-between", gap: 1.5, px: 1.5, py: 0.8,
                       background: l.strong ? brand.blueDeep : brand.rowBlue,
                       color: l.strong ? "#fff" : brand.rowText,
                       borderTop: "1px solid #E5E9F2",
                     }}>
-                      <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
-                      <Typography fontSize={13} fontWeight={800}>{l.value}</Typography>
+                      <Typography fontSize={11.5} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
+                      <Typography fontSize={11.5} fontWeight={800}>{l.value}</Typography>
                     </Box>
                   ))}
                 </Box>
 
                 <Box sx={{
-                  mt: 2, p: 2.5, borderRadius: 3, background: style.bg, color: "#fff", textAlign: "center",
+                  mt: 1.5, p: 1.5, borderRadius: 2.5, background: style.bg, color: "#fff", textAlign: "center",
                   border: "2px solid rgba(255,255,255,0.3)",
                 }}>
-                  <Typography fontSize={12.5} fontWeight={700} sx={{ opacity: 0.9 }}>Cash Difference</Typography>
-                  <Typography variant="h4" fontWeight={900}>
+                  <Typography fontSize={11} fontWeight={700} sx={{ opacity: 0.9 }}>Cash Difference</Typography>
+                  <Typography fontSize={22} fontWeight={900}>
                     {signedMoney(difference)}
                   </Typography>
-                  <Typography fontSize={13} fontWeight={800} letterSpacing={1}>{style.label}</Typography>
-                  <Typography fontSize={12} sx={{ mt: 0.5, opacity: 0.92 }}>
+                  <Typography fontSize={11.5} fontWeight={800} letterSpacing={1}>{style.label}</Typography>
+                  <Typography fontSize={10.5} sx={{ mt: 0.5, opacity: 0.92 }}>
                     Actual {money(actualCash)} vs Expected {money(expected)}
                   </Typography>
                 </Box>
 
-                <Typography sx={{ mt: 2, fontSize: 12, color: brand.slate }}>
+                <Typography sx={{ mt: 1.5, fontSize: 10.5, color: brand.slate }}>
                   Covers {preview.fromDate} to {preview.toDate}. Saving records this exact snapshot (including
                   the physical cash count above, and the 4-sheet Receipt Side / Payment Side / Outstanding TRs /
                   Cash Counting breakdown) so you can come back and view this month's Cash Book any time, even
                   after new entries are added later.
                 </Typography>
 
-                <TextField fullWidth size="small" label="Remarks" sx={{ mt: 2 }} value={remarks}
+                <TextField fullWidth size="small" label="Remarks" sx={{ mt: 1.5 }} value={remarks}
                   onChange={(e) => setRemarks(e.target.value)} />
                 <Button fullWidth variant="contained" disabled={saving} onClick={save}
-                  sx={{ height: 42, mt: 2, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
+                  sx={{ height: 36, mt: 1.5, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
                   {saving ? "Saving..." : "Save Monthly Closing"}
                 </Button>
                 <Button fullWidth variant="contained" startIcon={<FaPrint size={12} />}
                   onClick={printCashCounting}
-                  sx={{ mt: 1.5, height: 40, background: brand.gold, color: brand.navy, fontWeight: 800,
+                  sx={{ mt: 1.2, height: 34, background: brand.gold, color: brand.navy, fontWeight: 800,
                     "&:hover": { background: brand.goldDark, color: "#fff" } }}>
                   Print Cash Counting
                 </Button>
