@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography, IconButton, Collapse } from "@mui/material";
 import { FaTrashAlt, FaFileExcel, FaFilePdf, FaPrint, FaChevronDown, FaChevronUp } from "react-icons/fa";
-import { SectionCard, DataTable, money } from "./ui";
+import { SectionCard, DataTable, money, signedMoney } from "./ui";
 import {
   getMonthlySummary,
   getMonthlyClosings,
@@ -58,6 +58,14 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+// Same status colors as the Daily Closing tab, so the difference badge
+// shown here (pulled from that day's saved Daily Closing) matches it.
+const STATUS_STYLE = {
+  Balanced: { bg: "linear-gradient(135deg,#2FBF71,#1B8A50)", label: "BALANCED" },
+  Excess: { bg: "linear-gradient(135deg,#E9B949,#B8860B)", label: "EXCESS CASH" },
+  Shortage: { bg: "linear-gradient(135deg,#F0574D,#C0392B)", label: "CASH SHORTAGE" },
+};
+
 export default function MonthlyClosingTab({ onChanged, showToast }) {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -66,6 +74,10 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Physical cash count for the month's last date, pulled from that date's
+  // saved Daily Closing — shown on this main page the same way Daily
+  // Closing shows its own count, per request.
+  const [closingSnapshot, setClosingSnapshot] = useState(null);
 
   const [history, setHistory] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
@@ -78,11 +90,57 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     try {
       const res = await getMonthlySummary(month, year);
       setPreview(res.data);
+      loadClosingSnapshot(res.data?.toDate);
     } catch (e) {
       console.log(e);
       showToast?.("Failed to load monthly summary", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Same "physical count vs expected" numbers used in the Closing Summary
+  // sheet of the Excel/PDF export, but loaded up-front so they can also be
+  // shown directly on this page, matching how Daily Closing shows its count.
+  const loadClosingSnapshot = async (toDate) => {
+    if (!toDate) { setClosingSnapshot(null); return; }
+    try {
+      const [closingSummaryRes, bankInfoRes, savedClosingsRes] = await Promise.all([
+        getClosingSummary(toDate),
+        getCashSummary(toDate),
+        getClosings({ from: toDate, to: toDate }),
+      ]);
+      const cs = closingSummaryRes.data || {};
+      const bankInfo = bankInfoRes.data || {};
+      const savedClosing = (savedClosingsRes.data || [])
+        .filter((r) => String(r.closingDate).slice(0, 10) === toDate)
+        .sort((a, b) => b.id - a.id)[0] || null;
+
+      const expected = round2(cs.expectedCash);
+      const trAmt = round2(cs.trIssued);
+      const cashInBank = round2(bankInfo.cashInBank);
+      const cashInHandGross = round2(expected + trAmt);
+      const grandTotal = round2(bankInfo.totalBalance ?? cashInHandGross + cashInBank);
+
+      let counts = {};
+      let actualCash = null;
+      let difference = null;
+      let status = null;
+      if (savedClosing) {
+        try { counts = JSON.parse(savedClosing.denominations || "{}"); } catch { counts = {}; }
+        actualCash = round2(savedClosing.actualCash);
+        difference = round2(savedClosing.difference);
+        status = difference === 0 ? "Balanced" : difference > 0 ? "Excess" : "Shortage";
+      }
+
+      setClosingSnapshot({
+        toDate, counts, actualCash, difference, status,
+        expected, trAmt, cashInHandGross, cashInBank, grandTotal,
+        hasSavedClosing: !!savedClosing,
+      });
+    } catch (e) {
+      console.log(e);
+      setClosingSnapshot(null);
     }
   };
 
@@ -263,7 +321,17 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
   const save = async () => {
     setSaving(true);
     try {
-      const res = await saveMonthlyClosing({ month, year, remarks });
+      // Build the same 4-sheet snapshot used by the Excel/PDF export and
+      // save it along with the totals, so this exact month can be reopened
+      // later from History showing all 4 sheets, not just a single summary.
+      let sheets = null;
+      try {
+        const built = await buildMonthlyReportSheets();
+        sheets = built?.sheets || null;
+      } catch (e) {
+        console.log(e);
+      }
+      const res = await saveMonthlyClosing({ month, year, remarks, sheets });
       showToast?.(res.data.message, "success");
       setRemarks("");
       loadPreview();
@@ -363,15 +431,15 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         title="Monthly Closing — Full Month Cash Book Summary"
         action={
           <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />}
+            <Button size="small" variant="contained" startIcon={<FaFileExcel />}
               disabled={!preview || exporting || exportingPdf}
-              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)", mr: 1 }}
+              sx={{ background: brand.success, color: "#fff", mr: 1, "&:hover": { background: "#166B44" } }}
               onClick={exportMonthlyReport}>
               {exporting ? "Building…" : "Monthly Closing Report (Excel)"}
             </Button>
-            <Button size="small" variant="outlined" startIcon={<FaFilePdf />}
+            <Button size="small" variant="contained" startIcon={<FaFilePdf />}
               disabled={!preview || exporting || exportingPdf}
-              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+              sx={{ background: brand.danger, color: "#fff", "&:hover": { background: "#9E2E22" } }}
               onClick={exportMonthlyReportPdf}>
               {exportingPdf ? "Building…" : "Monthly Closing Report (PDF)"}
             </Button>
@@ -392,42 +460,110 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         {loading && <Typography sx={{ color: brand.slate, mb: 2 }}>Loading…</Typography>}
 
         {!loading && preview && (
-          <>
-            <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", mb: 2 }}>
-              {summaryLines(preview).map((l) => (
-                <Box key={l.label} sx={{
-                  display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
-                  background: l.strong ? brand.blueDeep : "#fff",
-                  color: l.strong ? "#fff" : brand.ink,
-                  borderTop: "1px solid #E5E9F2",
-                }}>
-                  <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
-                  <Typography fontSize={13} fontWeight={800}>{l.value}</Typography>
+          <Grid container spacing={4}>
+            {/* Physical cash count — same shape as Daily Closing's own count,
+                pulled from the Daily Closing saved on the month's last date */}
+            <Grid item xs={12} md={7} sx={{ pr: { md: 2 } }}>
+              <Box sx={{
+                mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
+                background: "rgba(212,175,55,0.06)",
+              }}>
+                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
+                  Physical Cash Count — as of {preview.toDate}
+                </Typography>
+                <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+                    <thead>
+                      <tr>
+                        {["Denomination", "Qty", "Amount"].map((h, i) => (
+                          <th key={h} style={{
+                            background: brand.panel, color: brand.ink,
+                            textAlign: i === 0 ? "left" : i === 1 ? "center" : "right",
+                            padding: "9px 12px", fontWeight: 800, borderBottom: `2px solid ${brand.gold}`,
+                          }}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DENOMS.map((d, i) => {
+                        const qty = Number(closingSnapshot?.counts?.[d]) || 0;
+                        return (
+                          <tr key={d} style={{ background: qty ? "rgba(212,175,55,0.08)" : i % 2 ? "rgba(238,243,251,0.5)" : "#fff" }}>
+                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", fontWeight: 800, color: brand.blueDeep }}>
+                              Rs. {d.toLocaleString()}
+                            </td>
+                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "center" }}>
+                              {qty || ""}
+                            </td>
+                            <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", textAlign: "right", fontWeight: 800, color: brand.ink }}>
+                              {money(d * qty)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </Box>
-              ))}
-            </Box>
 
-            <Typography sx={{ fontSize: 12.5, color: brand.slate, mb: 2 }}>
-              Covers {preview.fromDate} to {preview.toDate}. Saving records this exact snapshot so you can come
-              back and view this month's Cash Book any time, even after new entries are added later.
-            </Typography>
+                <Box sx={{
+                  mt: 2, p: 2, borderRadius: 3, background: brand.panel, border: "1px solid rgba(15,76,129,0.14)",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <Typography fontWeight={800} color={brand.ink}>Actual Cash Counted</Typography>
+                  <Typography variant="h6" fontWeight={900} color={brand.blueDeep}>
+                    {closingSnapshot?.hasSavedClosing ? money(closingSnapshot.actualCash) : "—"}
+                  </Typography>
+                </Box>
 
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={8}>
-                <TextField fullWidth size="small" label="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
-              </Grid>
-              <Grid item xs={12} md={4} sx={{ display: "flex", gap: 1.5 }}>
-                <Button fullWidth variant="contained" disabled={saving} onClick={save}
-                  sx={{ height: 40, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
-                  {saving ? "Saving..." : "Save Monthly Closing"}
-                </Button>
-                <Button variant="outlined" startIcon={<FaPrint />} onClick={() => printMonth(preview, remarks)}
-                  sx={{ height: 40, whiteSpace: "nowrap", fontWeight: 800, color: brand.blueDeep, borderColor: brand.blueDeep }}>
-                  Print
-                </Button>
-              </Grid>
+                {closingSnapshot && !closingSnapshot.hasSavedClosing && (
+                  <Typography sx={{ mt: 1.5, fontSize: 12, color: brand.slate }}>
+                    No Daily Closing saved on {preview.toDate} yet — physical count not available.
+                  </Typography>
+                )}
+              </Box>
             </Grid>
-          </>
+
+            <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
+              <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", mb: 2 }}>
+                {summaryLines(preview).map((l) => (
+                  <Box key={l.label} sx={{
+                    display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
+                    background: l.strong ? brand.blueDeep : "#fff",
+                    color: l.strong ? "#fff" : brand.ink,
+                    borderTop: "1px solid #E5E9F2",
+                  }}>
+                    <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
+                    <Typography fontSize={13} fontWeight={800}>{l.value}</Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              {closingSnapshot?.hasSavedClosing && closingSnapshot.status && (
+                <Box sx={{
+                  mb: 2, p: 2.5, borderRadius: 3, background: STATUS_STYLE[closingSnapshot.status].bg,
+                  color: "#fff", textAlign: "center", border: "2px solid rgba(255,255,255,0.3)",
+                }}>
+                  <Typography fontSize={12.5} fontWeight={700} sx={{ opacity: 0.9 }}>Cash Difference</Typography>
+                  <Typography variant="h5" fontWeight={900}>{signedMoney(closingSnapshot.difference)}</Typography>
+                  <Typography fontSize={13} fontWeight={800} letterSpacing={1}>{STATUS_STYLE[closingSnapshot.status].label}</Typography>
+                </Box>
+              )}
+
+              <Typography sx={{ fontSize: 12.5, color: brand.slate, mb: 2 }}>
+                Covers {preview.fromDate} to {preview.toDate}. Saving records this exact snapshot (including
+                the 4-sheet Receipt Side / Payment Side / Outstanding TRs / Closing Summary breakdown) so you
+                can come back and view this month's Cash Book any time, even after new entries are added later.
+              </Typography>
+
+              <TextField fullWidth size="small" label="Remarks" sx={{ mb: 2 }} value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+              <Button fullWidth variant="contained" disabled={saving} onClick={save}
+                sx={{ height: 42, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
+                {saving ? "Saving..." : "Save Monthly Closing"}
+              </Button>
+            </Grid>
+          </Grid>
         )}
       </SectionCard>
 
@@ -444,25 +580,52 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         {history.map((r) => (
           <Collapse in={expandedId === r.id} key={r.id} unmountOnExit>
             <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.panel }}>
-              <Typography fontWeight={800} sx={{ mb: 1, color: brand.ink }}>
+              <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
                 {MONTHS[r.month - 1]} {r.year} — Saved Snapshot
               </Typography>
-              <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", background: "#fff" }}>
-                {(() => {
-                  let s = null;
-                  try { s = JSON.parse(r.summary); } catch { s = null; }
-                  if (!s) return <Typography sx={{ p: 2, color: brand.slate }}>Snapshot unavailable</Typography>;
-                  return summaryLines(s).map((l) => (
-                    <Box key={l.label} sx={{
-                      display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1,
-                      borderTop: "1px solid #E5E9F2",
-                    }}>
-                      <Typography fontSize={12.5} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
-                      <Typography fontSize={12.5} fontWeight={800}>{l.value}</Typography>
+              {(() => {
+                let sheets = null;
+                try { sheets = r.sheets ? JSON.parse(r.sheets) : null; } catch { sheets = null; }
+
+                if (sheets && sheets.length) {
+                  // Permanent 4-sheet record, exactly as it was at save time.
+                  return sheets.map((sheet) => (
+                    <Box key={sheet.name} sx={{ mb: 2 }}>
+                      <Box sx={{
+                        px: 1.5, py: 0.8, borderRadius: "8px 8px 0 0", background: brand.blueDeep,
+                      }}>
+                        <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 12.5 }}>{sheet.name}</Typography>
+                      </Box>
+                      <Box sx={{ borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid #E5E9F2", background: "#fff" }}>
+                        <DataTable
+                          columns={sheet.columns.map((c) => ({ key: c.key, label: c.label, align: c.key === "amount" || c.key === "cash" || c.key === "bank" || c.key === "qty" ? "right" : undefined }))}
+                          rows={sheet.rows}
+                          empty="No records"
+                        />
+                      </Box>
                     </Box>
                   ));
-                })()}
-              </Box>
+                }
+
+                // Older records saved before the 4-sheet snapshot existed —
+                // fall back to the flat totals that were stored for them.
+                let s = null;
+                try { s = JSON.parse(r.summary); } catch { s = null; }
+                if (!s) return <Typography sx={{ p: 2, color: brand.slate }}>Snapshot unavailable</Typography>;
+                return (
+                  <Box sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid #E5E9F2", background: "#fff" }}>
+                    {summaryLines(s).map((l) => (
+                      <Box key={l.label} sx={{
+                        display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1,
+                        borderTop: "1px solid #E5E9F2",
+                      }}>
+                        <Typography fontSize={12.5} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
+                        <Typography fontSize={12.5} fontWeight={800}>{l.value}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })()}
               {r.remarks && (
                 <Typography sx={{ mt: 1.5, fontSize: 12.5, color: brand.slate }}>
                   <b>Remarks:</b> {r.remarks}

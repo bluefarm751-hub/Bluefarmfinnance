@@ -2242,6 +2242,7 @@ router.get("/monthly-closings/:id", async (req, res) => {
 
         const row = rows[0];
         row.summary = row.summary ? JSON.parse(row.summary) : null;
+        row.sheets = row.sheets ? JSON.parse(row.sheets) : null;
 
         res.json(row);
 
@@ -2267,7 +2268,7 @@ router.post("/monthly-closings", async (req, res) => {
 
     try {
 
-        const { farm, month, year, remarks } = req.body;
+        const { farm, month, year, remarks, sheets } = req.body;
 
         if (!month || !year) {
             return res.status(400).json({
@@ -2294,7 +2295,7 @@ router.post("/monthly-closings", async (req, res) => {
                 "totalWithdrawn", "totalBankDeposited",
                 "totalHoRemittance", "trIssued",
                 "closingCash", "closingBank",
-                summary, remarks
+                summary, sheets, remarks
             )
             VALUES
             (
@@ -2305,7 +2306,7 @@ router.post("/monthly-closings", async (req, res) => {
                 $12,$13,
                 $14,$15,
                 $16,$17,
-                $18,$19
+                $18,$19,$20
             )
             RETURNING id
             `,
@@ -2317,7 +2318,9 @@ router.post("/monthly-closings", async (req, res) => {
                 s.totalWithdrawn, s.totalBankDeposited,
                 s.totalHoRemittance, s.trIssued,
                 s.closingCash, s.closingBank,
-                JSON.stringify(s), remarks || "",
+                JSON.stringify(s),
+                sheets ? JSON.stringify(sheets) : null,
+                remarks || "",
             ]
         );
 

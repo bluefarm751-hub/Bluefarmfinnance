@@ -127,80 +127,6 @@ export default function DailyClosingTab({ onChanged, showToast }) {
   const cashInHandGross = round2(expected + trAmt);
   const grandTotal = round2(bankInfo?.totalBalance ?? cashInHandGross + cashInBank);
 
-  const printSlip = () => {
-    const denomRows = DENOMS.map((d) => {
-      const qty = Number(counts[d]) || 0;
-      return `
-        <tr>
-          <td>Rs. ${d.toLocaleString()}</td>
-          <td style="text-align:center;">${qty || ""}</td>
-          <td style="text-align:right;">${(d * qty).toLocaleString()}</td>
-        </tr>`;
-    }).join("");
-
-    const diffColor = difference === 0 ? "#1E8E5A" : difference > 0 ? "#B8860B" : "#C0392B";
-
-    const bodyHtml = `
-      <div style="margin-bottom:18px;">
-        <table>
-          <thead>
-            <tr><th colspan="3" style="text-align:center;">Cash In Hand</th></tr>
-            <tr>
-              <th>Denomination</th>
-              <th style="text-align:center;">Qty</th>
-              <th style="text-align:right;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${denomRows}
-            <tr>
-              <td colspan="2" style="font-weight:800;">Total</td>
-              <td style="text-align:right;font-weight:800;">${actualCash.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td colspan="2" style="font-weight:800;color:#fff;background:${diffColor};">Differ</td>
-              <td style="text-align:right;font-weight:800;color:#fff;background:${diffColor};">${signedMoney(difference)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <table>
-        <tbody>
-          <tr>
-            <td style="font-weight:700;">Cash</td>
-            <td style="text-align:right;font-weight:800;">${money(expected)}</td>
-          </tr>
-          <tr>
-            <td style="font-weight:700;">TR</td>
-            <td style="text-align:right;font-weight:800;">${money(trAmt)}</td>
-          </tr>
-          <tr>
-            <td style="font-weight:800;background:#F4E27A;">Cash In Hand</td>
-            <td style="text-align:right;font-weight:800;background:#F4E27A;">${money(cashInHandGross)}</td>
-          </tr>
-          <tr><td colspan="2" style="border:none;padding:4px;"></td></tr>
-          <tr>
-            <td style="font-weight:800;background:#9BCB7B;">Cash In Bank</td>
-            <td style="text-align:right;font-weight:800;background:#9BCB7B;">${money(cashInBank)}</td>
-          </tr>
-          <tr><td colspan="2" style="border:none;padding:4px;"></td></tr>
-          <tr>
-            <td style="font-weight:800;color:#fff;background:${brand.blueDeep};">TOTAL</td>
-            <td style="text-align:right;font-weight:800;color:#fff;background:${brand.blueDeep};">${money(grandTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      ${remarks ? `<div style="margin-top:16px;"><b>Remarks:</b> ${String(remarks).replace(/</g, "&lt;")}</div>` : ""}
-    `;
-
-    printDocument({
-      title: `Daily Closing (${formatDMY(date)})`,
-      subtitle: "Cash Book",
-      bodyHtml,
-    });
-  };
 
   // Builds the same 4-section "Daily Closing Main Report" pattern used by
   // Monthly Closing (Receipt Side / Payment Side / Outstanding TRs / Closing
@@ -371,15 +297,15 @@ export default function DailyClosingTab({ onChanged, showToast }) {
         title="Daily Closing — Physical Cash Verification"
         action={
           <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />}
+            <Button size="small" variant="contained" startIcon={<FaFileExcel />}
               disabled={exportingReport || exportingReportPdf}
-              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)", mr: 1 }}
+              sx={{ background: brand.success, color: "#fff", mr: 1, "&:hover": { background: "#166B44" } }}
               onClick={exportDailyReport}>
               {exportingReport ? "Building…" : "Daily Closing Report (Excel)"}
             </Button>
-            <Button size="small" variant="outlined" startIcon={<FaFilePdf />}
+            <Button size="small" variant="contained" startIcon={<FaFilePdf />}
               disabled={exportingReport || exportingReportPdf}
-              sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+              sx={{ background: brand.danger, color: "#fff", "&:hover": { background: "#9E2E22" } }}
               onClick={exportDailyReportPdf}>
               {exportingReportPdf ? "Building…" : "Daily Closing Report (PDF)"}
             </Button>
@@ -489,10 +415,6 @@ export default function DailyClosingTab({ onChanged, showToast }) {
                 <Button fullWidth variant="contained" onClick={save}
                   sx={{ height: 42, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
                   Save Daily Closing
-                </Button>
-                <Button variant="outlined" startIcon={<FaPrint />} onClick={printSlip}
-                  sx={{ height: 42, whiteSpace: "nowrap", fontWeight: 800, color: brand.blueDeep, borderColor: brand.blueDeep }}>
-                  Print
                 </Button>
               </Box>
             </Box>

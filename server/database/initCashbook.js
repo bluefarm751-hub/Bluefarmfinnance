@@ -147,9 +147,18 @@ async function initCashbook() {
         "closingCash" NUMERIC DEFAULT 0,
         "closingBank" NUMERIC DEFAULT 0,
         summary TEXT,
+        sheets TEXT,
         remarks TEXT,
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Migration: older installs already had monthly_closings without the
+    // "sheets" column (added so a saved month keeps its full 4-sheet
+    // snapshot — Receipt Side / Payment Side / Outstanding TRs / Closing
+    // Summary — permanently, instead of just the flat summary totals).
+    await client.query(`
+      ALTER TABLE monthly_closings ADD COLUMN IF NOT EXISTS sheets TEXT
     `);
 
     await client.query("COMMIT");
