@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography, IconButton, Collapse } from "@mui/material";
-import { FaTrashAlt, FaFileExcel, FaFilePdf, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTrashAlt, FaFileExcel, FaFilePdf, FaChevronDown, FaChevronUp, FaPrint } from "react-icons/fa";
 import { SectionCard, DataTable, money, signedMoney } from "./ui";
 import {
   getMonthlySummary,
@@ -13,6 +13,7 @@ import {
 } from "../../api/cashbookApi";
 import { exportXlsxMultiSheet } from "../../utils/xlsxWriter";
 import { downloadMultiSectionPdf } from "../../utils/multiSectionPdf";
+import { printDocument, tableHtml } from "../../utils/print";
 import { brand } from "../../theme";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -338,6 +339,42 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     }
   };
 
+  // Standalone print for just the physical cash count (denomination table +
+  // actual cash counted) — separate from the full 4-sheet Monthly Closing
+  // Report, for when only the cash-counting slip itself needs to be printed.
+  const printCashCounting = () => {
+    if (!preview) return;
+    const rows = DENOMS.map((d) => {
+      const qty = Number(counts[d]) || 0;
+      return { denomination: `Rs. ${d.toLocaleString()}`, qty, amount: money(d * qty) };
+    });
+    const cols = [
+      { key: "denomination", label: "Denomination" },
+      { key: "qty", label: "Qty" },
+      { key: "amount", label: "Amount" },
+    ];
+    const bodyHtml = `
+      <div class="info-box">
+        <div class="info-grid">
+          <div class="info-item"><div>
+            <div class="info-label">MONTH</div>
+            <div class="info-value">${MONTHS[month - 1]} ${year}</div>
+          </div></div>
+          <div class="info-item"><div>
+            <div class="info-label">ACTUAL CASH COUNTED</div>
+            <div class="info-value">${money(actualCash)}</div>
+          </div></div>
+        </div>
+      </div>
+      ${tableHtml(cols, rows)}
+    `;
+    printDocument({
+      title: "Cash Counting Slip",
+      subtitle: `Monthly Closing — ${MONTHS[month - 1]} ${year} (as of ${preview.toDate})`,
+      bodyHtml,
+    });
+  };
+
   const historyCols = [
     { key: "period", label: "Month", render: (r) => `${MONTHS[r.month - 1]} ${r.year}` },
     { key: "openingCash", label: "Opening Cash", align: "right", render: (r) => money(r.openingCash) },
@@ -407,9 +444,16 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
-                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
-                  Count Physical Cash — as of {preview.toDate}
-                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+                  <Typography fontWeight={800} sx={{ color: brand.ink }}>
+                    Count Physical Cash — as of {preview.toDate}
+                  </Typography>
+                  <Button size="small" variant="outlined" startIcon={<FaPrint size={11} />}
+                    onClick={printCashCounting}
+                    sx={{ borderColor: brand.gold, color: brand.goldDark, fontWeight: 700, fontSize: 11.5, height: 30 }}>
+                    Print Cash Counting
+                  </Button>
+                </Box>
                 <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
                     <thead>
