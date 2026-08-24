@@ -359,13 +359,13 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
     const esc = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const summaryRow = (label, value, opts = {}) => `
       <tr>
-        <td colspan="2" style="padding:6px 9px;border:1px solid #C9D3E3;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};font-size:10.5pt;">${esc(label)}</td>
-        <td style="padding:6px 9px;border:1px solid #C9D3E3;text-align:right;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};font-size:10.5pt;">${esc(value)}</td>
+        <td colspan="2" style="padding:6px 10px;border:1px solid #C9D3E3;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(label)}</td>
+        <td style="padding:6px 10px;border:1px solid #C9D3E3;text-align:right;font-weight:${opts.bold === false ? 600 : 800};background:${opts.bg || "rgba(255,255,255,0.92)"};color:${opts.color || "#0B1B33"};">${esc(value)}</td>
       </tr>`;
-    const spacer = `<tr><td colspan="3" style="border:none;background:transparent;height:7px;padding:0;"></td></tr>`;
+    const spacer = `<tr><td colspan="3" style="border:none;background:transparent;height:6px;padding:0;"></td></tr>`;
 
     const summaryHtml = `
-      <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;">
+      <table style="width:100%;border-collapse:collapse;font-size:10pt;font-family:Arial,sans-serif;margin-top:0;">
         <tbody>
           ${summaryRow("Total", money(actualCash))}
           ${summaryRow("Differ", signedMoney(difference), { bg: brand.danger, color: "#fff" })}
@@ -394,9 +394,9 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           </div></div>
         </div>
       </div>
-      <div style="display:flex;gap:16px;align-items:flex-start;margin-top:6px;">
-        <div style="flex:1 1 58%;min-width:0;">${tableHtml(cols, rows)}</div>
-        <div style="flex:1 1 42%;min-width:0;">${summaryHtml}</div>
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1 1 58%;">${tableHtml(cols, rows)}</div>
+        <div style="flex:1 1 42%;">${summaryHtml}</div>
       </div>
     `;
     printDocument({
@@ -475,7 +475,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
-                <Typography fontWeight={800} sx={{ mb: 1.5, color: "#fff" }}>
+                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
                   Count Physical Cash — as of {preview.toDate}
                 </Typography>
                 <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
