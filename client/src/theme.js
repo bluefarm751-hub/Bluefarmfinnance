@@ -53,6 +53,11 @@ export const gradients = {
   // Sidebar — a clearly blue dark shade (not near-black navy), matching
   // the top bar's blue family so the whole shell reads as one blue theme.
   sidebar: `linear-gradient(180deg, ${brand.blueDeep} 0%, #0A3868 100%)`,
+  // Top bar — the exact same two colours as the sidebar, but running
+  // left→right instead of top→bottom: the edge touching the sidebar reads
+  // sky blue (blueBright), the far edge reads dark blue (matching the
+  // sidebar's bottom shade), with no blended/mixed tone in between.
+  topbar: `linear-gradient(90deg, ${brand.blueBright} 0%, ${brand.blueDeep} 55%, #0A3868 100%)`,
 };
 
 export const shadowCard = "0 20px 50px rgba(8, 33, 63, 0.35)";

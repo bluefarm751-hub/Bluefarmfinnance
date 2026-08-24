@@ -7,7 +7,7 @@ import {
   FaCalendarAlt,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { brand } from "../theme";
+import { brand, gradients } from "../theme";
 import { logout } from "../api/authApi";
 
 export default function Header() {
@@ -36,7 +36,10 @@ export default function Header() {
     <header
       style={{
         height: "78px",
-        background: `linear-gradient(90deg, ${brand.blueDeep} 0%, ${brand.blueBright} 100%)`,
+        // Same two colours as the sidebar, running left (sky blue, the
+        // side touching the sidebar) to right (dark blue) — not a blended
+        // top-to-bottom copy of the sidebar's own gradient.
+        background: gradients.topbar,
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
