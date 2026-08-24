@@ -394,10 +394,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           </div></div>
         </div>
       </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="flex:1 1 58%;">${tableHtml(cols, rows)}</div>
-        <div style="flex:1 1 42%;">${summaryHtml}</div>
-      </div>
+      <div style="margin-bottom:14px;">${tableHtml(cols, rows)}</div>
+      <div>${summaryHtml}</div>
     `;
     printDocument({
       title: "Cash Counting Slip",
@@ -475,9 +473,14 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
               }}>
-                <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
-                  Count Physical Cash — as of {preview.toDate}
-                </Typography>
+                <Box sx={{
+                  mb: 1.5, px: 1.5, py: 0.9, borderRadius: 2,
+                  background: brand.tableCardBg, borderBottom: `2px solid ${brand.gold}`,
+                }}>
+                  <Typography fontWeight={800} sx={{ color: "#ffffff" }}>
+                    Count Physical Cash — as of {preview.toDate}
+                  </Typography>
+                </Box>
                 <Box sx={{ borderRadius: 2.5, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
                     <thead>
@@ -583,10 +586,10 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   sx={{ height: 42, mt: 2, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
                   {saving ? "Saving..." : "Save Monthly Closing"}
                 </Button>
-                <Button fullWidth variant="outlined" startIcon={<FaPrint size={12} />}
+                <Button fullWidth variant="contained" startIcon={<FaPrint size={12} />}
                   onClick={printCashCounting}
-                  sx={{ mt: 1.5, height: 40, borderColor: brand.gold, color: brand.goldDark, fontWeight: 700,
-                    "&:hover": { borderColor: brand.goldDark, background: "rgba(212,175,55,0.08)" } }}>
+                  sx={{ mt: 1.5, height: 40, background: brand.gold, color: brand.navy, fontWeight: 800,
+                    "&:hover": { background: brand.goldDark, color: "#fff" } }}>
                   Print Cash Counting
                 </Button>
               </Box>

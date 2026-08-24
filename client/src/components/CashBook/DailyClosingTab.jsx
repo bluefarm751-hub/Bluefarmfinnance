@@ -295,10 +295,8 @@ export default function DailyClosingTab({ onChanged, showToast }) {
           </div></div>
         </div>
       </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="flex:1 1 58%;">${tableHtml(cols, rows)}</div>
-        <div style="flex:1 1 42%;">${summaryHtml}</div>
-      </div>
+      <div style="margin-bottom:14px;">${tableHtml(cols, rows)}</div>
+      <div>${summaryHtml}</div>
     `;
     printDocument({
       title: "Cash Counting Slip",
