@@ -468,9 +468,9 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         {loading && <Typography sx={{ color: brand.slate, mb: 2 }}>Loading…</Typography>}
 
         {!loading && preview && (
-          <Grid container spacing={4}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {/* Cash counting comes first — count the drawer before checking it against the expected total */}
-            <Grid item xs={12} md={7} sx={{ pr: { md: 2 }, flex: { xs: "1 1 100%", md: "0 0 58%" }, maxWidth: { xs: "100%", md: "58%" } }}>
+            <Box sx={{ flex: "1 1 480px", minWidth: 0, pr: { md: 2 } }}>
               <Box sx={{
                 mb: 2, p: 1.8, borderRadius: 3, border: `1.5px solid ${brand.gold}`,
                 background: "rgba(212,175,55,0.06)",
@@ -519,16 +519,16 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 </Box>
 
                 <Box sx={{
-                  mt: 2, p: 2, borderRadius: 3, background: brand.tableCardBg, border: `1px solid ${brand.tableCardBorder}`,
+                  mt: 2, p: 2, borderRadius: 3, background: `linear-gradient(135deg, ${brand.gold} 0%, ${brand.goldDark} 100%)`, border: `1px solid ${brand.goldDark}`,
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <Typography fontWeight={800} color="#fff">Actual Cash Counted</Typography>
-                  <Typography variant="h6" fontWeight={900} color={brand.goldLight}>{money(actualCash)}</Typography>
+                  <Typography fontWeight={800} color={brand.ink}>Actual Cash Counted</Typography>
+                  <Typography variant="h6" fontWeight={900} color={brand.ink}>{money(actualCash)}</Typography>
                 </Box>
               </Box>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" }, flex: { xs: "1 1 100%", md: "0 0 42%" }, maxWidth: { xs: "100%", md: "42%" } }}>
+            <Box sx={{ flex: "1 1 380px", minWidth: 0, pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
               <Box sx={{
                 p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
                 background: "#dfebfa", mt: { xs: 4, md: 0 }, mb: 2,
@@ -590,8 +590,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   Print Cash Counting
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         )}
       </SectionCard>
 
