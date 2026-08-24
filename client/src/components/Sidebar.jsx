@@ -234,6 +234,10 @@ function GroupHeader({ icon, title, to, open, onToggle }) {
   const location = useLocation();
   const isActive = !!to && location.pathname.startsWith(to);
 
+  // Every group tab (Payroll / Finance / Cash Book / Ledger) keeps the same
+  // background regardless of open/active state — only a gold left border +
+  // bolder gold icon mark which one is active, so the tabs read as a
+  // consistent, uniform set instead of each lighting up a different colour.
   const wrapperStyle = {
     display: "flex",
     alignItems: "center",
@@ -246,22 +250,18 @@ function GroupHeader({ icon, title, to, open, onToggle }) {
     fontWeight: 700,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    background: isActive
-      ? "linear-gradient(90deg, #d9b64a 0%, #b8912c 100%)"
-      : open
-        ? "linear-gradient(90deg, #16608f 0%, #12507a 100%)"
-        : hover
-          ? "rgba(255,255,255,0.14)"
-          : "rgba(6,26,48,0.45)",
-    border: `1px solid ${isActive ? "rgba(212,175,55,0.8)" : open ? "rgba(212,175,55,0.55)" : "rgba(255,255,255,0.10)"}`,
-    boxShadow: open ? "0 4px 14px rgba(0,0,0,0.28)" : "none",
+    background: hover ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
+    borderLeft: `3px solid ${isActive ? brand.gold : "transparent"}`,
+    border: "1px solid rgba(255,255,255,0.10)",
+    borderLeftWidth: 3,
+    borderLeftColor: isActive ? brand.gold : "transparent",
     transition: "0.22s",
   };
 
   const titleContent = (
     <span style={{ display: "flex", alignItems: "center", gap: 12, cursor: to ? "pointer" : "default" }}>
-      <span style={{ fontSize: 16, color: isActive ? "#12283f" : brand.goldLight }}>{icon}</span>
-      <span style={{ color: isActive ? "#12283f" : "#fff" }}>{title}</span>
+      <span style={{ fontSize: 16, color: isActive ? brand.gold : brand.goldLight }}>{icon}</span>
+      <span style={{ color: "#fff" }}>{title}</span>
     </span>
   );
 
@@ -387,17 +387,15 @@ function MainTabLink({ to, icon, title }) {
         fontWeight: 700,
         letterSpacing: 0.4,
         textTransform: "uppercase",
-        background: isActive
-          ? "linear-gradient(90deg, #d9b64a 0%, #b8912c 100%)"
-          : hover
-            ? "rgba(255,255,255,0.14)"
-            : "rgba(6,26,48,0.45)",
-        border: `1px solid ${isActive ? "rgba(212,175,55,0.8)" : "rgba(255,255,255,0.10)"}`,
-        color: isActive ? "#12283f" : "#fff",
+        background: hover ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderLeftWidth: 3,
+        borderLeftColor: isActive ? brand.gold : "transparent",
+        color: "#fff",
         transition: "0.22s",
       }}
     >
-      <span style={{ fontSize: 16, color: isActive ? "#12283f" : brand.goldLight }}>{icon}</span>
+      <span style={{ fontSize: 16, color: isActive ? brand.gold : brand.goldLight }}>{icon}</span>
       <span>{title}</span>
     </NavLink>
   );

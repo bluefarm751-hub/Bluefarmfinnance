@@ -22,7 +22,11 @@ const muiTheme = createTheme({
       secondary: brand.slate,
     },
   },
-  shape: { borderRadius: 10 },
+  // Kept low on purpose — every sx `borderRadius: N` across the app is a
+  // multiple of this value, so raising it (it used to be 10) is what made
+  // cards, badges and dialogs render almost fully rounded/pill-shaped.
+  // A small base value keeps corners just slightly rounded everywhere.
+  shape: { borderRadius: 4 },
   components: {
     MuiPaper: {
       styleOverrides: {
