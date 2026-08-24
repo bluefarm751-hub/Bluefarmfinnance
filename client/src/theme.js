@@ -50,7 +50,7 @@ export const gradients = {
   // Blue Remounts = cavalry / horses -> deep maroon & bronze/gold ("military remount" prestige feel)
   blueRemounts: "linear-gradient(135deg, #5C0E22 0%, #8C1B3B 45%, #B8860B 100%)",
 
-  sidebar: "linear-gradient(180deg, #0F4C81 0%, #08213f 100%)",
+  sidebar: "linear-gradient(180deg, #1976D2 0%, #0d4d8f 100%)",
 };
 
 export const shadowCard = "0 20px 50px rgba(8, 33, 63, 0.35)";
