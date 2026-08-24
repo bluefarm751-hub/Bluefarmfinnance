@@ -128,7 +128,7 @@ export default function DateFieldDMY({ label, name, value, onChange, fullWidth =
                 size="small"
                 disabled={disabled}
                 aria-label="open calendar"
-                sx={{ color: "#0A8FDC" }}
+                sx={{ color: "#16608f" }}
               >
                 <CalendarMonthIcon fontSize="small" />
               </IconButton>

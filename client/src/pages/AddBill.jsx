@@ -126,7 +126,7 @@ export default function AddBill() {
 
     setSaving(true);
     try {
-      await addBill(formData, billPic);
+      await addBill({ ...formData, sNo }, billPic);
       showToast("Bill added — amount deducted from head", "success");
       setTimeout(() => navigate("/finance"), 800);
     } catch (err) {
@@ -160,9 +160,16 @@ export default function AddBill() {
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 3.5 }}>
             <Grid container spacing={2}>
-              {/* S No */}
+              {/* S No — auto-filled with the next number, but the user can
+                  type their own value if they want a specific one. */}
               <Grid item xs={12} md={2}>
-                <TextField fullWidth label="S No" value={sNo} InputProps={{ readOnly: true }} />
+                <TextField
+                  fullWidth
+                  label="S No"
+                  type="number"
+                  value={sNo}
+                  onChange={(e) => setSNo(e.target.value === "" ? "" : Number(e.target.value))}
+                />
               </Grid>
 
               {/* Bill Date */}

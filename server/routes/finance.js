@@ -740,6 +740,7 @@ router.post("/bills", billUpload, async (req, res) => {
             status,
             chequeNo,
             chequeDate,
+            sNo: sNoInput,
         } = req.body;
 
         if (!headId) {
@@ -805,19 +806,24 @@ router.post("/bills", billUpload, async (req, res) => {
             });
         }
 
-        // Next bill number for this farm
-        const numberResult = await db.query(
-            `
-            SELECT
-                COALESCE(MAX("sNo"), 0) + 1 AS "nextNo"
-            FROM finance_bills
-            WHERE farm IS NOT DISTINCT FROM $1
-            `,
-            [farm || null]
-        );
+        // S No: user can type their own on the Add Bill form. Only fall back
+        // to auto-numbering (next after the current max) when they leave it
+        // blank/invalid — so manual entries are respected as typed.
+        let sNo = Number(sNoInput);
 
-        const sNo =
-            Number(numberResult.rows[0].nextNo) || 1;
+        if (!sNo || sNo <= 0) {
+            const numberResult = await db.query(
+                `
+                SELECT
+                    COALESCE(MAX("sNo"), 0) + 1 AS "nextNo"
+                FROM finance_bills
+                WHERE farm IS NOT DISTINCT FROM $1
+                `,
+                [farm || null]
+            );
+
+            sNo = Number(numberResult.rows[0].nextNo) || 1;
+        }
 
         const result = await db.query(
             `

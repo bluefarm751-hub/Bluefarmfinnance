@@ -44,40 +44,33 @@ const muiTheme = createTheme({
         paper: { backgroundColor: brand.panelSoft, backgroundImage: "none" },
       },
     },
-    // Inputs use a dark navy field (matching the Cash Book cards) with
-    // white typed/selected text, instead of the light panel + dark-ink
-    // text used elsewhere — filled-in values (dates, dropdown picks, etc.)
-    // stayed a near-black colour on the light box, which read as an
-    // unstyled/broken field against the surrounding dark cards.
     MuiOutlinedInput: {
       styleOverrides: {
-        root: {
-          backgroundColor: brand.tableCardBg,
-          color: "#fff",
-          "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.35)" },
-          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.6)" },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: brand.blueBright },
-        },
-        input: { color: "#fff" },
+        root: { backgroundColor: brand.panelSoft },
       },
     },
     MuiInputBase: {
       styleOverrides: {
-        root: { backgroundColor: brand.tableCardBg, color: "#fff" },
-        input: { color: "#fff" },
+        root: { backgroundColor: brand.panelSoft },
       },
     },
+    // Field labels ("Date", "Voucher No", ...) float up and sit ON the box's
+    // top border once a field has a value (and always for Date, which forces
+    // shrink=true). In that floating position the label text renders on
+    // whatever sits BEHIND the field — often a dark card background — so a
+    // label with no background of its own goes dark-on-dark and disappears.
+    // Giving the label its own light chip (matching the field surface)
+    // keeps it readable in both the floating and resting positions, no
+    // matter what background is behind the field.
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          color: "rgba(255,255,255,0.75)",
-          "&.Mui-focused": { color: brand.blueBright },
+          backgroundColor: brand.panelSoft,
+          paddingLeft: 5,
+          paddingRight: 5,
+          borderRadius: 4,
+          "&.Mui-focused": { backgroundColor: brand.panelSoft },
         },
-      },
-    },
-    MuiSelect: {
-      styleOverrides: {
-        icon: { color: "#fff" },
       },
     },
     MuiMenu: {
