@@ -32,6 +32,12 @@ import { exportExcel } from "../utils/exportExcel";
 import { printContingentBillPdf, downloadContingentBillPdf } from "../utils/contingentBillPdf";
 import { brand, shadowCard } from "../theme";
 
+// Matches the boxed, alternating-row look used everywhere else in the app
+// (Temporary Receipt table, Cash Book, etc.) — a dark blue outer box with
+// light blue / white-gradient rows inside, instead of plain white cards.
+const rowBg = (i) => (i % 2 ? brand.rowWhiteGradient : brand.rowBlue);
+const rowTextColor = (i) => (i % 2 ? brand.rowTextOnWhite : brand.rowText);
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -217,14 +223,26 @@ export default function ContingentBillReport() {
           </Card>
         )}
 
-        {/* List */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {filtered.map((b) => {
+        {/* List — boxed dark-blue outer panel with alternating light rows,
+            matching the table style used across the rest of the app. */}
+        <Box sx={{
+          background: brand.tableCardBg, border: `1px solid ${brand.tableCardBorder}`,
+          borderRadius: 3, boxShadow: shadowCard, p: 1.2,
+          display: "flex", flexDirection: "column", gap: 1,
+        }}>
+          {filtered.map((b, i) => {
             const isExpanded = expandedId === b.id;
+            const txt = rowTextColor(i);
 
             return (
-              <Card key={b.id} sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
-                <CardContent>
+              <Box
+                key={b.id}
+                sx={{
+                  background: rowBg(i), borderRadius: 2, p: 2,
+                  border: "1px solid rgba(8,33,63,0.12)",
+                }}
+              >
+                <Box>
                   <Box sx={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",
                     flexWrap: "nowrap", gap: 2,
@@ -238,8 +256,8 @@ export default function ContingentBillReport() {
                         label={`Voucher ${b.voucherNo || "—"}`}
                         sx={{ fontWeight: 700, background: "linear-gradient(135deg,#1E88E5,#1565C0)", color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}
                       />
-                      <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }} />
-                      <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220 }} />
+                      <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, color: txt, borderColor: txt }} />
+                      <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220, color: txt, borderColor: txt }} />
                       <Chip
                         label={`Total: Rs. ${Number(b.totalAmount || 0).toLocaleString()}`}
                         sx={{ fontWeight: 700, background: brand.success, color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}
@@ -286,48 +304,48 @@ export default function ContingentBillReport() {
                   </Box>
 
                   <Collapse in={isExpanded}>
-                    <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: 2, borderColor: "rgba(8,33,63,0.18)" }} />
                     <Grid container spacing={2} sx={{ mb: 2 }}>
                       <Grid item xs={12} md={4}>
-                        <Typography variant="caption" color="text.secondary">Payment Head</Typography>
-                        <Typography fontWeight={700}>{b.headName || "—"}</Typography>
+                        <Typography variant="caption" sx={{ color: txt, opacity: 0.75 }}>Payment Head</Typography>
+                        <Typography fontWeight={700} sx={{ color: txt }}>{b.headName || "—"}</Typography>
                       </Grid>
                       <Grid item xs={12} md={8}>
-                        <Typography variant="caption" color="text.secondary">Authority</Typography>
-                        <Typography fontWeight={700}>{b.authority || "—"}</Typography>
+                        <Typography variant="caption" sx={{ color: txt, opacity: 0.75 }}>Authority</Typography>
+                        <Typography fontWeight={700} sx={{ color: txt }}>{b.authority || "—"}</Typography>
                       </Grid>
                       <Grid item xs={12}>
-                        <Typography variant="caption" color="text.secondary">Rupees</Typography>
-                        <Typography fontWeight={700}>{b.amountInWords || "—"}</Typography>
+                        <Typography variant="caption" sx={{ color: txt, opacity: 0.75 }}>Rupees</Typography>
+                        <Typography fontWeight={700} sx={{ color: txt }}>{b.amountInWords || "—"}</Typography>
                       </Grid>
                     </Grid>
 
                     {[...(b.items || [])]
                       .sort((x, y) => (x.billDate || "").localeCompare(y.billDate || ""))
-                      .map((it, i) => (
+                      .map((it, j) => (
                       <Box
-                        key={it.id || i}
+                        key={it.id || j}
                         sx={{
                           display: "flex", justifyContent: "space-between", alignItems: "center",
-                          flexWrap: "nowrap", gap: 1, py: 1, borderBottom: "1px solid #EEF2F8",
+                          flexWrap: "nowrap", gap: 1, py: 1, borderBottom: "1px solid rgba(8,33,63,0.15)",
                         }}
                       >
                         <Box sx={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
-                          <Typography fontWeight={700} noWrap title={it.description || "—"}>
+                          <Typography fontWeight={700} noWrap title={it.description || "—"} sx={{ color: txt }}>
                             {it.description || "—"}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                          <Typography variant="caption" noWrap sx={{ display: "block", color: txt, opacity: 0.75 }}>
                             Bill No: {it.billNo || "—"} • Date: {it.billDate || "—"}
                           </Typography>
                         </Box>
-                        <Typography fontWeight={700} sx={{ flexShrink: 0 }}>
+                        <Typography fontWeight={700} sx={{ flexShrink: 0, color: txt }}>
                           Rs. {Number(it.amount || 0).toLocaleString()}
                         </Typography>
                       </Box>
                     ))}
                   </Collapse>
-                </CardContent>
-              </Card>
+                </Box>
+              </Box>
             );
           })}
         </Box>

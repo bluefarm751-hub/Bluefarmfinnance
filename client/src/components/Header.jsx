@@ -65,15 +65,17 @@ export default function Header() {
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            color: "#fff",
             fontSize: "13.5px",
-            background: "rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.22)",
+            border: "1px solid rgba(255,255,255,0.3)",
             padding: "8px 14px",
             borderRadius: "20px",
           }}
         >
           <FaCalendarAlt color="#fff" />
-          {today}
+          <span style={{ color: "#ffffff", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+            {today}
+          </span>
         </div>
 
         <IconBtn><FaBell size={18} color="#fff" /></IconBtn>

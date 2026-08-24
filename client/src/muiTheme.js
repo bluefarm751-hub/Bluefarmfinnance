@@ -44,14 +44,40 @@ const muiTheme = createTheme({
         paper: { backgroundColor: brand.panelSoft, backgroundImage: "none" },
       },
     },
+    // Inputs use a dark navy field (matching the Cash Book cards) with
+    // white typed/selected text, instead of the light panel + dark-ink
+    // text used elsewhere — filled-in values (dates, dropdown picks, etc.)
+    // stayed a near-black colour on the light box, which read as an
+    // unstyled/broken field against the surrounding dark cards.
     MuiOutlinedInput: {
       styleOverrides: {
-        root: { backgroundColor: brand.panelSoft },
+        root: {
+          backgroundColor: brand.tableCardBg,
+          color: "#fff",
+          "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.35)" },
+          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.6)" },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: brand.blueBright },
+        },
+        input: { color: "#fff" },
       },
     },
     MuiInputBase: {
       styleOverrides: {
-        root: { backgroundColor: brand.panelSoft },
+        root: { backgroundColor: brand.tableCardBg, color: "#fff" },
+        input: { color: "#fff" },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          color: "rgba(255,255,255,0.75)",
+          "&.Mui-focused": { color: brand.blueBright },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        icon: { color: "#fff" },
       },
     },
     MuiMenu: {
