@@ -83,7 +83,7 @@ export default function Ledger() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         {/* Colorful Welcome Card */}
         <Box sx={{
           textAlign: "center",

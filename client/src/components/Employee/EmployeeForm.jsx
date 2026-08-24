@@ -179,16 +179,14 @@ export default function EmployeeForm({ formData, setFormData }) {
               <TextField fullWidth label="Family Mobile No" name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ width: { xs: "100%", md: "200%" }, overflowX: { md: "auto" }, pb: { md: 0.5 } }}>
-                <TextField
-                  fullWidth
-                  label="Address"
-                  name="address"
-                  value={formData.address || ""}
-                  onChange={handleChange}
-                  slotProps={{ input: viewAdornment("Address", formData.address) }}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Address"
+                name="address"
+                value={formData.address || ""}
+                onChange={handleChange}
+                slotProps={{ input: viewAdornment("Address", formData.address) }}
+              />
             </Grid>
           </Grid>
         </CardContent>
@@ -250,16 +248,14 @@ export default function EmployeeForm({ formData, setFormData }) {
               <TextField fullWidth label="Account Title" name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ width: { xs: "100%", md: "200%" }, overflowX: { md: "auto" }, pb: { md: 0.5 } }}>
-                <TextField
-                  fullWidth
-                  label="IBAN"
-                  name="iban"
-                  value={formData.iban || ""}
-                  onChange={handleChange}
-                  slotProps={{ input: viewAdornment("IBAN", formData.iban) }}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="IBAN"
+                name="iban"
+                value={formData.iban || ""}
+                onChange={handleChange}
+                slotProps={{ input: viewAdornment("IBAN", formData.iban) }}
+              />
             </Grid>
           </Grid>
         </CardContent>

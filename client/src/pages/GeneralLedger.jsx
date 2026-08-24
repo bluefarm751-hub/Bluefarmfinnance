@@ -57,7 +57,7 @@ export default function GeneralLedger() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Typography variant="h4" fontWeight="bold" mb={0.5}>General Ledger</Typography>
         <Typography color="text.secondary" mb={3}>
           Every Debit / Credit entry for {farm}, in chronological order with a running balance.

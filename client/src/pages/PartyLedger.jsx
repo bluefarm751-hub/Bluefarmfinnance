@@ -60,7 +60,7 @@ export default function PartyLedger() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 0.5 }}>
           <Typography variant="h4" fontWeight="bold">Party Ledger</Typography>
           <Button

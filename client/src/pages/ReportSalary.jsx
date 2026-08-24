@@ -90,7 +90,7 @@ export default function ReportSalary() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         {/* Premium badge */}
         <Box sx={{
           display: "inline-flex", alignItems: "center", gap: 0.6,
@@ -165,6 +165,7 @@ export default function ReportSalary() {
               <DataGrid
                 rows={rows}
                 columns={gridColumns}
+                getRowHeight={() => "auto"}
                 getRowId={(r) => r.id}
                 pageSizeOptions={[10, 25, 50]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}

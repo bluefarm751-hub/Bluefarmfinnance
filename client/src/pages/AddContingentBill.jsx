@@ -198,7 +198,7 @@ export default function AddContingentBill() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Box sx={{
           display: "inline-flex", alignItems: "center", gap: 0.6,
           px: 1.6, py: 0.4, borderRadius: 10,

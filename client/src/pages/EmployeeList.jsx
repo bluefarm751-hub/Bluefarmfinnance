@@ -76,7 +76,7 @@ export default function EmployeeList() {
   });
 
   const columns = [
-    { field: "employeeNo", headerName: "Emp No", width: 110 },
+    { field: "employeeNo", headerName: "Emp No", width: 150 },
     { field: "name", headerName: "Employee Name", flex: 2 },
     { field: "cnic", headerName: "CNIC", flex: 1.3 },
     { field: "appointment", headerName: "Appointment", flex: 1.4 },
@@ -185,6 +185,7 @@ export default function EmployeeList() {
                 rows={filteredEmployees}
                 columns={columns}
                 getRowId={(row) => row.id}
+                getRowHeight={() => "auto"}
                 disableRowSelectionOnClick
                 pageSizeOptions={[10, 20, 50]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}

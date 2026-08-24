@@ -7,7 +7,7 @@ import { brand, gradients } from "../theme";
 export default function ComingSoon({ title }) {
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Box sx={{
           textAlign: "center",
           py: 8,

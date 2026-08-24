@@ -303,7 +303,7 @@ export default function UpdateSalary() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Box sx={{
           display: "inline-flex", alignItems: "center", gap: 0.6,
           px: 1.6, py: 0.4, borderRadius: 10,
@@ -392,6 +392,7 @@ export default function UpdateSalary() {
               <DataGrid
                 rows={rows}
                 columns={columns}
+                                getRowHeight={() => "auto"}
                 pageSizeOptions={[10, 25]}
                 initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
                 getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? "row-even" : "row-odd")}

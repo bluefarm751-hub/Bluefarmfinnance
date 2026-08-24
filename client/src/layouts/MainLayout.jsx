@@ -46,7 +46,7 @@ export default function MainLayout({ children }) {
             overflowY: "auto",
             overflowX: "hidden",
             WebkitOverflowScrolling: "touch",
-            padding: "26px 30px",
+            padding: "6px 30px 26px",
             background: "transparent",
           }}
         >

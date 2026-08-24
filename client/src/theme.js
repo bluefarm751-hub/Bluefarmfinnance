@@ -50,7 +50,9 @@ export const gradients = {
   // Blue Remounts = cavalry / horses -> deep maroon & bronze/gold ("military remount" prestige feel)
   blueRemounts: "linear-gradient(135deg, #5C0E22 0%, #8C1B3B 45%, #B8860B 100%)",
 
-  sidebar: "linear-gradient(180deg, #0B2A4A 0%, #08213f 100%)",
+  // Sidebar — a clearly blue dark shade (not near-black navy), matching
+  // the top bar's blue family so the whole shell reads as one blue theme.
+  sidebar: `linear-gradient(180deg, ${brand.blueDeep} 0%, #0A3868 100%)`,
 };
 
 export const shadowCard = "0 20px 50px rgba(8, 33, 63, 0.35)";
@@ -73,8 +75,10 @@ export const tableBodyRowSx = (i) => ({
   background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue,
   "& .MuiTableCell-root": {
     color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
-    borderBottom: "none",
+    borderBottom: "1px solid rgba(8,33,63,0.18)",
+    borderRight: "1px solid rgba(8,33,63,0.10)",
   },
+  "& .MuiTableCell-root:last-of-type": { borderRight: "none" },
 });
 
 // MUI DataGrid equivalent — spread into the DataGrid's sx prop.
@@ -99,7 +103,23 @@ export const dataGridThemeSx = {
     color: brand.tableCardHeaderText,
   },
   "& .MuiDataGrid-columnSeparator": { color: "rgba(255,255,255,0.3)" },
-  "& .MuiDataGrid-cell": { borderBottom: "none" },
+  // Every row/cell now reads as a bordered box instead of a borderless
+  // strip, and long values wrap onto a 2nd line instead of being cut off
+  // with an ellipsis.
+  "& .MuiDataGrid-cell": {
+    borderBottom: "1px solid rgba(8,33,63,0.18)",
+    borderRight: "1px solid rgba(8,33,63,0.10)",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    lineHeight: 1.3,
+    display: "flex",
+    alignItems: "center",
+    padding: "8px 10px",
+  },
+  "& .MuiDataGrid-cell:last-of-type": { borderRight: "none" },
+  "& .MuiDataGrid-columnHeader": { borderRight: "1px solid rgba(255,255,255,0.14)" },
+  "& .MuiDataGrid-columnHeader:last-of-type": { borderRight: "none" },
+  "& .MuiDataGrid-row": { borderBottom: "1px solid rgba(8,33,63,0.10)" },
   "& .MuiDataGrid-row.row-even, & .MuiDataGrid-row.row-even .MuiDataGrid-cell": { background: brand.rowBlue, color: brand.rowText },
   "& .MuiDataGrid-row.row-odd, & .MuiDataGrid-row.row-odd .MuiDataGrid-cell": { background: brand.rowWhiteGradient, color: brand.rowTextOnWhite },
   "& .MuiDataGrid-row:hover, & .MuiDataGrid-row:hover .MuiDataGrid-cell": { background: `${brand.blueDeep} !important`, color: "#fff" },
