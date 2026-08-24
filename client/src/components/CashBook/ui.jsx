@@ -17,9 +17,9 @@ export function SectionCard({ title, action, children }) {
     <Box
       sx={{
         borderRadius: 4,
-        background: "#fff",
-        border: "1px solid rgba(15,76,129,0.14)",
-        boxShadow: "0 10px 30px rgba(8,33,63,0.08)",
+        background: brand.tableCardBg,
+        border: `1px solid ${brand.tableCardBorder}`,
+        boxShadow: "0 10px 30px rgba(8,33,63,0.25)",
         overflow: "hidden",
         mb: 3,
       }}
@@ -37,7 +37,7 @@ export function SectionCard({ title, action, children }) {
             background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
           }}
         >
-          <Typography sx={{ color: "#fff", fontWeight: 800, letterSpacing: 0.4, fontSize: 15 }}>
+          <Typography sx={{ color: brand.tableCardHeaderText, fontWeight: 800, letterSpacing: 0.4, fontSize: 15 }}>
             {title}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>{action}</Box>
@@ -51,15 +51,15 @@ export function SectionCard({ title, action, children }) {
 export function DataTable({ columns, rows, empty = "No records found", totalsRow }) {
   return (
     <Box sx={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 5px", fontSize: 13.5 }}>
         <thead>
           <tr>
             {columns.map((c) => (
               <th
                 key={c.key}
                 style={{
-                  background: brand.panel,
-                  color: brand.ink,
+                  background: brand.tableCardBg,
+                  color: brand.tableCardHeaderText,
                   textAlign: c.align || "left",
                   padding: "10px 12px",
                   fontWeight: 800,
@@ -77,22 +77,21 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
             <tr>
               <td
                 colSpan={columns.length}
-                style={{ padding: "26px 12px", textAlign: "center", color: brand.slate, fontWeight: 600 }}
+                style={{ padding: "26px 12px", textAlign: "center", color: "#cfe0f7", fontWeight: 600 }}
               >
                 {empty}
               </td>
             </tr>
           )}
           {rows.map((row, i) => (
-            <tr key={row.id ?? i} style={{ background: i % 2 ? "rgba(238,243,251,0.5)" : "#fff" }}>
+            <tr key={row.id ?? i} style={{ background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>
               {columns.map((c) => (
                 <td
                   key={c.key}
                   style={{
                     padding: "9px 12px",
                     textAlign: c.align || "left",
-                    borderBottom: "1px solid #E5E9F2",
-                    color: brand.ink,
+                    color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
                   }}
                 >
                   {c.render ? c.render(row, i) : (row[c.key] ?? "")}

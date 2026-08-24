@@ -131,7 +131,7 @@ export default function ReportAllocation() {
             label="Filter by Head"
             value={headId}
             onChange={(e) => setHeadId(e.target.value)}
-            sx={{ minWidth: 220, background: "#fff" }}
+            sx={{ minWidth: 220, background: "#dfebfa" }}
           >
             <MenuItem value="">All Heads</MenuItem>
             {heads.map((h) => (

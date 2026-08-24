@@ -236,13 +236,13 @@ export default function EmployeeDocuments({ employee, employeeId, onChanged, sho
             <iframe
               title={viewDoc.label}
               src={fullUrl(viewDoc.url)}
-              style={{ width: "100%", height: "72vh", border: "none", borderRadius: 12, background: "#fff" }}
+              style={{ width: "100%", height: "72vh", border: "none", borderRadius: 12, background: "#dfebfa" }}
             />
           )}
           {viewDoc && isImageFile(viewDoc.url) && (
             <Box sx={{ textAlign: "center" }}>
               <img src={fullUrl(viewDoc.url)} alt={viewDoc.label}
-                style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 12, background: "#fff" }} />
+                style={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 12, background: "#dfebfa" }} />
             </Box>
           )}
           {viewDoc && !isPdfFile(viewDoc.url) && !isImageFile(viewDoc.url) && (

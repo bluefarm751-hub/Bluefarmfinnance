@@ -416,7 +416,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                       <tr>
                         {["Denomination", "Qty", "Amount"].map((h, i) => (
                           <th key={h} style={{
-                            background: brand.panel, color: brand.ink,
+                            background: brand.tableCardBg, color: brand.tableCardHeaderText,
                             textAlign: i === 0 ? "left" : i === 1 ? "center" : "right",
                             padding: "9px 12px", fontWeight: 800, borderBottom: `2px solid ${brand.gold}`,
                           }}>
@@ -429,7 +429,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                       {DENOMS.map((d, i) => {
                         const qty = Number(counts[d]) || 0;
                         return (
-                          <tr key={d} style={{ background: qty ? "rgba(212,175,55,0.08)" : i % 2 ? "rgba(238,243,251,0.5)" : "#fff" }}>
+                          <tr key={d} style={{ background: qty ? "rgba(244,197,66,0.35)" : i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>
                             <td style={{ padding: "8px 12px", borderBottom: "1px solid #E5E9F2", fontWeight: 800, color: brand.blueDeep }}>
                               Rs. {d.toLocaleString()}
                             </td>
@@ -451,11 +451,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                 </Box>
 
                 <Box sx={{
-                  mt: 2, p: 2, borderRadius: 3, background: brand.panel, border: "1px solid rgba(15,76,129,0.14)",
+                  mt: 2, p: 2, borderRadius: 3, background: brand.tableCardBg, border: `1px solid ${brand.tableCardBorder}`,
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <Typography fontWeight={800} color={brand.ink}>Actual Cash Counted</Typography>
-                  <Typography variant="h6" fontWeight={900} color={brand.blueDeep}>{money(actualCash)}</Typography>
+                  <Typography fontWeight={800} color="#fff">Actual Cash Counted</Typography>
+                  <Typography variant="h6" fontWeight={900} color={brand.goldLight}>{money(actualCash)}</Typography>
                 </Box>
               </Box>
             </Grid>
@@ -463,7 +463,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
             <Grid item xs={12} md={5} sx={{ pl: { md: 3 }, borderLeft: { md: "1px solid #E5E9F2" } }}>
               <Box sx={{
                 p: 2, borderRadius: 3, border: `1.5px solid rgba(15,76,129,0.2)`,
-                background: "#fff", mt: { xs: 4, md: 0 }, mb: 2,
+                background: "#dfebfa", mt: { xs: 4, md: 0 }, mb: 2,
               }}>
                 <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink, fontSize: 15 }}>
                   Closing Summary
@@ -478,8 +478,8 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   ].map((l) => (
                     <Box key={l.label} sx={{
                       display: "flex", justifyContent: "space-between", gap: 2, px: 2, py: 1.3,
-                      background: l.strong ? brand.blueDeep : "#fff",
-                      color: l.strong ? "#fff" : brand.ink,
+                      background: l.strong ? brand.blueDeep : brand.rowBlue,
+                      color: l.strong ? "#fff" : brand.rowText,
                       borderTop: "1px solid #E5E9F2",
                     }}>
                       <Typography fontSize={13} fontWeight={l.strong ? 800 : 600}>{l.label}</Typography>
@@ -525,7 +525,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         <DataTable columns={historyCols} rows={history} empty="No monthly closings saved yet" />
         {history.map((r) => (
           <Collapse in={expandedId === r.id} key={r.id} unmountOnExit>
-            <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.panel }}>
+            <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.tableCardBg }}>
               <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
                 {MONTHS[r.month - 1]} {r.year} — Saved Snapshot
               </Typography>
@@ -540,7 +540,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                       }}>
                         <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 12.5 }}>{sheet.name}</Typography>
                       </Box>
-                      <Box sx={{ borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid #E5E9F2", background: "#fff" }}>
+                      <Box sx={{ borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid #E5E9F2", background: "#dfebfa" }}>
                         <DataTable
                           columns={sheet.columns.map((c) => ({ key: c.key, label: c.label, align: c.key === "amount" || c.key === "cash" || c.key === "bank" || c.key === "qty" ? "right" : undefined }))}
                           rows={sheet.rows}

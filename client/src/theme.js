@@ -9,9 +9,34 @@ export const brand = {
   goldDark: "#9C7A1E",
   ink: "#0B1B33",
   slate: "#6B7280",
-  panel: "#eef3fb",
+  // Page canvas — a clear blue tint, no white left in it.
+  panel: "#cfe0f7",
+  // Card / Paper / TextField surfaces — slightly lighter than the page so
+  // boxes still stand out, but stays in the same blue family (never white).
+  panelSoft: "#dfebfa",
+  // Typing caret (text cursor) colour for every input in the app.
+  caret: "#0A8FDC",
   danger: "#C0392B",
   success: "#1E8E5A",
+
+  // ---- Confirmed table/card design (Cash Book style boxes) ----
+  // Outer box that wraps a table (e.g. "Recent entries" style panels).
+  tableCardBg: "#1c4f7e",
+  tableCardBorder: "#123a63",
+  tableCardHeaderText: "#ffffff",
+  // Alternating row colours — both light, neither one reads as white,
+  // and both sit clearly apart from the dark tableCardBg.
+  rowBlue: "#8FCBEF",
+  rowWhiteGradient: "linear-gradient(90deg,#ffffff,#eef4fb)",
+  rowText: "#062a45",
+  rowTextOnWhite: "#1c4f7e",
+  // Action button colours — bright enough to never blend into tableCardBg.
+  buttonSave: "#2FBF71",
+  buttonSaveText: "#0a3319",
+  buttonCancel: "#F0574D",
+  buttonCancelText: "#4a0f0b",
+  buttonEdit: "#F4C542",
+  buttonEditText: "#3a2c05",
 };
 
 export const gradients = {

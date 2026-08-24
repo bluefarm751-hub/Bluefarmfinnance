@@ -56,7 +56,7 @@ function SquareUploadBox({ label, previewUrl, isImage, fileName, onChange }) {
           maxWidth: 160,
           borderRadius: 3,
           border: `2px dashed ${previewUrl ? brand.gold : "#C9D3E3"}`,
-          background: previewUrl ? "#fff" : "#F7FAFF",
+          background: previewUrl ? "#dfebfa" : "#eaf3fc",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

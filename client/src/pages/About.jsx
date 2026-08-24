@@ -237,7 +237,7 @@ function InfoLine({ icon, label, value }) {
 function ModuleCard({ icon, title, desc, accentGradient }) {
   return (
     <Box sx={{
-      background: "#fff",
+      background: "#dfebfa",
       borderRadius: 4,
       p: 2.6,
       boxShadow: shadowCard,

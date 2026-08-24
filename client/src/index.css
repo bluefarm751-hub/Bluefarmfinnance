@@ -13,17 +13,23 @@ body,
     padding:0;
     overflow:hidden;
     font-family:Segoe UI,Arial,sans-serif;
-    background:#f6f9ff;
+    background:#cfe0f7;
 }
 
 body{
+    /* All-blue canvas — every stop below is a shade of blue, no white left in it. */
     background:
-        radial-gradient(1100px 620px at 8% -10%, #dceafc 0%, transparent 62%),
-        radial-gradient(900px 520px at 95% 0%, #ffeede 0%, transparent 58%),
-        radial-gradient(900px 600px at 85% 100%, #dff5ec 0%, transparent 60%),
-        radial-gradient(700px 500px at 20% 105%, #ece3fb 0%, transparent 60%),
-        linear-gradient(150deg,#f6f9ff 0%,#eef3fb 45%,#f3f0fa 100%);
+        radial-gradient(1100px 620px at 8% -10%, #bcd6f2 0%, transparent 62%),
+        radial-gradient(900px 520px at 95% 0%, #a6c6ea 0%, transparent 58%),
+        radial-gradient(900px 600px at 85% 100%, #cfe3fa 0%, transparent 60%),
+        radial-gradient(700px 500px at 20% 105%, #b3cdec 0%, transparent 60%),
+        linear-gradient(150deg,#cfe3fa 0%,#bcd6f2 50%,#a6c6ea 100%);
     background-attachment:fixed;
+}
+
+/* Cursor (text caret) — always a visible blue, on any surface. */
+input, textarea, [contenteditable="true"]{
+    caret-color:#0A8FDC;
 }
 
 ::-webkit-scrollbar{width:9px;height:9px}

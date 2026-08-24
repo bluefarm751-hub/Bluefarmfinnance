@@ -78,7 +78,7 @@ export default function Employees() {
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          background: "#fff",
+          background: "#dfebfa",
           borderRadius: 5,
           p: { xs: 2.5, md: 3.5 },
           border: "1px solid rgba(8,33,63,0.08)",

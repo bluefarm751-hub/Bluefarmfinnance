@@ -319,7 +319,7 @@ export default function AddBill() {
                         sx={{
                           width: 150, height: 110, borderRadius: 2, border: `1px solid ${brand.gold}`,
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          gap: 0.5, textDecoration: "none", background: "#fff",
+                          gap: 0.5, textDecoration: "none", background: "#dfebfa",
                         }}
                       >
                         <PictureAsPdfIcon sx={{ fontSize: 34, color: "#D32F2F" }} />

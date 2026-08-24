@@ -256,7 +256,7 @@ export default function EmployeeProfile() {
             },
             "& .Mui-selected": {
               color: `${brand.goldDark} !important`,
-              background: "#fffdf5",
+              background: "#e6f0fb",
               border: `1px solid ${brand.gold}66`,
               boxShadow: "0 3px 10px rgba(212,175,55,0.22)",
             },
@@ -391,7 +391,7 @@ function InfoRow({ icon, label, value }) {
       <Box sx={{
         display: "flex", gap: 0.8, alignItems: "center",
         border: "1px solid #c8d6e5", borderRadius: "6px",
-        background: "#fff", 
+        background: "#dfebfa", 
         p: 1,
         height: "100%", width: "100%"
       }}>

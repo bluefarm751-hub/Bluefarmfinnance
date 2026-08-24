@@ -426,7 +426,7 @@ export default function EditBill() {
                       sx={{
                         width: 100, height: 80, borderRadius: 2, border: `1px solid ${brand.gold}`,
                         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                        gap: 0.3, textDecoration: "none", background: "#fff",
+                        gap: 0.3, textDecoration: "none", background: "#dfebfa",
                       }}
                     >
                       <PictureAsPdfIcon sx={{ fontSize: 28, color: "#D32F2F" }} />
@@ -489,13 +489,13 @@ export default function EditBill() {
             <iframe
               title="Bill"
               src={fullUrl(viewPic)}
-              style={{ width: "100%", height: "72vh", border: "none", borderRadius: 12, background: "#fff" }}
+              style={{ width: "100%", height: "72vh", border: "none", borderRadius: 12, background: "#dfebfa" }}
             />
           )}
           {viewPic && !isPdfPath(viewPic) && (
             <Box sx={{ textAlign: "center" }}>
               <Box component="img" src={fullUrl(viewPic)} alt="Bill"
-                sx={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 12, background: "#fff" }} />
+                sx={{ maxWidth: "100%", maxHeight: "72vh", borderRadius: 12, background: "#dfebfa" }} />
             </Box>
           )}
         </Box>
