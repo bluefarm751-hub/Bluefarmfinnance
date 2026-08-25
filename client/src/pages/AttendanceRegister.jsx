@@ -322,8 +322,11 @@ export default function AttendanceRegister() {
                 rows={rows}
                 columns={columns}
                 checkboxSelection
-                rowSelectionModel={selectedIds}
-                onRowSelectionModelChange={(model) => setSelectedIds(model)}
+                rowSelectionModel={{ type: "include", ids: new Set(selectedIds) }}
+                onRowSelectionModelChange={(model) => {
+                  const ids = model?.ids instanceof Set ? Array.from(model.ids) : Array.isArray(model) ? model : [];
+                  setSelectedIds(ids);
+                }}
                 loading={loading}
                 rowHeight={58}
                 columnHeaderHeight={46}

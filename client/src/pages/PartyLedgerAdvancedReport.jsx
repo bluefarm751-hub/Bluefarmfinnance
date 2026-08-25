@@ -58,16 +58,16 @@ export default function PartyLedgerAdvancedReport({ mode = "excel", type = "head
     { key: "business", label: "Monthly Business", align: "right", render: (r) => fmt(r.business) },
     { key: "paid", label: "Paid", align: "right", render: (r) => fmt(r.paid) },
     { key: "payable", label: "Payable", align: "right", render: (r) => fmt(r.payable) },
-    { key: "remaining", label: "Party Ledger Remaining", align: "right", render: (r) => fmt(r.remaining) },
+    { key: "remaining", label: "Paid Balance Remaining", align: "right", render: (r) => fmt(r.remaining) },
     { key: "bills", label: "Bills", align: "right" },
   ] : [
     ...(party === "__ALL__" ? [{ key: "partyName", label: "Party" }] : []),
     { key: "headName", label: "Head" },
-    { key: "headTotal", label: "Head Total", align: "right", render: (r) => fmt(r.headTotal) },
+    { key: "headTotal", label: "Total Paid", align: "right", render: (r) => fmt(r.headTotal) },
     { key: "business", label: "Total Business", align: "right", render: (r) => fmt(r.business) },
     { key: "paid", label: "Paid", align: "right", render: (r) => fmt(r.paid) },
     { key: "payable", label: "Payable", align: "right", render: (r) => fmt(r.payable) },
-    { key: "remaining", label: "Remaining", align: "right", render: (r) => fmt(r.remaining) },
+    { key: "remaining", label: "Paid Balance Remaining", align: "right", render: (r) => fmt(r.remaining) },
     { key: "bills", label: "Bills", align: "right" },
   ], [isMonthly, party]);
 
@@ -84,7 +84,7 @@ export default function PartyLedgerAdvancedReport({ mode = "excel", type = "head
     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 1 }}>
       <Box><Chip icon={<FaBalanceScale />} label="PARTY LEDGER REPORT" sx={{ mb: 1, background: `${brand.gold}22`, border: `1px solid ${brand.gold}`, color: brand.goldDark, fontWeight: 800 }} />
         <Typography variant="h4" fontWeight="bold">{titleKind} — {isExcel ? "Excel" : "PDF"}</Typography>
-        <Typography color="text.secondary" mt={0.5}>{isMonthly ? "Monthly Party Ledger summary by contractor and head." : "Contractor-wise summary showing business, paid, payable and remaining by head."}</Typography>
+        <Typography color="text.secondary" mt={0.5}>{isMonthly ? "Monthly Party Ledger summary by contractor and head." : "Contractor-wise summary pulled from added bills, showing business, paid, payable and paid-balance remaining by head."}</Typography>
       </Box>
       <Button variant="outlined" startIcon={<FaArrowLeft />} onClick={() => navigate("/ledger/party")}>Back to Party Ledger</Button>
     </Box>

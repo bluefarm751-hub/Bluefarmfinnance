@@ -23,7 +23,7 @@ const billColumns = [
   { key: "status", label: "Status" },
   { key: "paid", label: "Paid", align: "right", render: (r) => fmt(r.paid) },
   { key: "payable", label: "Payable", align: "right", render: (r) => fmt(r.payable) },
-  { key: "remaining", label: "Head Remaining", align: "right", render: (r) => fmt(r.remaining) },
+  { key: "remaining", label: "Paid Balance After Bill", align: "right", render: (r) => fmt(r.remaining) },
 ];
 
 function SummaryCard({ label, value, gradient }) {
@@ -83,7 +83,7 @@ export default function PartyLedger() {
           <Typography variant="h4" fontWeight="bold">Party Ledger</Typography>
           <Button variant="outlined" startIcon={<FaUsersCog />} onClick={() => navigate("/ledger/parties")}>Manage Parties</Button>
         </Box>
-        <Typography color="text.secondary" mb={3}>Automatic contractor-wise and head-wise Party Ledger. Payable bills are shown separately and do not reduce the Party Ledger balance; only Paid bills reduce the Party Ledger balance.</Typography>
+        <Typography color="text.secondary" mb={3}>Contractor-wise data is pulled directly from the bills already added. Bills are grouped head-wise. Total paid is shown first, each paid bill is deducted one-by-one, and payable bills stay separate at the end without reducing the paid balance.</Typography>
 
         <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Party Ledger — {farm}</>}>
           <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -109,9 +109,9 @@ export default function PartyLedger() {
           ) : (
             <>
               <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={4}><SummaryCard label="Total Business" value={data.totals.business} gradient="linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)" /></Grid>
-                <Grid item xs={12} sm={4}><SummaryCard label="Paid Amount" value={data.totals.paid} gradient="linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)" /></Grid>
-                <Grid item xs={12} sm={4}><SummaryCard label="Payable Amount" value={data.totals.payable} gradient="linear-gradient(135deg,#F0574D 0%,#C0392B 100%)" /></Grid>
+                <Grid item xs={12} sm={4}><SummaryCard label="Total Payment Made" value={data.totals.paid} gradient="linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)" /></Grid>
+                <Grid item xs={12} sm={4}><SummaryCard label="Remaining Payable" value={data.totals.payable} gradient="linear-gradient(135deg,#F0574D 0%,#C0392B 100%)" /></Grid>
+                <Grid item xs={12} sm={4}><SummaryCard label="Total Bill Amount" value={data.totals.business} gradient="linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)" /></Grid>
               </Grid>
 
               {loading ? <Typography sx={{ py: 4, textAlign: "center" }}>Loading ledger...</Typography> : data.summary.length === 0 ? (
@@ -124,7 +124,7 @@ export default function PartyLedger() {
                     <Box sx={{ p: 2, background: "linear-gradient(135deg,#0F4C81 0%,#16608f 100%)", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1.5, flexWrap: "wrap", cursor: "pointer" }} onClick={() => setOpenHeads((p) => ({ ...p, [key]: !open }))}>
                       <Box>
                         <Typography fontWeight={900} fontSize={18}>{g.headName}</Typography>
-                        <Typography sx={{ fontSize: 12.5, opacity: .9 }}>Head Amount: {fmt(g.headTotal)} · Bills: {fmt(g.totalBill)} · Paid: {fmt(g.paid)} · Head Remaining: {fmt(g.remaining)}</Typography>
+                        <Typography sx={{ fontSize: 12.5, opacity: .9 }}>Total Paid: {fmt(g.paid)} · Bills: {fmt(g.totalBill)} · Payable: {fmt(g.payable)} · Paid Balance Left: {fmt(g.remaining)}</Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                         <Chip size="small" label={`Paid ${fmt(g.paid)}`} sx={{ background: "rgba(47,191,113,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.35)" }} />
@@ -141,7 +141,7 @@ export default function PartyLedger() {
                             <tbody>
                               {g.bills.map((b, i) => <tr key={b.id}><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{i + 1}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4", fontWeight: 700 }}>{b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{b.billDate || "—"}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{b.item || "—"}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 800 }}>{fmt(b.amount)}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}><Chip size="small" label={b.status || "Not Paid"} color={String(b.status).toLowerCase() === "paid" ? "success" : "error"} variant="outlined" /></td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(b.paid)}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(b.payable)}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 900, color: b.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(b.remaining)}</td></tr>)}
                             </tbody>
-                            <tfoot><tr><td colSpan={4} style={{ padding: "12px 10px", fontWeight: 900, color: "#0F4C81" }}>Head Total / Final Balance</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.totalBill)}</td><td></td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.paid)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.payable)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900, color: g.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(g.remaining)}</td></tr></tfoot>
+                            <tfoot><tr><td colSpan={4} style={{ padding: "12px 10px", fontWeight: 900, color: "#0F4C81" }}>Head Total / Final Paid Balance</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.totalBill)}</td><td></td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.paid)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.payable)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900, color: g.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(g.remaining)}</td></tr></tfoot>
                           </table>
                         </Box>
                       </Box>

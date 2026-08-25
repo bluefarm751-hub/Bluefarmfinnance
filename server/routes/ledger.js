@@ -670,51 +670,27 @@ router.get("/party-summary", async (req, res) => {
             });
         });
 
-        // Remaining in each head is based on the head's total available amount
-        // (base head amount + allocations), less every bill under that head.
-        const headIds = Array.from(groups.values())
-            .map((g) => g.headId)
-            .filter(Boolean);
+        // Party Ledger is contractor-payment based, NOT head-budget based.
+        // For each contractor/head group the opening running amount is the
+        // total PAID amount for that group. Each paid bill is then deducted
+        // one-by-one. Payable bills NEVER reduce this running paid balance;
+        // they remain payable and are shown after the paid bills.
+        groups.forEach((g) => {
+            g.headTotal = g.paid;
+            g.paidRemaining = g.paid;
+            g.remaining = g.paidRemaining;
+            g.remainingAfterEachBill = [];
 
-        if (headIds.length) {
-            const headResult = await db.query(`
-                SELECT
-                    h.id,
-                    h."headName",
-                    h.amount,
-                    COALESCE((SELECT SUM(a.amount) FROM finance_allocations a WHERE a."headId" = h.id ${farm ? 'AND a.farm = $2' : ''}), 0) AS allocated
-                FROM finance_heads h
-                WHERE h.id = ANY($1::int[])
-            `, farm ? [headIds, farm] : [headIds]);
-
-            const headMap = new Map(headResult.rows.map((h) => [String(h.id), h]));
-            groups.forEach((g) => {
-                const h = headMap.get(String(g.headId));
-                const headTotal = h ? num(h.amount) + num(h.allocated) : 0;
-                g.headTotal = headTotal;
-                // Party Ledger is separate from the General/Simple Ledger: only PAID bills
-                // reduce the Party Ledger remaining head balance. Payable bills stay
-                // visible in the payable column but do not reduce this Party balance.
-                g.remaining = headTotal - g.paid;
-                g.remainingAfterEachBill = [];
-                let running = headTotal;
-                g.bills.forEach((b) => {
-                    if (b.paid > 0) running -= b.paid;
-                    b.remaining = running;
-                    g.remainingAfterEachBill.push(running);
-                });
+            let runningPaid = g.paid;
+            g.bills.forEach((b) => {
+                if (b.paid > 0) {
+                    runningPaid = Math.max(0, runningPaid - b.paid);
+                }
+                b.remaining = runningPaid;
+                b.paidRemaining = runningPaid;
+                g.remainingAfterEachBill.push(runningPaid);
             });
-        } else {
-            groups.forEach((g) => {
-                g.headTotal = 0;
-                g.remaining = -g.totalBill;
-                let running = 0;
-                g.bills.forEach((b) => {
-                    if (b.paid > 0) running -= b.paid;
-                    b.remaining = running;
-                });
-            });
-        }
+        });
 
         res.json({
             party: party ? String(party).trim() : "All Contractors",
@@ -843,35 +819,42 @@ router.get("/parties", async (req, res) => {
         });
 
         // ----------------------------------------------------
-        // PARTIES FOUND IN AUTO ENTRIES
+        // CONTRACTORS FOUND DIRECTLY IN FINANCE BILLS
         // ----------------------------------------------------
+        // Party Ledger must always be driven by the contractorName
+        // stored on already-added bills. Do not depend only on manual
+        // ledger parties or derived ledger rows.
+        const billParams = [];
+        let billWhere = `WHERE 1=1`;
+        if (farm) {
+            billParams.push(farm);
+            billWhere += ` AND b.farm = $${billParams.length}`;
+        }
 
-        rows.forEach((r) => {
+        const contractorRows = await query(`
+            SELECT DISTINCT BTRIM(b."contractorName") AS name
+            FROM finance_bills b
+            ${billWhere}
+              AND NULLIF(BTRIM(b."contractorName"), '') IS NOT NULL
+            ORDER BY BTRIM(b."contractorName") ASC
+        `, billParams);
 
-            const name =
-                String(r.party || "")
-                    .trim();
-
-            if (
-                !name ||
-                [
-                    "Bank Deposit",
-                    "Head Office",
-                ].includes(name)
-            ) {
-                return;
-            }
-
-            const key =
-                name.toLowerCase();
-
+        contractorRows.forEach((r) => {
+            const name = String(r.name || '').trim();
+            if (!name) return;
+            const key = name.toLowerCase();
             if (!seen.has(key)) {
-
-                seen.set(key, {
-                    name,
-                    manual: false,
-                });
+                seen.set(key, { name, manual: false, fromBills: true });
             }
+        });
+
+        // Also keep contractors/parties found in the combined ledger for
+        // backward compatibility with receipts/manual entries.
+        rows.forEach((r) => {
+            const name = String(r.party || '').trim();
+            if (!name || ['Bank Deposit', 'Head Office'].includes(name)) return;
+            const key = name.toLowerCase();
+            if (!seen.has(key)) seen.set(key, { name, manual: false });
         });
 
         res.json(
