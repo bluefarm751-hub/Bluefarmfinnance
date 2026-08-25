@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Button, Chip, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import { FaArrowLeft, FaBalanceScale, FaFileExcel, FaFilePdf } from "react-icons/fa";
 import MainLayout from "../layouts/MainLayout";
+import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard } from "../components/CashBook/ui";
 import { getPartyLedgerSummary, getParties } from "../api/ledgerApi";
 import { brand } from "../theme";
@@ -80,6 +81,7 @@ export default function PartyLedgerReport({ mode = "excel" }) {
   return (
     <MainLayout>
       <Box sx={{ px: 3, pt: 1, pb: 4 }}>
+        <LedgerTabs />
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 1 }}>
           <Box>
             <Chip icon={<FaBalanceScale />} label="PARTY LEDGER REPORT" sx={{ mb: 1, background: `${brand.gold}22`, border: `1px solid ${brand.gold}`, color: brand.goldDark, fontWeight: 800 }} />

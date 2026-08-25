@@ -54,6 +54,8 @@ export default function AttendanceRegister() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const days = useMemo(() => daysInMonth(month, year), [month, year]);
 
@@ -79,6 +81,7 @@ export default function AttendanceRegister() {
         return row;
       });
       setRows(incoming);
+      setSelectedIds([]);
       if (!incoming.length) showToast("No active employees found for this farm.", "warning");
     } catch (err) {
       console.error(err);
@@ -133,6 +136,53 @@ export default function AttendanceRegister() {
       showToast(err.response?.data?.message || "Could not save attendance", "error");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const selectAllEmployees = () => setSelectedIds(rows.map((r) => r.id));
+  const clearSelectedEmployees = () => setSelectedIds([]);
+
+  const markSelectedAllDays = (status) => {
+    if (!selectedIds.length) {
+      showToast("Select employees first.", "warning");
+      return;
+    }
+    setRows((prev) => prev.map((row) => {
+      if (!selectedIds.includes(row.id)) return row;
+      const next = { ...row };
+      for (let d = 1; d <= days; d += 1) next[`d${d}`] = status;
+      return next;
+    }));
+    showToast(`${status === "P" ? "Present" : status} applied to all days for selected employees.`, "success");
+  };
+
+  const saveSelectedEmployees = async () => {
+    if (!selectedIds.length) {
+      showToast("Select employees first.", "warning");
+      return;
+    }
+    setBulkSaving(true);
+    try {
+      const selected = rows.filter((row) => selectedIds.includes(row.id));
+      await Promise.all(selected.map(async (row) => {
+        const records = [];
+        for (let d = 1; d <= days; d += 1) {
+          const status = row[`d${d}`];
+          if (status) records.push({ date: dateKey(year, month, d), status });
+        }
+        await saveAttendance(month, year, row.id, row.employeeNo, row.employeeName, records);
+      }));
+      setRows((prev) => prev.map((row) => {
+        if (!selectedIds.includes(row.id)) return row;
+        const s = summarize(row);
+        return { ...row, present: s.present, absent: s.absent, leave: s.leave, hasAttendance: s.marked > 0 };
+      }));
+      showToast(`${selected.length} employee attendance records saved.`, "success");
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || "Could not save selected attendance", "error");
+    } finally {
+      setBulkSaving(false);
     }
   };
 
@@ -253,6 +303,14 @@ export default function AttendanceRegister() {
 
         <Card sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
           <CardContent>
+            <Box sx={{ mb: 1.5, display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+              <Button size="small" variant="outlined" onClick={selectAllEmployees}>Select All</Button>
+              <Button size="small" variant="text" onClick={clearSelectedEmployees}>Clear Selection</Button>
+              <Button size="small" variant="contained" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("P")}>Present All Days</Button>
+              <Button size="small" variant="outlined" color="error" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("A")}>Absent All Days</Button>
+              <Button size="small" variant="outlined" disabled={!selectedIds.length || bulkSaving} onClick={saveSelectedEmployees}>{bulkSaving ? "Saving..." : "Save Selected"}</Button>
+              <Chip label={`${selectedIds.length} selected`} size="small" sx={{ fontWeight: 800 }} />
+            </Box>
             <Box sx={{ mb: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
               <Chip label="P = Present" size="small" sx={{ fontWeight: 800, background: "#E9F9EE", color: brand.success }} />
               <Chip label="A = Absent" size="small" sx={{ fontWeight: 800, background: "#FDECEA", color: brand.danger }} />
@@ -263,6 +321,9 @@ export default function AttendanceRegister() {
               <DataGrid
                 rows={rows}
                 columns={columns}
+                checkboxSelection
+                rowSelectionModel={selectedIds}
+                onRowSelectionModelChange={(model) => setSelectedIds(model)}
                 loading={loading}
                 rowHeight={58}
                 columnHeaderHeight={46}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Chip, Grid, Typography } from "@mui/material";
 import { FaBalanceScale, FaFileExcel, FaFilePdf, FaPrint, FaSync } from "react-icons/fa";
 import MainLayout from "../layouts/MainLayout";
+import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard } from "../components/CashBook/ui";
 import { getBalanceSheet } from "../api/ledgerApi";
 import { exportExcel } from "../utils/exportExcel";
@@ -36,6 +37,7 @@ export default function BalanceSheet() {
   const totals = data.totals || {};
 
   return <MainLayout><Box sx={{ px: 3, pt: 1, pb: 4 }}>
+        <LedgerTabs />
     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap", mb: .5 }}>
       <Box><Typography variant="h4" fontWeight="bold">Balance Sheet</Typography><Typography color="text.secondary">Head-wise available balance for {farm}. Every bill reduces the relevant head, while Paid and Payable are shown separately.</Typography></Box>
       <Button variant="outlined" startIcon={<FaSync />} onClick={load}>Refresh</Button>

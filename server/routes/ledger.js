@@ -657,6 +657,19 @@ router.get("/party-summary", async (req, res) => {
             });
         });
 
+        // Party Ledger sequence: paid bills first, payable bills last. This keeps the
+        // running paid balance correct and makes payable visible separately at the end.
+        groups.forEach((g) => {
+            g.bills.sort((a, b) => {
+                const aPayable = a.paid > 0 ? 0 : 1;
+                const bPayable = b.paid > 0 ? 0 : 1;
+                if (aPayable !== bPayable) return aPayable - bPayable;
+                const dateCompare = String(a.billDate).localeCompare(String(b.billDate));
+                if (dateCompare !== 0) return dateCompare;
+                return Number(a.id) - Number(b.id);
+            });
+        });
+
         // Remaining in each head is based on the head's total available amount
         // (base head amount + allocations), less every bill under that head.
         const headIds = Array.from(groups.values())

@@ -4,6 +4,7 @@ import { FaBook, FaFileExcel, FaFilePdf, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
+import LedgerTabs from "../components/LedgerTabs";
 import DateFieldDMY from "../components/DateFieldDMY";
 import { SectionCard } from "../components/CashBook/ui";
 import { getGeneralLedger } from "../api/ledgerApi";
@@ -100,6 +101,7 @@ export default function LedgerReport({ mode = "excel" }) {
   return (
     <MainLayout>
       <Box sx={{ px: 3, pt: 1, pb: 4 }}>
+        <LedgerTabs />
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap", mb: 1 }}>
           <Box>
             <Chip icon={<FaBook />} label="LEDGER REPORTS" sx={{ mb: 1, background: `${brand.gold}22`, border: `1px solid ${brand.gold}`, color: brand.goldDark, fontWeight: 800 }} />

@@ -3,6 +3,7 @@ import { Box, Button, Chip, Grid, MenuItem, TextField, Typography } from "@mui/m
 import { FaArrowLeft, FaBalanceScale, FaFileExcel, FaFilePdf, FaPrint, FaSync } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard } from "../components/CashBook/ui";
 import { getBalanceSheet } from "../api/ledgerApi";
 import { exportExcel } from "../utils/exportExcel";
@@ -103,6 +104,7 @@ export default function BalanceSheetReport() {
   return (
     <MainLayout>
       <Box sx={{ px: 3, pt: 1, pb: 4 }}>
+        <LedgerTabs />
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 2 }}>
           <Box>
             <Typography variant="h4" fontWeight="bold">Balance Sheet Report</Typography>

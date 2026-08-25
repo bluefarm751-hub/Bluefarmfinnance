@@ -4,6 +4,7 @@ import { Box, Button, Chip, Grid, MenuItem, TextField, Typography } from "@mui/m
 import { FaFileExcel, FaFilePdf, FaPrint, FaBalanceScale, FaUsersCog, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 import MainLayout from "../layouts/MainLayout";
+import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard, money } from "../components/CashBook/ui";
 import { getPartyLedgerSummary, getParties } from "../api/ledgerApi";
 import { useToast } from "../utils/useToast";
@@ -77,6 +78,7 @@ export default function PartyLedger() {
   return (
     <MainLayout>
       <Box sx={{ px: 3, pt: 1, pb: 4 }}>
+        <LedgerTabs />
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: .5 }}>
           <Typography variant="h4" fontWeight="bold">Party Ledger</Typography>
           <Button variant="outlined" startIcon={<FaUsersCog />} onClick={() => navigate("/ledger/parties")}>Manage Parties</Button>

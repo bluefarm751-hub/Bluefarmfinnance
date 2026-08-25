@@ -91,26 +91,12 @@ export default function Sidebar() {
   ];
 
   const ledgerLinks = [
-    { to: "/ledger/general", icon: <FaBook />, text: "General Ledger", locked: !isAdmin },
-    { to: "/ledger/report-excel", icon: <FaFileAlt />, text: "Report Ledger Excel", locked: !isAdmin },
-    { to: "/ledger/report-pdf", icon: <FaFileInvoiceDollar />, text: "Report Ledger PDF", locked: !isAdmin },
+    { to: "/ledger/general", icon: <FaBook />, text: "Main Ledger", locked: !isAdmin },
     { to: "/ledger/party", icon: <FaBalanceScale />, text: "Party Ledger", locked: !isAdmin },
-    { to: "/ledger/party-report-excel", icon: <FaFileAlt />, text: "Report Party Ledger Excel", locked: !isAdmin },
-    { to: "/ledger/party-report-pdf", icon: <FaFileInvoiceDollar />, text: "Report Party Ledger PDF", locked: !isAdmin },
-    { to: "/ledger/party-head-summary-excel", icon: <FaFileAlt />, text: "Party Head Summary Excel", locked: !isAdmin },
-    { to: "/ledger/party-head-summary-pdf", icon: <FaFileInvoiceDollar />, text: "Party Head Summary PDF", locked: !isAdmin },
-    { to: "/ledger/party-monthly-excel", icon: <FaFileAlt />, text: "Monthly Party Ledger Excel", locked: !isAdmin },
-    { to: "/ledger/party-monthly-pdf", icon: <FaFileInvoiceDollar />, text: "Monthly Party Ledger PDF", locked: !isAdmin },
-    { to: "/ledger/add-entry", icon: <FaEdit />, text: "Add Ledger Entry", locked: !isAdmin },
     { to: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, text: "Balance Sheet", locked: !isAdmin },
+    { to: "/ledger/report-excel", icon: <FaFileAlt />, text: "Report Ledger", locked: !isAdmin },
+    { to: "/ledger/party-report-excel", icon: <FaFileAlt />, text: "Report Party Ledger", locked: !isAdmin },
     { to: "/ledger/balance-sheet-report", icon: <FaFileAlt />, text: "Report Balance Sheet", locked: !isAdmin },
-    { to: "/ledger/balance-sheet-monthly-comparison", icon: <FaFileAlt />, text: "Monthly Balance Sheet Comparison", locked: !isAdmin },
-    { to: "/ledger/balance-sheet-contractor-breakup", icon: <FaFileAlt />, text: "Head-wise Contractor Breakup", locked: !isAdmin },
-    { to: "/ledger/balance-sheet-yearly-comparison", icon: <FaFileAlt />, text: "Yearly Balance Sheet Comparison", locked: !isAdmin },
-    { to: "/ledger/contractor-detailed-pdf", icon: <FaFileInvoiceDollar />, text: "Head-wise Contractor Detailed PDF", locked: !isAdmin },
-    { to: "/ledger/yearly-contractor-comparison", icon: <FaFileAlt />, text: "Yearly Contractor Comparison", locked: !isAdmin },
-    { to: "/ledger/balance-sheet-full-detail-pdf", icon: <FaFileInvoiceDollar />, text: "Balance Sheet Full Detail PDF", locked: !isAdmin },
-    { to: "/ledger/parties", icon: <FaUsers />, text: "Manage Parties", locked: !isAdmin },
   ];
 
   const groups = [
