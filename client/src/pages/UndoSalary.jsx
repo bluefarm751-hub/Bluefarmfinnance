@@ -143,16 +143,16 @@ export default function UndoSalary() {
         )}
 
         {batches.length > 0 && (
-          <Card elevation={0} sx={{ width: "100%", borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
+          <Card elevation={0} sx={{ width: "100%", borderRadius: 0, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
             <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
               <TableContainer>
-                <Table size="small">
+                <Table>
                   <TableHead>
                     <TableRow sx={tableHeadRowSx}>
-                      <TableCell sx={{ fontWeight: 800 }}>Batch</TableCell>
-                      <TableCell sx={{ fontWeight: 800 }}>Employees</TableCell>
-                      <TableCell sx={{ fontWeight: 800 }}>Total Amount</TableCell>
-                      <TableCell sx={{ fontWeight: 800 }} align="right">Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Batch</TableCell>
+                      <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Employees</TableCell>
+                      <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Total Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 800, py: 1.8 }} align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -162,7 +162,7 @@ export default function UndoSalary() {
 
                       return (
                         <Fragment key={key}>
-                          <TableRow hover sx={tableBodyRowSx(i)}>
+                          <TableRow hover sx={{ ...tableBodyRowSx(i), "& .MuiTableCell-root": { ...tableBodyRowSx(i)["& .MuiTableCell-root"], py: 1.6 } }}>
                             <TableCell sx={{ fontWeight: 700 }}>{b.month} {b.year}</TableCell>
                             <TableCell>{b.employeeCount} employee(s)</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Rs. {Number(b.totalNet || 0).toLocaleString()}</TableCell>
@@ -205,19 +205,19 @@ export default function UndoSalary() {
                                   )}
 
                                   {!loadingEmployees && batchEmployees.length > 0 && (
-                                    <TableContainer sx={{ borderRadius: 2, overflow: "hidden", boxShadow: shadowCard }}>
-                                      <Table size="small">
+                                    <TableContainer sx={{ borderRadius: 0, overflow: "hidden", boxShadow: shadowCard }}>
+                                      <Table>
                                         <TableHead>
                                           <TableRow sx={tableHeadRowSx}>
-                                            <TableCell sx={{ fontWeight: 800 }}>Employee Name</TableCell>
-                                            <TableCell sx={{ fontWeight: 800 }}>Emp No</TableCell>
-                                            <TableCell sx={{ fontWeight: 800 }}>Net Salary</TableCell>
-                                            <TableCell sx={{ fontWeight: 800 }} align="right">Action</TableCell>
+                                            <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Employee Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Emp No</TableCell>
+                                            <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Net Salary</TableCell>
+                                            <TableCell sx={{ fontWeight: 800, py: 1.6 }} align="right">Action</TableCell>
                                           </TableRow>
                                         </TableHead>
                                         <TableBody>
                                           {batchEmployees.map((emp, j) => (
-                                            <TableRow key={emp.id} hover sx={tableBodyRowSx(j)}>
+                                            <TableRow key={emp.id} hover sx={{ ...tableBodyRowSx(j), "& .MuiTableCell-root": { ...tableBodyRowSx(j)["& .MuiTableCell-root"], py: 1.5 } }}>
                                               <TableCell sx={{ fontWeight: 700 }}>{emp.employeeName}</TableCell>
                                               <TableCell>{emp.employeeNo}</TableCell>
                                               <TableCell>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell>

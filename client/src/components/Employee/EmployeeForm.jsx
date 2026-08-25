@@ -179,16 +179,14 @@ export default function EmployeeForm({ formData, setFormData }) {
               <TextField fullWidth label="Family Mobile No" name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ width: "100%", overflowX: "auto" }}>
-                <TextField
-                  label="Address"
-                  name="address"
-                  value={formData.address || ""}
-                  onChange={handleChange}
-                  slotProps={{ input: viewAdornment("Address", formData.address) }}
-                  sx={{ width: { xs: "100%", md: "200%" } }}
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Address"
+                name="address"
+                value={formData.address || ""}
+                onChange={handleChange}
+                slotProps={{ input: viewAdornment("Address", formData.address) }}
+              />
             </Grid>
           </Grid>
         </CardContent>
@@ -250,16 +248,14 @@ export default function EmployeeForm({ formData, setFormData }) {
               <TextField fullWidth label="Account Title" name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ width: "100%", overflowX: "auto" }}>
-                <TextField
-                  label="IBAN"
-                  name="iban"
-                  value={formData.iban || ""}
-                  onChange={handleChange}
-                  slotProps={{ input: viewAdornment("IBAN", formData.iban) }}
-                  sx={{ width: { xs: "100%", md: "150%" } }}
-                />
-              </Box>
+              <TextField
+                label="IBAN"
+                name="iban"
+                value={formData.iban || ""}
+                onChange={handleChange}
+                slotProps={{ input: viewAdornment("IBAN", formData.iban) }}
+                sx={{ width: { xs: "100%", md: "75%" } }}
+              />
             </Grid>
           </Grid>
         </CardContent>
