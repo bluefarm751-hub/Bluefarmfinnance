@@ -115,7 +115,17 @@ export default function CashBook() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 1 }}>
+      <Box sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: "calc(100vh - 150px)" }}>
+        <Box sx={{
+          width: "100%",
+          minHeight: "calc(100vh - 200px)",
+          boxSizing: "border-box",
+          background: "#fff",
+          borderRadius: 5,
+          p: { xs: 1.5, md: 3 },
+          border: "1px solid #d9e4ec",
+          boxShadow: "0 18px 55px rgba(8,33,63,0.13)",
+        }}>
         {showWelcome && (
 
         <Box sx={{
@@ -222,6 +232,7 @@ export default function CashBook() {
         {tab === 5 && <DailyClosingTab onChanged={refresh} showToast={showToast} />}
         {tab === 6 && <MonthlyClosingTab onChanged={refresh} showToast={showToast} />}
         {tab === 7 && <ReportsTab />}
+        </Box>
       </Box>
       {ToastUI}
     </MainLayout>

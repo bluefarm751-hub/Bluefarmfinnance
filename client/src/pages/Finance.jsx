@@ -85,7 +85,17 @@ export default function Finance() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
+      <Box sx={{ px: { xs: 1.5, md: 3 }, pt: 1, pb: 3 }}>
+        <Box sx={{
+          width: "100%",
+          minHeight: "calc(100vh - 150px)",
+          boxSizing: "border-box",
+          background: "#fff",
+          borderRadius: 5,
+          p: { xs: 2, md: 3.5 },
+          border: "1px solid #d9e4ec",
+          boxShadow: "0 18px 55px rgba(8,33,63,0.13)",
+        }}>
         {/* Colorful Welcome Card */}
         <Box sx={{
           textAlign: "center",
@@ -271,6 +281,7 @@ export default function Finance() {
             );
           })}
         </Grid>
+        </Box>
       </Box>
 
       {ToastUI}

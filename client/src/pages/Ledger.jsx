@@ -24,6 +24,7 @@ export default function Ledger() {
           background: "#fff",
           border: "1px solid #d9e4ec",
           boxShadow: "0 12px 35px rgba(8,33,63,0.12)",
+          minHeight: "calc(100vh - 150px)",
         }}>
           <Box sx={{
             textAlign: "center",
@@ -66,7 +67,7 @@ export default function Ledger() {
                     background: tab.gradient,
                     color: "#fff",
                     p: { xs: 3, md: 3.5 },
-                    minHeight: { xs: 190, md: 235 },
+                    minHeight: { xs: 260, md: 330 },
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
