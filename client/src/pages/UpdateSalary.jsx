@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import { useToast } from "../utils/useToast";
-import { getActiveEmployees } from "../api/payrollApi";
+import { getActiveEmployees, getAttendanceSummary } from "../api/payrollApi";
 import DateFieldDMY from "../components/DateFieldDMY";
 
 import {
@@ -15,6 +15,7 @@ import {
   TextField,
   MenuItem,
   Button,
+  Chip,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
@@ -122,6 +123,23 @@ export default function UpdateSalary() {
       const periodStart = fromDate || monthStart;
       const periodEnd = toDate || monthEnd;
 
+      let attendanceMap = new Map();
+      try {
+        const attendanceRes = await getAttendanceSummary(month, year);
+        attendanceMap = new Map((attendanceRes.data || []).map((item) => [
+          Number(item.employeeId),
+          {
+            present: Number(item.present || 0),
+            absent: Number(item.absent || 0),
+            leave: Number(item.leave || 0),
+            markedDays: Number(item.markedDays || 0),
+            hasAttendance: Boolean(item.hasAttendance),
+          },
+        ]));
+      } catch (attendanceErr) {
+        console.warn("Attendance summary unavailable; keeping existing salary calculation.", attendanceErr);
+      }
+
       const built = employees.map((emp) => {
         const gross = Number(emp.grossSalary || 0);
 
@@ -134,7 +152,19 @@ export default function UpdateSalary() {
         const effectiveStart = joinsMidPeriod ? emp.joiningDate : periodStart;
         const effectiveEnd = periodEnd;
 
-        const { days, factor } = periodBreakdown(effectiveStart, effectiveEnd);
+        const normalPeriod = periodBreakdown(effectiveStart, effectiveEnd);
+        const attendance = attendanceMap.get(Number(emp.id));
+        // Attendance is an OPTIONAL payroll override. With no attendance
+        // records for this employee, keep the existing date-based behavior.
+        // When attendance exists, Present + Leave are payable days; Absent
+        // days are non-payable. A partial register therefore intentionally
+        // pays only the days that were marked as Present/Leave.
+        const days = attendance?.hasAttendance
+          ? attendance.present + attendance.leave
+          : normalPeriod.days;
+        const factor = attendance?.hasAttendance
+          ? days / daysInMonth(month, year)
+          : normalPeriod.factor;
 
         return {
           id: emp.id,
@@ -152,6 +182,10 @@ export default function UpdateSalary() {
           toDate: effectiveEnd,
           days,
           factor,
+          attendanceApplied: Boolean(attendance?.hasAttendance),
+          attendancePresent: attendance?.present || 0,
+          attendanceAbsent: attendance?.absent || 0,
+          attendanceLeave: attendance?.leave || 0,
           arrear: 0,
           netSalary: Math.round(gross * factor),
         };
@@ -282,6 +316,23 @@ export default function UpdateSalary() {
         />
       ),
     },
+    {
+      field: "attendanceApplied",
+      headerName: "Attendance",
+      width: 130,
+      sortable: false,
+      renderCell: (params) => (
+        <Chip
+          size="small"
+          label={params.row.attendanceApplied ? "Applied" : "Not Applied"}
+          sx={{
+            fontWeight: 800,
+            background: params.row.attendanceApplied ? "#E9F9EE" : brand.panel,
+            color: params.row.attendanceApplied ? brand.success : brand.blueDeep,
+          }}
+        />
+      ),
+    },
     { field: "netSalary", headerName: "Net Salary (Amount)", width: 150, type: "number" },
     {
       field: "remarks",
@@ -313,7 +364,7 @@ export default function UpdateSalary() {
 
         <Typography variant="h4" fontWeight="bold" mb={1}>Update Salary</Typography>
         <Typography color="text.secondary" mb={3}>
-          Set the pay period, load active employees, then adjust each employee's dates, days, remarks or arrear/recovery individually if needed.
+          Load active employees and review salary. If an employee has saved attendance for this month, their payable days come from Present + Leave; employees with no attendance keep the existing payroll calculation.
         </Typography>
 
         {/* Premium summary cards */}

@@ -72,6 +72,36 @@ async function initDatabase() {
     `);
 
     // ============================================================
+    // ATTENDANCE
+    // Optional payroll attendance. Only saved attendance affects
+    // payroll; employees without attendance keep existing salary behavior.
+    // ============================================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS attendance (
+        id SERIAL PRIMARY KEY,
+        "employeeId" INTEGER NOT NULL,
+        "employeeNo" TEXT,
+        "employeeName" TEXT,
+        farm TEXT NOT NULL,
+        "attendanceDate" DATE NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('P','A','L')),
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE ("employeeId", farm, "attendanceDate")
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_attendance_farm_date
+      ON attendance (farm, "attendanceDate")
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_attendance_employee_date
+      ON attendance ("employeeId", "attendanceDate")
+    `);
+
+    // ============================================================
     // FINANCE HEADS
     // ============================================================
     await client.query(`

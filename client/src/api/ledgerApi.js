@@ -14,6 +14,16 @@ export const getPartyLedger = (party, params = {}) => {
   return axios.get(`${API}/party`, { params: { farm, party, ...params } });
 };
 
+export const getPartyLedgerSummary = (party = "", params = {}) => {
+  const farm = localStorage.getItem("farm");
+  return axios.get(`${API}/party-summary`, { params: { farm, party, ...params } });
+};
+
+export const getBalanceSheet = (params = {}) => {
+  const farm = localStorage.getItem("farm");
+  return axios.get(`${API}/balance-sheet`, { params: { farm, ...params } });
+};
+
 // ---------- PARTIES ----------
 export const getParties = () => {
   const farm = localStorage.getItem("farm");

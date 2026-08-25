@@ -402,6 +402,135 @@ function withRunningBalance(rows) {
     });
 }
 
+
+// ============================================================
+// BALANCE SHEET — HEAD-WISE REMAINING BALANCES
+// ============================================================
+
+router.get("/balance-sheet", async (req, res) => {
+    try {
+        const { farm, fromDate, toDate } = req.query;
+        const params = [];
+        let farmHeads = "";
+        let farmBills = "";
+        let farmAllocations = "";
+        let dateBills = "";
+
+        if (farm) {
+            params.push(farm);
+            farmHeads = `WHERE h.farm = $1`;
+            farmBills = `AND b.farm = $1`;
+            farmAllocations = `AND a.farm = $1`;
+        }
+
+        if (fromDate) {
+            params.push(fromDate);
+            dateBills += ` AND b."billDate" >= $${params.length}`;
+        }
+        if (toDate) {
+            params.push(toDate);
+            dateBills += ` AND b."billDate" <= $${params.length}`;
+        }
+
+        const result = await db.query(`
+            SELECT
+                h.id,
+                h."headName",
+                h.amount AS "baseAmount",
+                COALESCE((
+                    SELECT SUM(a.amount)
+                    FROM finance_allocations a
+                    WHERE a."headId" = h.id ${farmAllocations}
+                ), 0) AS "additionalAllocation",
+                COALESCE((
+                    SELECT SUM(b.amount)
+                    FROM finance_bills b
+                    WHERE b."headId" = h.id ${farmBills} ${dateBills}
+                ), 0) AS "billAmount",
+                COALESCE((
+                    SELECT SUM(b.amount)
+                    FROM finance_bills b
+                    WHERE b."headId" = h.id
+                      AND LOWER(COALESCE(b.status, '')) = 'paid'
+                      ${farmBills} ${dateBills}
+                ), 0) AS "paidAmount",
+                COALESCE((
+                    SELECT SUM(b.amount)
+                    FROM finance_bills b
+                    WHERE b."headId" = h.id
+                      AND LOWER(COALESCE(b.status, '')) <> 'paid'
+                      ${farmBills} ${dateBills}
+                ), 0) AS "payableAmount"
+            FROM finance_heads h
+            ${farmHeads}
+            ORDER BY h."headName" ASC, h.id ASC
+        `, params);
+
+        const billsParams = farm ? [farm] : [];
+        let billsWhere = `WHERE 1=1`;
+        if (farm) billsWhere += ` AND b.farm = $1`;
+        if (fromDate) { billsParams.push(fromDate); billsWhere += ` AND b."billDate" >= $${billsParams.length}`; }
+        if (toDate) { billsParams.push(toDate); billsWhere += ` AND b."billDate" <= $${billsParams.length}`; }
+        const billsResult = await db.query(`
+            SELECT b.id, b."headId", b."billDate", b."sNo", b."contractorName", b.item, b.amount, b.status, b.remarks
+            FROM finance_bills b
+            ${billsWhere}
+            ORDER BY b."headId" ASC, b."billDate" ASC NULLS LAST, b.id ASC
+        `, billsParams);
+
+        const billsByHead = new Map();
+        for (const b of billsResult.rows) {
+            const key = String(b.headId);
+            if (!billsByHead.has(key)) billsByHead.set(key, []);
+            billsByHead.get(key).push({
+                id: b.id,
+                billDate: b.billDate,
+                billNo: b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`,
+                contractorName: b.contractorName || "",
+                item: b.item || "",
+                amount: num(b.amount),
+                status: b.status || "Payable",
+                remarks: b.remarks || "",
+            });
+        }
+
+        const rows = result.rows.map((r) => {
+            const baseAmount = num(r.baseAmount);
+            const additionalAllocation = num(r.additionalAllocation);
+            const totalAmount = baseAmount + additionalAllocation;
+            const billAmount = num(r.billAmount);
+            const paidAmount = num(r.paidAmount);
+            const payableAmount = num(r.payableAmount);
+            const bills = billsByHead.get(String(r.id)) || [];
+            return {
+                ...r,
+                baseAmount,
+                additionalAllocation,
+                totalAmount,
+                billAmount,
+                paidAmount,
+                payableAmount,
+                remaining: totalAmount - billAmount,
+                bills,
+            };
+        });
+
+        const totals = rows.reduce((a, r) => {
+            a.totalAmount += r.totalAmount;
+            a.billAmount += r.billAmount;
+            a.paidAmount += r.paidAmount;
+            a.payableAmount += r.payableAmount;
+            a.remaining += r.remaining;
+            return a;
+        }, { totalAmount: 0, billAmount: 0, paidAmount: 0, payableAmount: 0, remaining: 0 });
+
+        res.json({ farm: farm || "", fromDate: fromDate || "", toDate: toDate || "", rows, totals });
+    } catch (err) {
+        console.error("GET /ledger/balance-sheet:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // ============================================================
 // GENERAL LEDGER
 // ============================================================
@@ -427,6 +556,167 @@ router.get("/general", async (req, res) => {
             success: false,
             message: err.message,
         });
+    }
+});
+
+
+// PARTY LEDGER — BILL / HEAD-WISE SUMMARY
+router.get("/party-summary", async (req, res) => {
+    try {
+        const { farm, party, fromDate, toDate } = req.query;
+
+        const params = [];
+        const filters = [];
+        if (party && String(party).trim()) {
+            params.push(String(party).trim());
+            filters.push(`LOWER(TRIM(COALESCE(b."contractorName", ''))) = LOWER(TRIM($${params.length}))`);
+        }
+        if (farm) {
+            params.push(farm);
+            filters.push(`b.farm = $${params.length}`);
+        }
+        if (fromDate) {
+            params.push(fromDate);
+            filters.push(`DATE(b."billDate") >= $${params.length}::date`);
+        }
+        if (toDate) {
+            params.push(toDate);
+            filters.push(`DATE(b."billDate") <= $${params.length}::date`);
+        }
+        const whereSql = filters.length ? `AND ${filters.join('\n              AND ')}` : '';
+
+        const result = await db.query(`
+            SELECT
+                b.id,
+                b."sNo",
+                b."billDate",
+                b."headId",
+                COALESCE(h."headName", 'Unassigned Head') AS "headName",
+                b.contractorName,
+                b.item,
+                b.amount,
+                b.status,
+                b."paymentMode",
+                b.remarks
+            FROM finance_bills b
+            LEFT JOIN finance_heads h ON h.id = b."headId"
+            WHERE 1=1
+              ${whereSql}
+            ORDER BY
+                COALESCE(h."headName", 'Unassigned Head') ASC,
+                COALESCE(b."billDate", '') ASC,
+                COALESCE(b."sNo", 0) ASC,
+                b.id ASC
+        `, params);
+
+        const groups = new Map();
+        let totalBusiness = 0;
+        let totalPaid = 0;
+        let totalPayable = 0;
+
+        result.rows.forEach((row) => {
+            const amount = num(row.amount);
+            const paid = String(row.status || "").trim().toLowerCase() === "paid" ? amount : 0;
+            const payable = amount - paid;
+            totalBusiness += amount;
+            totalPaid += paid;
+            totalPayable += payable;
+
+            const partyName = String(row.contractorName || "Unassigned Party").trim() || "Unassigned Party";
+            const partyKey = partyName.toLowerCase();
+            const key = `${partyKey}::${String(row.headId || `name:${row.headName}`).toLowerCase()}`;
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    partyName,
+                    partyKey,
+                    headId: row.headId,
+                    headName: row.headName,
+                    totalBill: 0,
+                    paid: 0,
+                    payable: 0,
+                    remaining: 0,
+                    bills: [],
+                });
+            }
+
+            const g = groups.get(key);
+            g.totalBill += amount;
+            g.paid += paid;
+            g.payable += payable;
+            g.bills.push({
+                id: row.id,
+                sNo: row.sNo,
+                billDate: normalizeDate(row.billDate),
+                item: row.item || "",
+                amount,
+                status: row.status || "Not Paid",
+                paid,
+                payable,
+                paymentMode: row.paymentMode || "",
+                remarks: row.remarks || "",
+            });
+        });
+
+        // Remaining in each head is based on the head's total available amount
+        // (base head amount + allocations), less every bill under that head.
+        const headIds = Array.from(groups.values())
+            .map((g) => g.headId)
+            .filter(Boolean);
+
+        if (headIds.length) {
+            const headResult = await db.query(`
+                SELECT
+                    h.id,
+                    h."headName",
+                    h.amount,
+                    COALESCE((SELECT SUM(a.amount) FROM finance_allocations a WHERE a."headId" = h.id ${farm ? 'AND a.farm = $2' : ''}), 0) AS allocated
+                FROM finance_heads h
+                WHERE h.id = ANY($1::int[])
+            `, farm ? [headIds, farm] : [headIds]);
+
+            const headMap = new Map(headResult.rows.map((h) => [String(h.id), h]));
+            groups.forEach((g) => {
+                const h = headMap.get(String(g.headId));
+                const headTotal = h ? num(h.amount) + num(h.allocated) : 0;
+                g.headTotal = headTotal;
+                // Party Ledger is separate from the General/Simple Ledger: only PAID bills
+                // reduce the Party Ledger remaining head balance. Payable bills stay
+                // visible in the payable column but do not reduce this Party balance.
+                g.remaining = headTotal - g.paid;
+                g.remainingAfterEachBill = [];
+                let running = headTotal;
+                g.bills.forEach((b) => {
+                    if (b.paid > 0) running -= b.paid;
+                    b.remaining = running;
+                    g.remainingAfterEachBill.push(running);
+                });
+            });
+        } else {
+            groups.forEach((g) => {
+                g.headTotal = 0;
+                g.remaining = -g.totalBill;
+                let running = 0;
+                g.bills.forEach((b) => {
+                    if (b.paid > 0) running -= b.paid;
+                    b.remaining = running;
+                });
+            });
+        }
+
+        res.json({
+            party: party ? String(party).trim() : "All Contractors",
+            fromDate: fromDate || "",
+            toDate: toDate || "",
+            summary: Array.from(groups.values()),
+            totals: {
+                business: totalBusiness,
+                paid: totalPaid,
+                payable: totalPayable,
+            },
+        });
+    } catch (err) {
+        console.error("GET /ledger/party-summary:", err);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 

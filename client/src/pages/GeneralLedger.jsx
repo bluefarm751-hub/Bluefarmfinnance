@@ -60,7 +60,7 @@ export default function GeneralLedger() {
       <Box sx={{ px: 3, pt: 1, pb: 3 }}>
         <Typography variant="h4" fontWeight="bold" mb={0.5}>General Ledger</Typography>
         <Typography color="text.secondary" mb={3}>
-          Every Debit / Credit entry for {farm}, in chronological order with a running balance.
+          Every Debit / Credit entry for {farm}, in chronological order with a running balance. Payable and Paid bills are both credits here and therefore reduce the Simple/General Ledger balance.
         </Typography>
 
         <SectionCard
@@ -88,8 +88,8 @@ export default function GeneralLedger() {
           </Grid>
 
           <Typography sx={{ mb: 1.5, fontSize: 12.5, color: brand.slate, fontWeight: 600 }}>
-            Debit = money received (bills paid to the farm, receipts). Credit = money paid out (bills paid,
-            HQ remittances). Bills, receipts, bank deposits and remittances are pulled in automatically —
+            Debit = money received (bills paid to the farm, receipts). Credit = money paid out (including both Paid and Payable bills,
+            HQ remittances). Payable bills therefore reduce the Simple/General Ledger balance. Bills, receipts, bank deposits and remittances are pulled in automatically —
             add anything else from "Add Ledger Entry". {rows.length} record(s).
           </Typography>
 

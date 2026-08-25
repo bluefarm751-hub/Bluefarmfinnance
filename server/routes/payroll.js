@@ -3,6 +3,12 @@ const router = express.Router();
 
 const db = require("../database/database");
 
+const MONTH_NUMBER = {
+  January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
+  July: 7, August: 8, September: 9, October: 10, November: 11, December: 12,
+};
+
+
 // ============================================================
 // GET ACTIVE EMPLOYEES FOR A FARM
 // ============================================================
@@ -37,6 +43,169 @@ router.get("/active-employees", async (req, res) => {
     });
   }
 });
+
+// ============================================================
+// ATTENDANCE REGISTER
+// Optional payroll attendance: only employees with at least one
+// saved attendance record get attendance-based salary days.
+// ============================================================
+router.get("/attendance", async (req, res) => {
+  try {
+    const { farm, month, year } = req.query;
+
+    if (!farm || !month || !year) {
+      return res.status(400).json({ success: false, message: "farm, month and year are required" });
+    }
+
+    const monthNumber = MONTH_NUMBER[month];
+    if (!monthNumber) {
+      return res.status(400).json({ success: false, message: "Invalid month" });
+    }
+
+    const result = await db.query(
+      `
+      SELECT
+        e.id,
+        e."employeeNo",
+        e.name,
+        e.department,
+        e."grossSalary",
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'date', to_char(a."attendanceDate", 'YYYY-MM-DD'),
+              'status', a.status
+            ) ORDER BY a."attendanceDate"
+          ) FILTER (WHERE a.id IS NOT NULL),
+          '[]'::json
+        ) AS attendance,
+        COUNT(a.id)::int AS "markedDays"
+      FROM employees e
+      LEFT JOIN attendance a
+        ON a."employeeId" = e.id
+       AND a.farm = $1
+       AND EXTRACT(MONTH FROM a."attendanceDate") = $2
+       AND EXTRACT(YEAR FROM a."attendanceDate") = $3
+      WHERE e.status = 'Active'
+        AND e.farm = $1
+      GROUP BY e.id
+      ORDER BY e.name ASC
+      `,
+      [farm, monthNumber, Number(year)]
+    );
+
+    const rows = result.rows.map((r) => {
+      const counts = { P: 0, A: 0, L: 0 };
+      for (const item of r.attendance || []) counts[item.status] = (counts[item.status] || 0) + 1;
+      return {
+        ...r,
+        attendance: r.attendance || [],
+        present: counts.P,
+        absent: counts.A,
+        leave: counts.L,
+        hasAttendance: Number(r.markedDays) > 0,
+      };
+    });
+
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /attendance:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.post("/attendance/save", async (req, res) => {
+  const client = await db.connect();
+  try {
+    const { farm, month, year, employeeId, employeeNo, employeeName, records } = req.body;
+
+    if (!farm || !month || !year || !employeeId || !Array.isArray(records)) {
+      return res.status(400).json({ success: false, message: "farm, month, year, employeeId and records are required" });
+    }
+
+    const monthNumber = MONTH_NUMBER[month];
+    if (!monthNumber) {
+      return res.status(400).json({ success: false, message: "Invalid month" });
+    }
+
+    await client.query("BEGIN");
+
+    await client.query(
+      `
+      DELETE FROM attendance
+      WHERE "employeeId" = $1
+        AND farm = $2
+        AND EXTRACT(MONTH FROM "attendanceDate") = $3
+        AND EXTRACT(YEAR FROM "attendanceDate") = $4
+      `,
+      [employeeId, farm, monthNumber, Number(year)]
+    );
+
+    const valid = records.filter((r) => r?.date && ["P", "A", "L"].includes(r.status));
+
+    for (const record of valid) {
+      const d = new Date(`${record.date}T00:00:00`);
+      if (Number.isNaN(d.getTime()) || d.getMonth() !== monthNumber - 1 || d.getFullYear() !== Number(year)) continue;
+
+      await client.query(
+        `
+        INSERT INTO attendance
+          ("employeeId", "employeeNo", "employeeName", farm, "attendanceDate", status)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        `,
+        [employeeId, employeeNo || "", employeeName || "", farm, record.date, record.status]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Attendance saved successfully",
+      markedDays: valid.length,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("POST /attendance/save:", err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+router.get("/attendance/summary", async (req, res) => {
+  try {
+    const { farm, month, year } = req.query;
+    if (!farm || !month || !year) {
+      return res.status(400).json({ success: false, message: "farm, month and year are required" });
+    }
+    const monthNumber = MONTH_NUMBER[month];
+    if (!monthNumber) return res.status(400).json({ success: false, message: "Invalid month" });
+
+    const result = await db.query(
+      `
+      SELECT
+        "employeeId",
+        COUNT(*)::int AS "markedDays",
+        COUNT(*) FILTER (WHERE status = 'P')::int AS present,
+        COUNT(*) FILTER (WHERE status = 'A')::int AS absent,
+        COUNT(*) FILTER (WHERE status = 'L')::int AS leave
+      FROM attendance
+      WHERE farm = $1
+        AND EXTRACT(MONTH FROM "attendanceDate") = $2
+        AND EXTRACT(YEAR FROM "attendanceDate") = $3
+      GROUP BY "employeeId"
+      `,
+      [farm, monthNumber, Number(year)]
+    );
+
+    res.json(result.rows.map((r) => ({ ...r, hasAttendance: Number(r.markedDays) > 0 })));
+  } catch (err) {
+    console.error("GET /attendance/summary:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 
 // ============================================================
 // CHECK IF SALARY BATCH ALREADY EXISTS

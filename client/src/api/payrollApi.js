@@ -48,3 +48,22 @@ export const undoSalary = (month, year) => {
 export const undoEmployeeSalary = (payrollId) => {
   return axios.delete(`${API}/undo-employee/${payrollId}`);
 };
+
+
+// Attendance Register -> monthly employee attendance for the current farm
+export const getAttendanceRegister = (month, year) => {
+  const farm = localStorage.getItem("farm");
+  return axios.get(`${API}/attendance`, { params: { farm, month, year } });
+};
+
+export const saveAttendance = (month, year, employeeId, employeeNo, employeeName, records) => {
+  const farm = localStorage.getItem("farm");
+  return axios.post(`${API}/attendance/save`, {
+    farm, month, year, employeeId, employeeNo, employeeName, records,
+  });
+};
+
+export const getAttendanceSummary = (month, year) => {
+  const farm = localStorage.getItem("farm");
+  return axios.get(`${API}/attendance/summary`, { params: { farm, month, year } });
+};

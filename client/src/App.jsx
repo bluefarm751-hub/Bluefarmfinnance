@@ -27,14 +27,25 @@ import EditContingentBill from "./pages/EditContingentBill";
 import ContingentBillReport from "./pages/ContingentBillReport";
 import CashBook from "./pages/CashBook";
 import ComingSoon from "./pages/ComingSoon";
+import BalanceSheet from "./pages/BalanceSheet";
+import BalanceSheetReport from "./pages/BalanceSheetReport";
+import BalanceSheetAdvancedReport from "./pages/BalanceSheetAdvancedReport";
+import BalanceSheetYearlyReport from "./pages/BalanceSheetYearlyReport";
+import HeadwiseContractorDetailedPdf from "./pages/HeadwiseContractorDetailedPdf";
+import YearlyContractorComparisonReport from "./pages/YearlyContractorComparisonReport";
+import BalanceSheetFullDetailPdf from "./pages/BalanceSheetFullDetailPdf";
 
 import Ledger from "./pages/Ledger";
 import GeneralLedger from "./pages/GeneralLedger";
+import LedgerReport from "./pages/LedgerReport";
 import PartyLedger from "./pages/PartyLedger";
+import PartyLedgerReport from "./pages/PartyLedgerReport";
+import PartyLedgerAdvancedReport from "./pages/PartyLedgerAdvancedReport";
 import AddLedgerEntry from "./pages/AddLedgerEntry";
 import ManageParties from "./pages/ManageParties";
 
 import UpdateSalary from "./pages/UpdateSalary";
+import AttendanceRegister from "./pages/AttendanceRegister";
 import GenerateSalary from "./pages/GenerateSalary";
 import UndoSalary from "./pages/UndoSalary";
 import ReportSalary from "./pages/ReportSalary";
@@ -87,6 +98,7 @@ function App() {
       <Route path="/employees/view/:id" element={p(<EmployeeProfile />)} />
 
       {/* Tab 4-7: Salary workflow (admin only) */}
+      <Route path="/salary/attendance" element={p(<AttendanceRegister />)} />
       <Route path="/salary/update" element={p(<UpdateSalary />)} />
       <Route path="/salary/generate" element={p(<GenerateSalary />)} />
       <Route path="/salary/undo" element={p(<UndoSalary />)} />
@@ -117,10 +129,25 @@ function App() {
       {/* Ledger (admin / Accounts Office only) */}
       <Route path="/ledger" element={pAdmin(<Ledger />)} />
       <Route path="/ledger/general" element={pAdmin(<GeneralLedger />)} />
+      <Route path="/ledger/report-excel" element={pAdmin(<LedgerReport mode="excel" />)} />
+      <Route path="/ledger/report-pdf" element={pAdmin(<LedgerReport mode="pdf" />)} />
       <Route path="/ledger/party" element={pAdmin(<PartyLedger />)} />
+      <Route path="/ledger/party-report-excel" element={pAdmin(<PartyLedgerReport mode="excel" />)} />
+      <Route path="/ledger/party-report-pdf" element={pAdmin(<PartyLedgerReport mode="pdf" />)} />
+      <Route path="/ledger/party-head-summary-excel" element={pAdmin(<PartyLedgerAdvancedReport mode="excel" type="head-summary" />)} />
+      <Route path="/ledger/party-head-summary-pdf" element={pAdmin(<PartyLedgerAdvancedReport mode="pdf" type="head-summary" />)} />
+      <Route path="/ledger/party-monthly-excel" element={pAdmin(<PartyLedgerAdvancedReport mode="excel" type="monthly" />)} />
+      <Route path="/ledger/party-monthly-pdf" element={pAdmin(<PartyLedgerAdvancedReport mode="pdf" type="monthly" />)} />
       <Route path="/ledger/add-entry" element={pAdmin(<AddLedgerEntry />)} />
       <Route path="/ledger/parties" element={pAdmin(<ManageParties />)} />
-      <Route path="/ledger/balance-sheet" element={pAdmin(<ComingSoon title="Balance Sheet" />)} />
+      <Route path="/ledger/balance-sheet" element={pAdmin(<BalanceSheet />)} />
+      <Route path="/ledger/balance-sheet-report" element={pAdmin(<BalanceSheetReport />)} />
+      <Route path="/ledger/balance-sheet-monthly-comparison" element={pAdmin(<BalanceSheetAdvancedReport type="monthly-comparison" />)} />
+      <Route path="/ledger/balance-sheet-contractor-breakup" element={pAdmin(<BalanceSheetAdvancedReport type="contractor-breakup" />)} />
+      <Route path="/ledger/balance-sheet-yearly-comparison" element={pAdmin(<BalanceSheetYearlyReport />)} />
+      <Route path="/ledger/contractor-detailed-pdf" element={pAdmin(<HeadwiseContractorDetailedPdf />)} />
+      <Route path="/ledger/yearly-contractor-comparison" element={pAdmin(<YearlyContractorComparisonReport />)} />
+      <Route path="/ledger/balance-sheet-full-detail-pdf" element={pAdmin(<BalanceSheetFullDetailPdf />)} />
 
       {/* Tab 9: About */}
       <Route path="/about" element={p(<About />)} />
