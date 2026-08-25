@@ -148,7 +148,7 @@ export default function WithdrawalTab({ summary, onChanged, showToast }) {
           </>
         }
       >
-        <DataTable columns={columns} rows={rows} empty="No withdrawals recorded"
+        <DataTable columns={columns} rows={rows} empty="No withdrawals recorded" plainRows
           totalsRow={{ __sno: "TOTAL", amount: money(total) }} />
       </SectionCard>
 

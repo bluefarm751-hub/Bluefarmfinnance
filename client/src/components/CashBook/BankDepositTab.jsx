@@ -89,7 +89,7 @@ export default function BankDepositTab({ summary, onChanged, showToast }) {
           <Grid item xs={12} sm={3}><TextField fullWidth size="small" label="Remarks" value={form.remarks} onChange={e => setForm({...form, remarks: e.target.value})} /></Grid>
           <Grid item xs={12}><Button variant="contained" onClick={submit} sx={{ background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>Save Deposit</Button></Grid>
         </Grid></Box>}
-      <DataTable columns={columns} rows={rows} empty="No bank deposits yet" totalsRow={{ entryDate: "TOTAL", amount: money(totalDeposited) }} />
+      <DataTable columns={columns} rows={rows} empty="No bank deposits yet" totalsRow={{ entryDate: "TOTAL", amount: money(totalDeposited) }} plainRows />
     </SectionCard>
     <ConfirmDialog open={!!deleteTarget} title="Delete Deposit?" message="This will decrease Cash in Bank and increase Cash in Hand." confirmLabel="Delete" cancelLabel="Cancel" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} />
   </>);

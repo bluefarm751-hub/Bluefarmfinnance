@@ -503,7 +503,7 @@ export default function DailyClosingTab({ onChanged, showToast }) {
           </>
         }
       >
-        <DataTable columns={historyCols} rows={history} empty="No closings saved yet" />
+        <DataTable columns={historyCols} rows={history} empty="No closings saved yet" plainRows />
       </SectionCard>
 
       <ConfirmDialog

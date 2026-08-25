@@ -16,7 +16,7 @@ const SOURCES = ["Milk Sale", "Culling of Animals", "Other Income"];
  * side = "receipt" | "payment"
  * Receipt side auto-picks Budget Allocations; Payment side auto-picks Add Bills.
  */
-export default function SideTab({ side, onChanged, showToast, allowAdd = false }) {
+export default function SideTab({ side, onChanged, showToast, allowAdd = false, plainRows = false }) {
   const isReceipt = side === "receipt";
   const canAdd = isReceipt && allowAdd;
   const [rows, setRows] = useState([]);
@@ -263,6 +263,7 @@ export default function SideTab({ side, onChanged, showToast, allowAdd = false }
           rows={rows}
           empty={isReceipt ? "No receipts yet" : "No payments yet — add bills in the Add Bill tab"}
           totalsRow={{ date: "TOTAL", cash: money(totals.cash), bank: money(totals.bank) }}
+          plainRows={plainRows}
         />
       </SectionCard>
 
