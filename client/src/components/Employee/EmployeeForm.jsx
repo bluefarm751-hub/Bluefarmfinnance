@@ -60,7 +60,7 @@ function Section({ icon, title, children }) {
         }}>{icon}</Box>
         <Typography sx={{ fontSize: 15.5, fontWeight: 800, color: "#fff" }}>{title}</Typography>
       </Box>
-      <Box sx={{ p: { xs: 1.4, md: 1.8 } }}>
+      <Box sx={{ p: { xs: 1.25, md: 1.45 } }}>
         {children}
       </Box>
     </Box>
@@ -114,7 +114,7 @@ export default function EmployeeForm({ formData, setFormData }) {
   const policePreview = formData.policeVerification instanceof File ? URL.createObjectURL(formData.policeVerification) : formData.policeVerification ? `${formData.policeVerification}` : null;
   const policeFileName = formData.policeVerification instanceof File ? formData.policeVerification.name : (formData.policeVerification ? "Police verification uploaded" : null);
 
-  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.35 };
+  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.15 };
 
   return (
     <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.7 }}>
@@ -147,13 +147,13 @@ export default function EmployeeForm({ formData, setFormData }) {
         <Box sx={twoCol}>
           <Field label="Gross Salary"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="grossSalary" value={formData.grossSalary || ""} onChange={handleChange} /></Field>
           <Field label="Bank Name"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="bankName" value={formData.bankName || ""} onChange={handleChange} /></Field>
-          <Field label="Account Title" span={2}><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} /></Field>
-          <Field label="IBAN" span={2}><TextField hiddenLabel fullWidth size="small" name="iban" value={formData.iban || ""} onChange={handleChange} sx={{ ...inputSx, width: { xs: "100%", sm: "calc(50% + 50px)" } }} slotProps={{ input: viewAdornment("IBAN", formData.iban) }} /></Field>
+          <Field label="Account Title"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} /></Field>
+          <Field label="IBAN" span={2}><TextField hiddenLabel fullWidth size="small" name="iban" value={formData.iban || ""} onChange={handleChange} sx={{ ...inputSx, width: { xs: "100%", sm: "min(760px, 86%)", lg: "min(820px, 86%)" } }} slotProps={{ input: viewAdornment("IBAN", formData.iban) }} /></Field>
         </Box>
       </Section>
 
       <Section icon={<DescriptionIcon fontSize="small" />} title="Documents & Remarks">
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.35 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.15 }}>
           <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
           <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
           <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />

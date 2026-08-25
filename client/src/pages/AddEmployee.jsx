@@ -37,10 +37,13 @@ export default function AddEmployee() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1, pb: 4, width: "100%", maxWidth: 1160, mx: "auto", minWidth: 0, overflowX: "hidden" }}>
-        <Box sx={{ mb: 1.6, px: { xs: 1.5, md: 2.2 }, py: 1.35, borderRadius: 2, background: "linear-gradient(180deg,#0f4c81 0%,#123f68 100%)", color: "#fff", boxShadow: "0 6px 18px rgba(8,33,63,.16)" }}>
-          <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.4, opacity: .82, mb: .25 }}>NEW RECORD</Typography>
-          <Typography sx={{ fontSize: { xs: 24, md: 29 }, fontWeight: 800, lineHeight: 1.1, color: "#fff" }}>Add New Employee</Typography>
+      <Box sx={{ px: { xs: 1, sm: 1.5, md: 1.75 }, pt: 1, pb: 4, width: "100%", maxWidth: 1440, mx: "auto", minWidth: 0, overflowX: "hidden" }}>
+        <Box sx={{ mb: 1.2 }}>
+          <Box sx={{ display: "inline-flex", alignItems: "center", border: "1px solid #c9a227", borderRadius: 999, px: 1.25, py: .3, mb: .35, background: "transparent" }}>
+            <Typography sx={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 1.25, color: "#a27b00", lineHeight: 1.1 }}>NEW RECORD</Typography>
+          </Box>
+          <Typography sx={{ fontSize: { xs: 25, md: 29 }, fontWeight: 400, lineHeight: 1.1, color: "#14213d" }}>Add New Employee</Typography>
+          <Typography sx={{ mt: .25, fontSize: 14, color: "#26384e" }}>Enter employee information below.</Typography>
         </Box>
         <EmployeeForm formData={formData} setFormData={setFormData} />
         <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 1.2, flexWrap: "wrap" }}>
