@@ -244,13 +244,18 @@ export default function ContingentBillReport() {
           {filtered.map((b, i) => {
             const isExpanded = expandedId === b.id;
             const txt = rowTextColor(i);
+            const printedRowBackground =
+              "linear-gradient(135deg,#EAF7EF 0%,#D8F0DF 100%)";
+            const printedRowBorder = "1px solid rgba(30,142,90,0.45)";
 
             return (
               <Box
                 key={b.id}
                 sx={{
-                  background: rowBg(i), borderRadius: 2, p: 2,
-                  border: "1px solid rgba(8,33,63,0.12)",
+                  background: b.printed ? printedRowBackground : rowBg(i),
+                  borderRadius: 2, p: 2,
+                  border: b.printed ? printedRowBorder : "1px solid rgba(8,33,63,0.12)",
+                  boxShadow: b.printed ? "inset 4px 0 0 #1E8E5A" : "none",
                 }}
               >
                 <Box>
@@ -271,11 +276,25 @@ export default function ContingentBillReport() {
                         <Chip
                           label="PRINTED"
                           size="small"
-                          sx={{ fontWeight: 800, fontSize: 10.5, background: "#d0d0d0", color: "#555", whiteSpace: "nowrap", flexShrink: 0 }}
+                          sx={{
+                            fontWeight: 900, fontSize: 10.5,
+                            background: "#1E8E5A", color: "#fff",
+                            whiteSpace: "nowrap", flexShrink: 0,
+                            boxShadow: "0 1px 4px rgba(30,142,90,0.25)",
+                          }}
                         />
                       )}
-                      <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, color: txt, borderColor: txt }} />
-                      <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220, color: txt, borderColor: txt }} />
+                      <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, color: b.printed ? "#1B5E3B" : txt, borderColor: b.printed ? "#1E8E5A" : txt }} />
+                      <Chip
+                        label={`Head: ${b.headName || "—"}`}
+                        variant="outlined"
+                        sx={{
+                          fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0,
+                          maxWidth: 260, color: b.printed ? "#1B5E3B" : txt,
+                          borderColor: b.printed ? "#1E8E5A" : txt,
+                        }}
+                      />
+                      <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220, color: b.printed ? "#1B5E3B" : txt, borderColor: b.printed ? "#1E8E5A" : txt }} />
                       <Chip
                         label={`Total: Rs. ${Number(b.totalAmount || 0).toLocaleString()}`}
                         sx={{ fontWeight: 700, background: brand.success, color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}

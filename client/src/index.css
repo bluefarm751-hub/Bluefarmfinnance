@@ -98,3 +98,46 @@ img{
 /* Employee form / page safety: never create an accidental horizontal scrollbar. */
 html, body, #root { max-width: 100%; overflow-x: hidden; }
 .MuiContainer-root, .MuiPaper-root, .MuiCard-root, .MuiCardContent-root { min-width: 0; }
+
+
+/* Finance + Cash Book data-entry fields: clean white typing surfaces.
+   Scope is applied by MainLayout only to /finance* and /cashbook* routes,
+   so Payroll, Employees and other sections keep their existing styling. */
+.finance-cash-scope .MuiTextField-root .MuiOutlinedInput-root,
+.finance-cash-scope .MuiTextField-root .MuiFilledInput-root,
+.finance-cash-scope .MuiTextField-root .MuiInput-root,
+.finance-cash-scope .MuiInputBase-root,
+.finance-cash-scope input:not([type="checkbox"]):not([type="radio"]),
+.finance-cash-scope textarea,
+.finance-cash-scope .MuiSelect-select {
+    background-color:#ffffff !important;
+    color:#0B1B33 !important;
+}
+
+.finance-cash-scope .MuiOutlinedInput-notchedOutline {
+    border-color:rgba(15,76,129,0.35) !important;
+}
+
+.finance-cash-scope .MuiInputLabel-root {
+    color:#38536f !important;
+}
+
+.finance-cash-scope .MuiInputLabel-root.Mui-focused {
+    color:#0F4C81 !important;
+}
+
+.finance-cash-scope .MuiInputBase-input::placeholder,
+.finance-cash-scope textarea::placeholder {
+    color:#6B7280 !important;
+    opacity:1 !important;
+}
+
+/* Native controls used in a few Finance/Cash Book areas. */
+.finance-cash-scope input[type="date"],
+.finance-cash-scope input[type="number"],
+.finance-cash-scope input[type="text"],
+.finance-cash-scope input[type="search"],
+.finance-cash-scope input[type="email"] {
+    background-color:#ffffff !important;
+    color:#0B1B33 !important;
+}

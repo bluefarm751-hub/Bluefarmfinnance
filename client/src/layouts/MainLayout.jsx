@@ -1,7 +1,13 @@
+import { useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
 export default function MainLayout({ children }) {
+  const location = useLocation();
+  const isFinanceCashScope =
+    location.pathname.startsWith("/finance") ||
+    location.pathname.startsWith("/cashbook");
+
   return (
     <div
       style={{
@@ -50,7 +56,9 @@ export default function MainLayout({ children }) {
             background: "transparent",
           }}
         >
-          {children}
+          <div className={isFinanceCashScope ? "finance-cash-scope" : ""}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
