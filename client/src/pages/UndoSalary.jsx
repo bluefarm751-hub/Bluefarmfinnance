@@ -94,7 +94,7 @@ export default function UndoSalary() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1.2, pb: 4, width: "100%", maxWidth: 1330, mx: "auto", minWidth: 0 }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1.2, pb: 4, width: "100%", maxWidth: "none", mx: 0, minWidth: 0 }}>
         <Box sx={{ display: "inline-flex", alignItems: "center", px: 1.5, py: .35, borderRadius: 99, background: `${brand.gold}1f`, border: `1px solid ${brand.gold}`, fontSize: 10.5, fontWeight: 800, letterSpacing: 1, color: brand.goldDark, mb: .8 }}>PAYROLL CORRECTIONS</Box>
         <Typography variant="h4" fontWeight={500} sx={{ color: brand.ink, mb: .3 }}>Undo Salary</Typography>
         <Typography color="text.secondary" sx={{ mb: 1.6, fontSize: 13.5 }}>Undo a complete generated batch or reverse a single employee salary entry.</Typography>
@@ -147,7 +147,7 @@ export default function UndoSalary() {
                                     <TableCell sx={{ fontWeight: 800 }}>{emp.employeeName}</TableCell>
                                     <TableCell>{emp.employeeNo}</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell>
-                                    <TableCell align="right"><ActionButton title="Undo Employee Salary" color={brand.danger} onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}><UndoIcon sx={{ fontSize: 17 }} /></ActionButton></TableCell>
+                                    <TableCell align="right"><Button size="small" variant="contained" startIcon={<UndoIcon sx={{ fontSize: 17 }} />} onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })} sx={{ minWidth: 78, height: 30, px: 1.1, background: brand.danger, color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "none", borderRadius: 1.1, "&:hover": { background: "#8e281c" } }}>Undo</Button></TableCell>
                                   </TableRow>)}</TableBody>
                                 </Table>
                               </TableContainer>}

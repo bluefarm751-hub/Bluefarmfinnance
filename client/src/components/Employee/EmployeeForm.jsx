@@ -17,8 +17,8 @@ const inputSx = {
   width: "100%",
   minWidth: 0,
   "& .MuiOutlinedInput-root": {
-    minHeight: 44,
-    borderRadius: 1.35,
+    minHeight: 38,
+    borderRadius: 1.25,
     background: "#fff",
     "& fieldset": { borderColor: "#b7c8d8" },
     "&:hover fieldset": { borderColor: "#7fa5c4" },
@@ -27,8 +27,8 @@ const inputSx = {
       "& fieldset": { borderColor: `${brand.blueBright} !important`, borderWidth: "1px !important" },
     },
   },
-  "& .MuiInputBase-input": { fontSize: 14, py: 1.05, color: "#111827" },
-  "& .MuiSelect-select": { fontSize: 14, py: 1.05, color: "#111827" },
+  "& .MuiInputBase-input": { fontSize: 14, py: .72, color: "#111827" },
+  "& .MuiSelect-select": { fontSize: 14, py: .72, color: "#111827" },
 };
 
 function Section({ icon, title, children }) {
@@ -42,8 +42,8 @@ function Section({ icon, title, children }) {
       boxShadow: "0 5px 14px rgba(8,33,63,.07)",
     }}>
       <Box sx={{
-        px: 1.6,
-        py: 1.05,
+        px: 1.4,
+        py: .78,
         display: "flex",
         alignItems: "center",
         gap: 1,
@@ -51,16 +51,16 @@ function Section({ icon, title, children }) {
         color: "#fff",
       }}>
         <Box sx={{
-          width: 30,
-          height: 30,
+          width: 28,
+          height: 28,
           borderRadius: 1,
           background: "rgba(255,255,255,.13)",
           display: "grid",
           placeItems: "center",
         }}>{icon}</Box>
-        <Typography sx={{ fontSize: 15.5, fontWeight: 800, color: "#fff" }}>{title}</Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{title}</Typography>
       </Box>
-      <Box sx={{ p: { xs: 1.25, md: 1.45 } }}>
+      <Box sx={{ p: { xs: 1.05, md: 1.15 } }}>
         {children}
       </Box>
     </Box>
@@ -70,7 +70,7 @@ function Section({ icon, title, children }) {
 function Field({ label, children, span = 1 }) {
   return (
     <Box sx={{ minWidth: 0, gridColumn: { xs: "1 / -1", md: span === 2 ? "1 / -1" : "auto" } }}>
-      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#111827", mb: .55, lineHeight: 1.2 }}>
+      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#111827", mb: .38, lineHeight: 1.15 }}>
         {label}
       </Typography>
       {children}
@@ -81,7 +81,7 @@ function Field({ label, children, span = 1 }) {
 function UploadBox({ label, previewUrl, isImage, fileName, onChange }) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#111827", mb: .55, lineHeight: 1.2 }}>{label}</Typography>
+      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#111827", mb: .38, lineHeight: 1.15 }}>{label}</Typography>
       <Box component="label" sx={{
         height: 84,
         border: `1px dashed ${previewUrl ? brand.gold : "#9bb2c7"}`,
@@ -114,10 +114,10 @@ export default function EmployeeForm({ formData, setFormData }) {
   const policePreview = formData.policeVerification instanceof File ? URL.createObjectURL(formData.policeVerification) : formData.policeVerification ? `${formData.policeVerification}` : null;
   const policeFileName = formData.policeVerification instanceof File ? formData.policeVerification.name : (formData.policeVerification ? "Police verification uploaded" : null);
 
-  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.15 };
+  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: .8 };
 
   return (
-    <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.7 }}>
+    <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.1 }}>
       <Section icon={<PersonIcon fontSize="small" />} title="Personal Information">
         <Box sx={twoCol}>
           <Field label="Employee No"><TextField hiddenLabel size="small" sx={inputSx} name="employeeNo" value={formData.employeeNo || ""} onChange={handleChange} /></Field>
@@ -127,7 +127,7 @@ export default function EmployeeForm({ formData, setFormData }) {
           <Field label="Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="mobile" value={formData.mobile || ""} onChange={handleChange} /></Field>
           <Field label="Family Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} /></Field>
           <Field label="Address" span={2}>
-            <TextField hiddenLabel fullWidth multiline minRows={3} maxRows={4} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], alignItems: "flex-start" } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
+            <TextField hiddenLabel fullWidth multiline minRows={1} maxRows={2} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 54, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .65 } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
           </Field>
         </Box>
       </Section>
