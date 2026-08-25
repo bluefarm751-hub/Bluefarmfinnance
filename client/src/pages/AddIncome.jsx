@@ -23,7 +23,7 @@ export default function AddIncome() {
 
         <FarmSourceBadge type="INCOME" />
 
-        <SideTab side="receipt" allowAdd showToast={showToast} plainRows />
+        <SideTab side="receipt" allowAdd showToast={showToast} />
       </Box>
       {ToastUI}
     </MainLayout>

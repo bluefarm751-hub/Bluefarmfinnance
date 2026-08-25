@@ -48,11 +48,7 @@ export function SectionCard({ title, action, children }) {
   );
 }
 
-// plainRows = true: keep the dark-blue header row, but make every body row
-// plain white/light (no alternating blue rowBlue stripe) — used only where
-// explicitly requested (TR tab, Add Income), NOT the default table look
-// used elsewhere (Receipt/Payment Side, Withdrawal, Bank Deposit, etc.).
-export function DataTable({ columns, rows, empty = "No records found", totalsRow, plainRows = false }) {
+export function DataTable({ columns, rows, empty = "No records found", totalsRow }) {
   return (
     <Box sx={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 5px", fontSize: 13.5 }}>
@@ -88,20 +84,14 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
             </tr>
           )}
           {rows.map((row, i) => (
-            <tr
-              key={row.id ?? i}
-              style={{
-                background: plainRows ? "#ffffff" : (i % 2 ? brand.rowWhiteGradient : brand.rowBlue),
-                ...(plainRows ? { borderBottom: "1px solid #e6edf5" } : {}),
-              }}
-            >
+            <tr key={row.id ?? i} style={{ background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>
               {columns.map((c) => (
                 <td
                   key={c.key}
                   style={{
                     padding: "9px 12px",
                     textAlign: c.align || "left",
-                    color: plainRows ? brand.rowTextOnWhite : (i % 2 ? brand.rowTextOnWhite : brand.rowText),
+                    color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
                   }}
                 >
                   {c.render ? c.render(row, i) : (row[c.key] ?? "")}

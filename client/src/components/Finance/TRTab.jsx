@@ -161,8 +161,7 @@ export default function TRTab({ onChanged, showToast }) {
         }
       >
         <DataTable columns={columns} rows={rows} empty="No temporary receipts issued"
-          totalsRow={{ sNo: "TOTAL", amount: money(total), status: `Outstanding ${money(outstanding)}` }}
-          plainRows />
+          totalsRow={{ sNo: "TOTAL", amount: money(total), status: `Outstanding ${money(outstanding)}` }} />
       </SectionCard>
 
       <ConfirmDialog
