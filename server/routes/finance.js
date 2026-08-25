@@ -1704,6 +1704,51 @@ router.put(
     }
 );
 
+// MARK CONTINGENT BILL AS PRINTED
+router.patch(
+    "/contingent-bills/:id/mark-printed",
+    async (req, res) => {
+        try {
+            const result = await db.query(
+                `
+                UPDATE finance_contingent_bills
+                SET printed = true,
+                    "printedAt" = CURRENT_TIMESTAMP
+                WHERE id = $1
+                RETURNING *
+                `,
+                [req.params.id]
+            );
+
+            if (result.rowCount === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Contingent bill not found",
+                });
+            }
+
+            res.json({
+                success: true,
+                message:
+                    "Contingent bill marked as printed",
+                data: result.rows[0],
+            });
+
+        } catch (err) {
+            console.error(
+                "PATCH /finance/contingent-bills/:id/mark-printed:",
+                err
+            );
+
+            res.status(500).json({
+                success: false,
+                message: err.message,
+            });
+        }
+    }
+);
+
 // DELETE CONTINGENT BILL
 router.delete(
     "/contingent-bills/:id",

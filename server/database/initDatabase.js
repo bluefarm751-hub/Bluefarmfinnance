@@ -156,9 +156,23 @@ async function initDatabase() {
         "receivedByName" TEXT,
         "receivedByRank" TEXT,
         "paymentHead" TEXT,
+        printed BOOLEAN DEFAULT false,
+        "printedAt" TIMESTAMP,
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Older databases created before the "printed" tracking was added won't
+    // have these columns yet — add them if missing so existing installs
+    // pick up the feature without a manual migration.
+    await client.query(`
+      ALTER TABLE finance_contingent_bills
+      ADD COLUMN IF NOT EXISTS printed BOOLEAN DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE finance_contingent_bills
+      ADD COLUMN IF NOT EXISTS "printedAt" TIMESTAMP
     `);
 
     // ============================================================

@@ -320,7 +320,11 @@ export function downloadContingentBillPdf(bill, farmLabel, filename) {
 // the browser's own PDF viewer handles printing the finished document
 // as-is — with no injected page title/date header, exactly matching what
 // the PDF looks like on screen.
-export function printContingentBillPdf(bill, farmLabel) {
+// onAfterPrint (optional) fires once the browser's print dialog is closed —
+// whether the user actually printed or just cancelled — so callers can mark
+// the voucher as "printed", the same way the print dialog closing is what
+// triggers the PRINTED status in the offline HTML tool.
+export function printContingentBillPdf(bill, farmLabel, onAfterPrint) {
   const doc = buildContingentBillPdf(bill, farmLabel);
   const blobUrl = doc.output("bloburl");
 
@@ -334,10 +338,20 @@ export function printContingentBillPdf(bill, farmLabel) {
   iframe.src = blobUrl;
   document.body.appendChild(iframe);
 
+  let firedAfterPrint = false;
+  const fireAfterPrint = () => {
+    if (firedAfterPrint) return;
+    firedAfterPrint = true;
+    if (typeof onAfterPrint === "function") onAfterPrint();
+  };
+
   iframe.onload = () => {
     setTimeout(() => {
       try {
         iframe.contentWindow.focus();
+        if (onAfterPrint) {
+          iframe.contentWindow.addEventListener("afterprint", fireAfterPrint);
+        }
         iframe.contentWindow.print();
       } catch {
         window.open(blobUrl, "_blank");

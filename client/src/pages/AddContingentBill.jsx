@@ -69,6 +69,11 @@ export default function AddContingentBill() {
 
   const [saving, setSaving] = useState(false);
 
+  // Remembers the row order from before "Sort by Date" was clicked, so a
+  // second click can put the rows back exactly how they were.
+  const [rowsOriginalOrder, setRowsOriginalOrder] = useState(null);
+  const [rowsSortedByDate, setRowsSortedByDate] = useState(false);
+
   // Rows can arrive pre-filled from "Add Contingent Bill (From Existing Bill /
   // HQ Remittance)" — the user ticked existing Bills / HQ Remittances there
   // and they land here ready to review before saving.
@@ -105,16 +110,33 @@ export default function AddContingentBill() {
 
   // New rows are added to the TOP of the list — the bill you're entering now
   // shows up first, with previously added rows pushed further down.
-  const addRow = () => setRows((prev) => [emptyRow(), ...prev]);
+  const addRow = () => {
+    setRows((prev) => [emptyRow(), ...prev]);
+    setRowsOriginalOrder(null);
+    setRowsSortedByDate(false);
+  };
 
   const removeRow = (idx) => {
     setRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)));
+    setRowsOriginalOrder(null);
+    setRowsSortedByDate(false);
   };
 
   // Lets the user re-order the rows on screen by date right away, instead
-  // of only finding out the saved order after saving.
+  // of only finding out the saved order after saving. Clicking again
+  // restores the rows to the order they were in before sorting.
   const handleSortByDate = () => {
-    setRows((prev) => sortRowsByDate(prev));
+    if (!rowsSortedByDate) {
+      setRowsOriginalOrder(rows);
+      setRows((prev) => sortRowsByDate(prev));
+      setRowsSortedByDate(true);
+      showToast("Rows sorted by date", "success");
+    } else {
+      if (rowsOriginalOrder) setRows(rowsOriginalOrder);
+      setRowsOriginalOrder(null);
+      setRowsSortedByDate(false);
+      showToast("Restored original order", "success");
+    }
   };
 
   const totalAmount = rows.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
@@ -329,7 +351,7 @@ export default function AddContingentBill() {
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Button size="small" variant="contained" startIcon={<SortIcon />} onClick={handleSortByDate}
                   sx={{ background: "#9C7A1E", "&:hover": { background: "#7A5F16" } }}>
-                  Sort by Date
+                  {rowsSortedByDate ? "Restore Order" : "Sort by Date"}
                 </Button>
                 <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={addRow}
                   sx={{ background: "#1E8E5A", "&:hover": { background: "#166B44" } }}>

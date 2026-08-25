@@ -26,7 +26,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { getContingentBills, deleteContingentBill } from "../api/financeApi";
+import { getContingentBills, deleteContingentBill, markContingentBillPrinted } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
 import { exportExcel } from "../utils/exportExcel";
 import { printContingentBillPdf, downloadContingentBillPdf } from "../utils/contingentBillPdf";
@@ -111,7 +111,18 @@ export default function ContingentBillReport() {
   };
 
   const handlePrintVoucher = (bill) => {
-    printContingentBillPdf(bill, farm);
+    printContingentBillPdf(bill, farm, async () => {
+      try {
+        await markContingentBillPrinted(bill.id);
+        setBills((prev) =>
+          prev.map((b) =>
+            b.id === bill.id ? { ...b, printed: true, printedAt: new Date().toISOString() } : b
+          )
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
   const handleDownloadPdf = (bill) => {
@@ -256,6 +267,13 @@ export default function ContingentBillReport() {
                         label={`Voucher ${b.voucherNo || "—"}`}
                         sx={{ fontWeight: 700, background: "linear-gradient(135deg,#1E88E5,#1565C0)", color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }}
                       />
+                      {b.printed && (
+                        <Chip
+                          label="PRINTED"
+                          size="small"
+                          sx={{ fontWeight: 800, fontSize: 10.5, background: "#d0d0d0", color: "#555", whiteSpace: "nowrap", flexShrink: 0 }}
+                        />
+                      )}
                       <Chip label={`${b.month} ${b.year}`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, color: txt, borderColor: txt }} />
                       <Chip label={b.paymentToMS || "—"} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, maxWidth: 220, color: txt, borderColor: txt }} />
                       <Chip

@@ -138,3 +138,8 @@ export const updateContingentBill = async (id, data) => {
 export const deleteContingentBill = async (id) => {
   return axios.delete(`${API}/contingent-bills/${id}`);
 };
+
+// Mark a contingent bill as printed (after it's actually sent to the printer)
+export const markContingentBillPrinted = async (id) => {
+  return axios.patch(`${API}/contingent-bills/${id}/mark-printed`);
+};
