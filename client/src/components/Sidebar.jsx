@@ -47,8 +47,13 @@ export default function Sidebar() {
   const farmLogo = isRemounts ? blueRemountsLogo : blueFarmLogo;
 
   // ---- Main tabs (collapsible groups) ----
+  // "/employees" is a *prefix* of "/employees/add" and "/employees/list" —
+  // without an exact match, the plain "Employees" link would light up gold
+  // on every one of those sub-pages too. `end: true` makes it match only
+  // the exact "/employees" path, same as before an "Add Employee" or "View
+  // Employee" sub-route existed.
   const payrollLinks = [
-    { to: "/employees", icon: <FaUsers />, text: "Employees", locked: false },
+    { to: "/employees", end: true, icon: <FaUsers />, text: "Employees", locked: false },
     { to: "/employees/add", icon: <FaUserPlus />, text: "Add Employee", locked: false },
     { to: "/employees/list", icon: <FaAddressCard />, text: "View Employee", locked: false },
     { to: "/salary/update", icon: <FaMoneyCheckAlt />, text: "Update Salary", locked: !isAdmin },
@@ -213,6 +218,7 @@ export default function Sidebar() {
                     key={link.text}
                     to={link.to}
                     state={link.state}
+                    end={link.end}
                     icon={link.icon}
                     text={link.text}
                     locked={link.locked}
@@ -298,7 +304,7 @@ function GroupHeader({ icon, title, to, open, onToggle }) {
   );
 }
 
-function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
+function MenuLink({ to, icon, text, locked, state, end, onLockedClick }) {
   const [hover, setHover] = useState(false);
   const loc = useLocation();
   // Cash Book tabs all share /cashbook, so match on the tab index too.
@@ -345,6 +351,7 @@ function MenuLink({ to, icon, text, locked, state, onLockedClick }) {
     <NavLink
       to={to}
       state={state}
+      end={end}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={({ isActive: navActive }) => {

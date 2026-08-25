@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../utils/useToast";
 import { getSalaryBatches, getBatchEmployees, undoSalary, undoEmployeeSalary } from "../api/payrollApi";
 
-import { Box, Card, CardContent, Typography, Button, Chip, IconButton, Collapse, Divider, Grid } from "@mui/material";
+import {
+  Box, Card, CardContent, Typography, Button, Collapse, Grid,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+} from "@mui/material";
 import UndoIcon from "@mui/icons-material/Undo";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { brand, gradients, shadowCard } from "../theme";
+import { brand, shadowCard, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
 export default function UndoSalary() {
   const { showToast, ToastUI } = useToast();
@@ -139,119 +142,116 @@ export default function UndoSalary() {
           </Card>
         )}
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {batches.map((b) => {
-            const key = batchKey(b);
-            const isExpanded = expandedKey === key;
+        {batches.length > 0 && (
+          <Card elevation={0} sx={{ width: "100%", borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
+            <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={tableHeadRowSx}>
+                      <TableCell sx={{ fontWeight: 800 }}>Batch</TableCell>
+                      <TableCell sx={{ fontWeight: 800 }}>Employees</TableCell>
+                      <TableCell sx={{ fontWeight: 800 }}>Total Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 800 }} align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {batches.map((b, i) => {
+                      const key = batchKey(b);
+                      const isExpanded = expandedKey === key;
 
-            return (
-              <Card key={key} sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexWrap: "nowrap",
-                      gap: 2,
-                    }}
-                  >
-                    <Box sx={{
-                      display: "flex", gap: 1.5, alignItems: "center", flexWrap: "nowrap",
-                      overflowX: "auto", minWidth: 0, py: 0.5,
-                      "&::-webkit-scrollbar": { height: 4 },
-                    }}>
-                      <Chip label={`${b.month} ${b.year}`} sx={{ fontWeight: 700, background: gradients.brand, color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }} />
-                      <Chip label={`${b.employeeCount} employee(s)`} variant="outlined" sx={{ fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }} />
-                      <Chip label={`Total: Rs. ${Number(b.totalNet || 0).toLocaleString()}`} sx={{ fontWeight: 700, background: brand.success, color: "#fff", whiteSpace: "nowrap", flexShrink: 0 }} />
-                    </Box>
+                      return (
+                        <Fragment key={key}>
+                          <TableRow hover sx={tableBodyRowSx(i)}>
+                            <TableCell sx={{ fontWeight: 700 }}>{b.month} {b.year}</TableCell>
+                            <TableCell>{b.employeeCount} employee(s)</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }}>Rs. {Number(b.totalNet || 0).toLocaleString()}</TableCell>
+                            <TableCell align="right">
+                              <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                  onClick={() => toggleExpand(b)}
+                                  sx={{ whiteSpace: "nowrap" }}
+                                >
+                                  {isExpanded ? "Hide Employees" : "Undo Single Employee"}
+                                </Button>
 
-                    <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
-                      <Button
-                        variant="outlined"
-                        startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        onClick={() => toggleExpand(b)}
-                        sx={{ whiteSpace: "nowrap" }}
-                      >
-                        {isExpanded ? "Hide Employees" : "Undo Single Employee"}
-                      </Button>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  color="error"
+                                  startIcon={<UndoIcon fontSize="small" />}
+                                  onClick={() => setConfirmBatch(b)}
+                                  sx={{ whiteSpace: "nowrap" }}
+                                >
+                                  Undo Full Batch
+                                </Button>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
 
-                      <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<UndoIcon />}
-                        onClick={() => setConfirmBatch(b)}
-                        sx={{ whiteSpace: "nowrap" }}
-                      >
-                        Undo Full Batch
-                      </Button>
-                    </Box>
-                  </Box>
+                          <TableRow>
+                            <TableCell colSpan={4} sx={{ p: 0, border: 0 }}>
+                              <Collapse in={isExpanded}>
+                                <Box sx={{ px: 2, py: 2, background: "rgba(15,76,129,0.05)" }}>
+                                  {loadingEmployees && (
+                                    <Typography color="text.secondary" sx={{ py: 1 }}>Loading employees...</Typography>
+                                  )}
 
-                  <Collapse in={isExpanded}>
-                    <Divider sx={{ my: 2 }} />
+                                  {!loadingEmployees && batchEmployees.length === 0 && (
+                                    <Typography color="text.secondary" sx={{ py: 1 }}>No employees left in this batch.</Typography>
+                                  )}
 
-                    {loadingEmployees && (
-                      <Typography color="text.secondary" sx={{ py: 2 }}>Loading employees...</Typography>
-                    )}
-
-                    {!loadingEmployees && batchEmployees.length === 0 && (
-                      <Typography color="text.secondary" sx={{ py: 2 }}>No employees left in this batch.</Typography>
-                    )}
-
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                      {!loadingEmployees && batchEmployees.map((emp, i) => (
-                        <Box
-                          key={emp.id}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            flexWrap: "nowrap",
-                            gap: 1,
-                            px: 1.5,
-                            py: 1.2,
-                            borderRadius: 2,
-                            background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue,
-                          }}
-                        >
-                          <Box sx={{ minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
-                            <Typography
-                              fontWeight={700}
-                              noWrap
-                              title={emp.employeeName}
-                              sx={{ color: i % 2 ? brand.rowTextOnWhite : brand.rowText }}
-                            >
-                              {emp.employeeName}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              noWrap
-                              sx={{ display: "block", color: i % 2 ? brand.rowTextOnWhite : brand.rowText, opacity: 0.75 }}
-                            >
-                              {emp.employeeNo} • Net Salary: Rs. {Number(emp.netSalary || 0).toLocaleString()}
-                            </Typography>
-                          </Box>
-
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            startIcon={<UndoIcon fontSize="small" />}
-                            onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}
-                            sx={{ flexShrink: 0, whiteSpace: "nowrap", background: "rgba(255,255,255,0.6)" }}
-                          >
-                            Undo
-                          </Button>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Collapse>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
+                                  {!loadingEmployees && batchEmployees.length > 0 && (
+                                    <TableContainer sx={{ borderRadius: 2, overflow: "hidden", boxShadow: shadowCard }}>
+                                      <Table size="small">
+                                        <TableHead>
+                                          <TableRow sx={tableHeadRowSx}>
+                                            <TableCell sx={{ fontWeight: 800 }}>Employee Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 800 }}>Emp No</TableCell>
+                                            <TableCell sx={{ fontWeight: 800 }}>Net Salary</TableCell>
+                                            <TableCell sx={{ fontWeight: 800 }} align="right">Action</TableCell>
+                                          </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                          {batchEmployees.map((emp, j) => (
+                                            <TableRow key={emp.id} hover sx={tableBodyRowSx(j)}>
+                                              <TableCell sx={{ fontWeight: 700 }}>{emp.employeeName}</TableCell>
+                                              <TableCell>{emp.employeeNo}</TableCell>
+                                              <TableCell>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell>
+                                              <TableCell align="right">
+                                                <Button
+                                                  size="small"
+                                                  variant="outlined"
+                                                  color="error"
+                                                  startIcon={<UndoIcon fontSize="small" />}
+                                                  onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}
+                                                  sx={{ whiteSpace: "nowrap", background: "rgba(255,255,255,0.6)" }}
+                                                >
+                                                  Undo
+                                                </Button>
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </TableContainer>
+                                  )}
+                                </Box>
+                              </Collapse>
+                            </TableCell>
+                          </TableRow>
+                        </Fragment>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
       </Box>
 
       <ConfirmDialog
