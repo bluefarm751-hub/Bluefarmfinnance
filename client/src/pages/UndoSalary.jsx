@@ -7,83 +7,154 @@ import { Box, Card, CardContent, Typography, Button, Collapse, Grid, Table, Tabl
 import UndoIcon from "@mui/icons-material/Undo";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { brand, shadowCard } from "../theme";
+import { brand, gradients, shadowCard } from "../theme";
 
-const undoTableSx = { width: "100%", borderCollapse: "separate", borderSpacing: 0, tableLayout: "fixed" };
-const undoHeaderSx = {
+const tableSx = {
+  width: "100%",
+  borderCollapse: "separate",
+  borderSpacing: 0,
+  tableLayout: "fixed",
+  "& .MuiTableCell-root": { fontSize: 13.5 },
+};
+
+const headRowSx = {
   background: `${brand.tableCardBg} !important`,
-  "& .MuiTableCell-root": { background: `${brand.tableCardBg} !important`, color: `${brand.tableCardHeaderText} !important`, fontWeight: 800, borderBottom: `2px solid ${brand.gold}`, borderRight: "1px solid rgba(255,255,255,0.14)", py: 1.55, px: 1.5, whiteSpace: "nowrap" },
+  "& .MuiTableCell-root": {
+    background: `${brand.tableCardBg} !important`,
+    color: `${brand.tableCardHeaderText} !important`,
+    fontWeight: 800,
+    borderBottom: `2px solid ${brand.gold}`,
+    borderRight: "1px solid rgba(255,255,255,.14)",
+    px: 1.2,
+    py: 1.35,
+    whiteSpace: "nowrap",
+  },
   "& .MuiTableCell-root:last-of-type": { borderRight: "none" },
 };
-const undoRowSx = (i) => ({
-  background: i % 2 === 0 ? `${brand.rowBlue} !important` : `${brand.rowWhiteGradient} !important`,
-  "& .MuiTableCell-root": { color: `${i % 2 === 0 ? brand.rowText : brand.rowTextOnWhite} !important`, background: `${i % 2 === 0 ? brand.rowBlue : "#f7fbff"} !important`, borderBottom: "1px solid rgba(8,33,63,0.14)", borderRight: "1px solid rgba(8,33,63,0.10)", px: 1.5, py: 1.25, fontSize: 14, whiteSpace: "normal", wordBreak: "break-word" },
+
+const bodyRowSx = (i) => ({
+  background: i % 2 === 0 ? brand.rowBlue : "#eef4fb",
+  "& .MuiTableCell-root": {
+    background: `${i % 2 === 0 ? brand.rowBlue : "#eef4fb"} !important`,
+    color: `${i % 2 === 0 ? brand.rowText : brand.rowTextOnWhite} !important`,
+    borderBottom: "1px solid rgba(8,33,63,.14)",
+    borderRight: "1px solid rgba(8,33,63,.10)",
+    px: 1.2,
+    py: 1.05,
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+  },
   "& .MuiTableCell-root:last-of-type": { borderRight: "none" },
   "&:hover .MuiTableCell-root": { background: `${brand.goldLight} !important`, color: `${brand.rowText} !important` },
 });
 
+function ActionButton({ title, color, onClick, children }) {
+  return <Tooltip title={title}><IconButton size="small" onClick={onClick} sx={{ width: 30, height: 30, background: color, color: "#fff", boxShadow: "0 2px 5px rgba(8,33,63,.15)", "&:hover": { filter: "brightness(.9)", background: color } }}>{children}</IconButton></Tooltip>;
+}
+
 export default function UndoSalary() {
   const { showToast, ToastUI } = useToast();
-  const [batches, setBatches] = useState([]), [confirmBatch, setConfirmBatch] = useState(null), [confirmEmployee, setConfirmEmployee] = useState(null), [loading, setLoading] = useState(true), [expandedKey, setExpandedKey] = useState(null), [batchEmployees, setBatchEmployees] = useState([]), [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [batches, setBatches] = useState([]);
+  const [confirmBatch, setConfirmBatch] = useState(null);
+  const [confirmEmployee, setConfirmEmployee] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedKey, setExpandedKey] = useState(null);
+  const [batchEmployees, setBatchEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
   useEffect(() => { loadBatches(); }, []);
-  const loadBatches = async () => { setLoading(true); try { const res = await getSalaryBatches(); setBatches(res.data); } catch (err) { console.error(err); showToast("Could not load salary batches", "error"); } finally { setLoading(false); } };
+  const loadBatches = async () => {
+    setLoading(true);
+    try { const res = await getSalaryBatches(); setBatches(res.data); }
+    catch (err) { console.error(err); showToast("Could not load salary batches", "error"); }
+    finally { setLoading(false); }
+  };
   const batchKey = (b) => `${b.farm}-${b.month}-${b.year}`;
   const toggleExpand = async (b) => {
-    const key = batchKey(b); if (expandedKey === key) { setExpandedKey(null); return; }
+    const key = batchKey(b);
+    if (expandedKey === key) { setExpandedKey(null); return; }
     setExpandedKey(key); setLoadingEmployees(true);
     try { const res = await getBatchEmployees(b.month, b.year); setBatchEmployees(res.data); }
-    catch (err) { console.error(err); showToast("Could not load employees for this batch", "error"); }
+    catch (err) { console.error(err); showToast("Could not load employees", "error"); }
     finally { setLoadingEmployees(false); }
   };
-  const handleUndo = async () => { const batch = confirmBatch; setConfirmBatch(null); try { await undoSalary(batch.month, batch.year); showToast(`Salary for ${batch.month} ${batch.year} undone`, "success"); setExpandedKey(null); loadBatches(); } catch (err) { console.error(err); showToast("Could not undo this salary batch", "error"); } };
-  const handleUndoEmployee = async () => { const target = confirmEmployee; setConfirmEmployee(null); try { await undoEmployeeSalary(target.payrollId); showToast(`Salary for ${target.name} undone`, "success"); setBatchEmployees((prev) => prev.filter((e) => e.id !== target.payrollId)); loadBatches(); } catch (err) { console.error(err); showToast("Could not undo this employee's salary", "error"); } };
-  const totalBatches = batches.length, totalEmployees = batches.reduce((s, b) => s + Number(b.employeeCount || 0), 0), totalAmount = batches.reduce((s, b) => s + Number(b.totalNet || 0), 0);
+  const handleUndo = async () => {
+    const b = confirmBatch; setConfirmBatch(null); if (!b) return;
+    try { await undoSalary(b.month, b.year); showToast("Salary batch undone successfully", "success"); setExpandedKey(null); loadBatches(); }
+    catch (err) { console.error(err); showToast(err.response?.data?.message || "Unable to undo salary batch", "error"); }
+  };
+  const handleUndoEmployee = async () => {
+    const item = confirmEmployee; setConfirmEmployee(null); if (!item) return;
+    try { await undoEmployeeSalary(item.payrollId); showToast("Employee salary undone successfully", "success"); await toggleExpand(item.batch); loadBatches(); }
+    catch (err) { console.error(err); showToast(err.response?.data?.message || "Unable to undo employee salary", "error"); }
+  };
+
+  const totalEmployees = batches.reduce((sum, b) => sum + Number(b.employeeCount || 0), 0);
+  const totalAmount = batches.reduce((sum, b) => sum + Number(b.totalNet || 0), 0);
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1.5, md: 3 }, pt: 1, pb: 3, width: "100%", maxWidth: 1400, mx: "auto", minWidth: 0, overflowX: "hidden" }}>
-        <Box sx={{ display: "inline-flex", alignItems: "center", px: 1.6, py: 0.4, borderRadius: 10, background: `${brand.gold}1f`, border: `1px solid ${brand.gold}`, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: brand.goldDark, mb: 1.2 }}>PAYROLL CORRECTIONS</Box>
-        <Typography variant="h4" fontWeight="bold" mb={0.7}>Undo Salary</Typography>
-        <Typography color="text.secondary" mb={2.5}>Undo an entire generated batch, or expand it to undo a single employee's salary entry only.</Typography>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1.2, pb: 4, width: "100%", maxWidth: 1330, mx: "auto", minWidth: 0 }}>
+        <Box sx={{ display: "inline-flex", alignItems: "center", px: 1.5, py: .35, borderRadius: 99, background: `${brand.gold}1f`, border: `1px solid ${brand.gold}`, fontSize: 10.5, fontWeight: 800, letterSpacing: 1, color: brand.goldDark, mb: .8 }}>PAYROLL CORRECTIONS</Box>
+        <Typography variant="h4" fontWeight={500} sx={{ color: brand.ink, mb: .3 }}>Undo Salary</Typography>
+        <Typography color="text.secondary" sx={{ mb: 1.6, fontSize: 13.5 }}>Undo a complete generated batch or reverse a single employee salary entry.</Typography>
 
-        <Grid container spacing={2} sx={{ mb: 2.5 }}>
+        <Grid container spacing={1.4} sx={{ mb: 2.2 }}>
           {[
-            { label: "Generated Batches", value: totalBatches, grad: "radial-gradient(120% 100% at 50% 0%, #6EC1FF 0%, #1E88E5 45%, #0D47A1 100%)" },
-            { label: "Total Employees", value: totalEmployees, grad: "radial-gradient(120% 100% at 50% 0%, #6EE7A8 0%, #2FBF71 45%, #145C36 100%)" },
-            { label: "Total Amount", value: `Rs. ${totalAmount.toLocaleString()}`, grad: "radial-gradient(120% 100% at 50% 0%, #D68FFF 0%, #A24BD1 45%, #5B1075 100%)" },
-          ].map((c) => <Grid item xs={12} sm={4} key={c.label}><Box sx={{ borderRadius: 3, background: c.grad, color: "#fff", p: 2.2, minHeight: 102, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: `${shadowCard}, inset 0 2px 6px rgba(255,255,255,0.35), inset 0 -12px 20px rgba(0,0,0,0.25)`, border: "1px solid rgba(255,255,255,0.25)" }}><Typography fontSize={12} fontWeight={600} sx={{ opacity: 0.9 }}>{c.label}</Typography><Typography variant="h5" fontWeight="bold">{c.value}</Typography></Box></Grid>)}
+            { label: "Generated Batches", value: batches.length, grad: "radial-gradient(120% 100% at 50% 0%, #69c9ff 0%, #1889d8 45%, #0f4c81 100%)" },
+            { label: "Total Employees", value: totalEmployees, grad: "radial-gradient(120% 100% at 50% 0%, #72e6a8 0%, #24ad67 45%, #176341 100%)" },
+            { label: "Total Amount", value: `Rs. ${totalAmount.toLocaleString()}`, grad: "radial-gradient(120% 100% at 50% 0%, #d79cff 0%, #9e4bca 45%, #5f1679 100%)" },
+          ].map((c) => (
+            <Grid item xs={12} sm={4} key={c.label}>
+              <Box sx={{ borderRadius: 2.2, background: c.grad, color: "#fff", px: 2, py: 1.5, minHeight: 88, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", boxShadow: "0 10px 24px rgba(8,33,63,.16), inset 0 2px 5px rgba(255,255,255,.35), inset 0 -9px 16px rgba(0,0,0,.20)", border: "1px solid rgba(255,255,255,.25)" }}>
+                <Typography fontSize={11.5} sx={{ opacity: .92 }}>{c.label}</Typography>
+                <Typography sx={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>{c.value}</Typography>
+              </Box>
+            </Grid>
+          ))}
         </Grid>
 
-        {!loading && batches.length === 0 && <Card sx={{ borderRadius: 2.5, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}><CardContent sx={{ textAlign: "center", py: 5 }}><Typography color="text.secondary">No generated salary batches found yet.</Typography></CardContent></Card>}
+        {!loading && batches.length === 0 && <Card sx={{ borderRadius: 2, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,.14)" }}><CardContent sx={{ textAlign: "center", py: 5 }}><Typography color="text.secondary">No generated salary batches found yet.</Typography></CardContent></Card>}
 
-        {batches.length > 0 && <Card elevation={0} sx={{ width: "100%", borderRadius: 2, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)", overflow: "hidden" }}>
-          <CardContent sx={{ p: 1.2, "&:last-child": { pb: 1.2 } }}>
+        {batches.length > 0 && <Card elevation={0} sx={{ width: "100%", borderRadius: 2, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,.14)", overflow: "hidden", background: brand.panelSoft }}>
+          <CardContent sx={{ p: 1.1, "&:last-child": { pb: 1.1 } }}>
             <TableContainer sx={{ width: "100%" }}>
-              <Table sx={undoTableSx} aria-label="salary batches table">
-                <TableHead><TableRow sx={undoHeaderSx}><TableCell sx={{ width: "18%" }}>Batch</TableCell><TableCell sx={{ width: "18%" }}>Employees</TableCell><TableCell sx={{ width: "18%" }}>Total Amount</TableCell><TableCell align="right" sx={{ width: "46%" }}>Actions</TableCell></TableRow></TableHead>
+              <Table sx={tableSx} aria-label="salary batches table">
+                <TableHead><TableRow sx={headRowSx}><TableCell sx={{ width: "18%" }}>Batch</TableCell><TableCell sx={{ width: "17%" }}>Employees</TableCell><TableCell sx={{ width: "20%" }}>Total Amount</TableCell><TableCell align="right" sx={{ width: "45%" }}>Actions</TableCell></TableRow></TableHead>
                 <TableBody>
                   {batches.map((b, i) => {
                     const key = batchKey(b), isExpanded = expandedKey === key;
                     return <Fragment key={key}>
-                      <TableRow hover sx={undoRowSx(i)}>
-                        <TableCell sx={{ fontWeight: 700 }}>{b.month} {b.year}</TableCell><TableCell>{b.employeeCount} employee(s)</TableCell><TableCell sx={{ fontWeight: 700 }}>Rs. {Number(b.totalNet || 0).toLocaleString()}</TableCell>
-                        <TableCell align="right"><Box sx={{ display: "flex", gap: 0.8, justifyContent: "flex-end", alignItems: "center" }}>
-                          <Tooltip title={isExpanded ? "Hide Employees" : "View Employees to Undo Individually"}><IconButton size="small" onClick={() => toggleExpand(b)} sx={{ width: 32, height: 32, background: brand.blueDeep, color: "#fff", "&:hover": { background: brand.navy } }}>{isExpanded ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}</IconButton></Tooltip>
-                          <Tooltip title="Undo Full Batch"><IconButton size="small" onClick={() => setConfirmBatch(b)} sx={{ width: 32, height: 32, background: brand.danger, color: "#fff", "&:hover": { background: "#8e281c" } }}><UndoIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip>
+                      <TableRow sx={bodyRowSx(i)}>
+                        <TableCell sx={{ fontWeight: 800 }}>{b.month} {b.year}</TableCell>
+                        <TableCell>{b.employeeCount} employee(s)</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>Rs. {Number(b.totalNet || 0).toLocaleString()}</TableCell>
+                        <TableCell align="right"><Box sx={{ display: "flex", gap: .7, justifyContent: "flex-end", alignItems: "center" }}>
+                          <Button size="small" variant="outlined" startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />} onClick={() => toggleExpand(b)} sx={{ height: 30, borderColor: brand.blueDeep, color: brand.blueDeep, fontSize: 11, textTransform: "none", px: 1.1 }}>{isExpanded ? "Hide Employees" : "View Employees"}</Button>
+                          <Button size="small" variant="contained" startIcon={<UndoIcon />} onClick={() => setConfirmBatch(b)} sx={{ height: 30, background: brand.danger, fontSize: 11, textTransform: "none", px: 1.1, "&:hover": { background: "#8e281c" } }}>Undo Batch</Button>
                         </Box></TableCell>
                       </TableRow>
-                      <TableRow><TableCell colSpan={4} sx={{ p: 0, border: 0, background: brand.panel }}>
-                        <Collapse in={isExpanded} unmountOnExit><Box sx={{ p: { xs: 1.2, md: 1.6 }, background: "#e6f1fb" }}>
-                          {loadingEmployees && <Typography color="text.secondary" sx={{ py: 1 }}>Loading employees...</Typography>}
-                          {!loadingEmployees && batchEmployees.length === 0 && <Typography color="text.secondary" sx={{ py: 1 }}>No employees left in this batch.</Typography>}
-                          {!loadingEmployees && batchEmployees.length > 0 && <TableContainer sx={{ width: "100%", border: "1px solid rgba(15,76,129,0.14)", borderRadius: 1.5, overflow: "hidden", background: "#fff" }}>
-                            <Table sx={undoTableSx} aria-label="batch employees table">
-                              <TableHead><TableRow sx={undoHeaderSx}><TableCell sx={{ width: "34%" }}>Employee Name</TableCell><TableCell sx={{ width: "22%" }}>Employee No</TableCell><TableCell sx={{ width: "20%" }}>Net Salary</TableCell><TableCell sx={{ width: "24%" }} align="right">Actions</TableCell></TableRow></TableHead>
-                              <TableBody>{batchEmployees.map((emp, j) => <TableRow key={emp.id} hover sx={undoRowSx(j)}><TableCell sx={{ fontWeight: 700 }}>{emp.employeeName}</TableCell><TableCell>{emp.employeeNo}</TableCell><TableCell sx={{ fontWeight: 600 }}>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell><TableCell align="right"><Tooltip title="Undo Employee Salary"><IconButton size="small" onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })} sx={{ width: 32, height: 32, background: brand.danger, color: "#fff", "&:hover": { background: "#8e281c" } }}><UndoIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip></TableCell></TableRow>)}</TableBody>
-                            </Table>
-                          </TableContainer>}
-                        </Box></Collapse>
-                      </TableCell></TableRow>
+                      <TableRow>
+                        <TableCell colSpan={4} sx={{ p: 0, border: 0, background: brand.panel }}>
+                          <Collapse in={isExpanded} unmountOnExit>
+                            <Box sx={{ p: 1.2, background: "#dceaf7" }}>
+                              {loadingEmployees && <Typography color="text.secondary" sx={{ py: 1 }}>Loading employees...</Typography>}
+                              {!loadingEmployees && batchEmployees.length === 0 && <Typography color="text.secondary" sx={{ py: 1 }}>No employees left in this batch.</Typography>}
+                              {!loadingEmployees && batchEmployees.length > 0 && <TableContainer sx={{ width: "100%", border: "1px solid rgba(15,76,129,.14)", borderRadius: 1.2, overflow: "hidden" }}>
+                                <Table sx={tableSx} aria-label="batch employees table">
+                                  <TableHead><TableRow sx={headRowSx}><TableCell sx={{ width: "34%" }}>Employee Name</TableCell><TableCell sx={{ width: "22%" }}>Employee No</TableCell><TableCell sx={{ width: "20%" }}>Net Salary</TableCell><TableCell sx={{ width: "24%" }} align="right">Actions</TableCell></TableRow></TableHead>
+                                  <TableBody>{batchEmployees.map((emp, j) => <TableRow key={emp.id} sx={bodyRowSx(j)}>
+                                    <TableCell sx={{ fontWeight: 800 }}>{emp.employeeName}</TableCell>
+                                    <TableCell>{emp.employeeNo}</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell>
+                                    <TableCell align="right"><ActionButton title="Undo Employee Salary" color={brand.danger} onClick={() => setConfirmEmployee({ payrollId: emp.id, name: emp.employeeName, batch: b })}><UndoIcon sx={{ fontSize: 17 }} /></ActionButton></TableCell>
+                                  </TableRow>)}</TableBody>
+                                </Table>
+                              </TableContainer>}
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
                     </Fragment>;
                   })}
                 </TableBody>

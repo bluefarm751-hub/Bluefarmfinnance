@@ -37,10 +37,11 @@ export default function AddEmployee() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1, pb: 4, width: "100%", maxWidth: 1260, mx: "auto", minWidth: 0, overflowX: "hidden" }}>
-        <Box sx={{ display: "inline-flex", alignItems: "center", px: 1.6, py: 0.4, borderRadius: 10, background: `${brand.gold}1f`, border: `1px solid ${brand.gold}`, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: brand.goldDark, mb: 1.2 }}>NEW RECORD</Box>
-        <Typography variant="h4" fontWeight="bold" mb={0.7}>Add New Employee</Typography>
-        <Typography color="text.secondary" mb={2}>Create a new employee record.</Typography>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1, pb: 4, width: "100%", maxWidth: 1160, mx: "auto", minWidth: 0, overflowX: "hidden" }}>
+        <Box sx={{ mb: 1.6, px: { xs: 1.5, md: 2.2 }, py: 1.35, borderRadius: 2, background: "linear-gradient(180deg,#0f4c81 0%,#123f68 100%)", color: "#fff", boxShadow: "0 6px 18px rgba(8,33,63,.16)" }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.4, opacity: .82, mb: .25 }}>NEW RECORD</Typography>
+          <Typography sx={{ fontSize: { xs: 24, md: 29 }, fontWeight: 800, lineHeight: 1.1, color: "#fff" }}>Add New Employee</Typography>
+        </Box>
         <EmployeeForm formData={formData} setFormData={setFormData} />
         <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 1.2, flexWrap: "wrap" }}>
           <Button variant="outlined" color="inherit" startIcon={<ArrowBackIcon />} onClick={() => navigate("/employees/list")}>Cancel</Button>
