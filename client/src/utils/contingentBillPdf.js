@@ -352,9 +352,24 @@ export function printContingentBillPdf(bill, farmLabel, onAfterPrint) {
         if (onAfterPrint) {
           iframe.contentWindow.addEventListener("afterprint", fireAfterPrint);
         }
+        // Window.print() is synchronous in normal browser print flows: execution
+        // resumes after the print dialog is closed. Fire the callback here as a
+        // reliable fallback because PDF iframe viewers do not always dispatch
+        // the `afterprint` event to the iframe window.
         iframe.contentWindow.print();
+        fireAfterPrint();
       } catch {
-        window.open(blobUrl, "_blank");
+        const printWindow = window.open(blobUrl, "_blank");
+        if (printWindow) {
+          // Give the new tab its own chance to emit afterprint. If the browser
+          // does not expose it, the report will still be marked from the
+          // original print action callback below.
+          try {
+            printWindow.addEventListener("afterprint", fireAfterPrint);
+          } catch {
+            // Ignore browsers that do not allow event binding on the popup.
+          }
+        }
       }
     }, 300);
   };

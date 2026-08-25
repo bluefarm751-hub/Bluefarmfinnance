@@ -111,16 +111,28 @@ export default function ContingentBillReport() {
   };
 
   const handlePrintVoucher = (bill) => {
+    // Keep the report status in sync immediately after the browser print
+    // dialog has returned. The print helper also guards this callback so it
+    // can only run once.
     printContingentBillPdf(bill, farm, async () => {
       try {
-        await markContingentBillPrinted(bill.id);
+        const res = await markContingentBillPrinted(bill.id);
+        const printedBill = res?.data || {};
         setBills((prev) =>
           prev.map((b) =>
-            b.id === bill.id ? { ...b, printed: true, printedAt: new Date().toISOString() } : b
+            b.id === bill.id
+              ? {
+                  ...b,
+                  printed: true,
+                  printedAt: printedBill.printedAt || new Date().toISOString(),
+                }
+              : b
           )
         );
+        showToast(`Voucher ${bill.voucherNo || bill.id} marked as PRINTED`, "success");
       } catch (err) {
-        console.error(err);
+        console.error("Failed to mark contingent bill as printed:", err);
+        showToast("Voucher printed, but PRINTED status could not be saved", "warning");
       }
     });
   };

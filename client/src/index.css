@@ -118,12 +118,30 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
     border-color:rgba(15,76,129,0.35) !important;
 }
 
+/* Finance/Cash Book labels stay ABOVE the white input instead of sitting
+   inside the field. Keep the label colour stable even while focused. */
 .finance-cash-scope .MuiInputLabel-root {
+    color:#38536f !important;
+    background:#ffffff !important;
+    padding:0 5px !important;
+    z-index:1 !important;
+    transform:translate(14px, -9px) scale(0.75) !important;
+    transform-origin:top left !important;
+    pointer-events:none;
+}
+
+.finance-cash-scope .MuiInputLabel-root.Mui-focused,
+.finance-cash-scope .MuiInputLabel-root.MuiInputLabel-shrink {
     color:#38536f !important;
 }
 
-.finance-cash-scope .MuiInputLabel-root.Mui-focused {
-    color:#0F4C81 !important;
+/* Prevent the typed/selected value from switching to the focus blue. */
+.finance-cash-scope .MuiInputBase-input,
+.finance-cash-scope .MuiSelect-select,
+.finance-cash-scope .MuiInputBase-input:focus,
+.finance-cash-scope .MuiSelect-select:focus {
+    color:#0B1B33 !important;
+    -webkit-text-fill-color:#0B1B33 !important;
 }
 
 .finance-cash-scope .MuiInputBase-input::placeholder,
