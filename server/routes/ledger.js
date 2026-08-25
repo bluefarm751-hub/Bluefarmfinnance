@@ -585,7 +585,7 @@ router.get("/party-summary", async (req, res) => {
         }
         const whereSql = filters.length ? `AND ${filters.join('\n              AND ')}` : '';
 
-        const result = await db.query(`
+        let result = await db.query(`
             SELECT
                 b.id,
                 b."sNo",
@@ -608,6 +608,38 @@ router.get("/party-summary", async (req, res) => {
                 COALESCE(b."sNo", 0) ASC,
                 b.id ASC
         `, params);
+
+        // If the current farm has no matching rows (for example older bills
+        // were stored without a farm value), do not return an empty Party
+        // Ledger when the contractor's bills are actually present. Retry the
+        // exact contractor/date filters without the farm restriction.
+        if (result.rows.length === 0 && farm && party) {
+            const fallbackParams = [String(party).trim()];
+            const fallbackFilters = [
+                `LOWER(TRIM(COALESCE(b."contractorName", ''))) = LOWER(TRIM($1))`,
+            ];
+            if (fromDate) {
+                fallbackParams.push(fromDate);
+                fallbackFilters.push(`DATE(b."billDate") >= $${fallbackParams.length}::date`);
+            }
+            if (toDate) {
+                fallbackParams.push(toDate);
+                fallbackFilters.push(`DATE(b."billDate") <= $${fallbackParams.length}::date`);
+            }
+            result = await db.query(`
+                SELECT
+                    b.id, b."sNo", b."billDate", b."headId",
+                    COALESCE(h."headName", 'Unassigned Head') AS "headName",
+                    b.contractorName, b.item, b.amount, b.status,
+                    b."paymentMode", b.remarks
+                FROM finance_bills b
+                LEFT JOIN finance_heads h ON h.id = b."headId"
+                WHERE ${fallbackFilters.join(' AND ')}
+                ORDER BY COALESCE(h."headName", 'Unassigned Head') ASC,
+                         COALESCE(b."billDate", '') ASC,
+                         COALESCE(b."sNo", 0) ASC, b.id ASC
+            `, fallbackParams);
+        }
 
         const groups = new Map();
         let totalBusiness = 0;
@@ -774,9 +806,10 @@ router.get("/parties", async (req, res) => {
         const manual =
             await query(sql, params);
 
-        const rows =
-            await ledgerRows({ farm });
-
+        // IMPORTANT: Party Ledger contractor list must come directly from
+        // the bills table. Do not call ledgerRows() here because that pulls
+        // unrelated cashbook/bank/HQ tables and can make the whole party
+        // dropdown fail even when finance_bills contains valid contractors.
         const seen =
             new Map();
 
@@ -831,13 +864,25 @@ router.get("/parties", async (req, res) => {
             billWhere += ` AND b.farm = $${billParams.length}`;
         }
 
-        const contractorRows = await query(`
+        let contractorRows = await query(`
             SELECT DISTINCT BTRIM(b."contractorName") AS name
             FROM finance_bills b
             ${billWhere}
               AND NULLIF(BTRIM(b."contractorName"), '') IS NOT NULL
             ORDER BY BTRIM(b."contractorName") ASC
         `, billParams);
+
+        // If no contractors exist under the selected farm value, fall back
+        // to all bills. This keeps Party Ledger driven by the actual bills
+        // instead of hiding contractors because of an old/missing farm tag.
+        if (contractorRows.length === 0 && farm) {
+            contractorRows = await query(`
+                SELECT DISTINCT BTRIM(b."contractorName") AS name
+                FROM finance_bills b
+                WHERE NULLIF(BTRIM(b."contractorName"), '') IS NOT NULL
+                ORDER BY BTRIM(b."contractorName") ASC
+            `);
+        }
 
         contractorRows.forEach((r) => {
             const name = String(r.name || '').trim();
@@ -846,15 +891,6 @@ router.get("/parties", async (req, res) => {
             if (!seen.has(key)) {
                 seen.set(key, { name, manual: false, fromBills: true });
             }
-        });
-
-        // Also keep contractors/parties found in the combined ledger for
-        // backward compatibility with receipts/manual entries.
-        rows.forEach((r) => {
-            const name = String(r.party || '').trim();
-            if (!name || ['Bank Deposit', 'Head Office'].includes(name)) return;
-            const key = name.toLowerCase();
-            if (!seen.has(key)) seen.set(key, { name, manual: false });
         });
 
         res.json(
