@@ -237,7 +237,7 @@ export default function ContingentBillReport() {
         {/* List — boxed dark-blue outer panel with alternating light rows,
             matching the table style used across the rest of the app. */}
         <Box sx={{
-          background: brand.tableCardBg, border: `1px solid ${brand.tableCardBorder}`,
+          background: brand.panelSoft, border: `1px solid ${brand.tableCardBorder}`,
           borderRadius: 3, boxShadow: shadowCard, p: 1.2,
           display: "flex", flexDirection: "column", gap: 1,
         }}>

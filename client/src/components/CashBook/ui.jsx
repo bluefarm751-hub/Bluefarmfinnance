@@ -17,7 +17,7 @@ export function SectionCard({ title, action, children }) {
     <Box
       sx={{
         borderRadius: 4,
-        background: brand.tableCardBg,
+        background: brand.panelSoft,
         border: `1px solid ${brand.tableCardBorder}`,
         boxShadow: "0 10px 30px rgba(8,33,63,0.25)",
         overflow: "hidden",
@@ -57,6 +57,7 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
         borderSpacing: 0,
         borderRadius: 0,
         overflow: "hidden",
+        background: brand.panelSoft,
         fontSize: 13.5,
       }}>
         <thead>
@@ -86,7 +87,7 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
             <tr>
               <td
                 colSpan={columns.length}
-                style={{ padding: "26px 12px", textAlign: "center", color: "#cfe0f7", fontWeight: 600 }}
+                style={{ padding: "26px 12px", textAlign: "center", color: brand.slate, fontWeight: 600 }}
               >
                 {empty}
               </td>

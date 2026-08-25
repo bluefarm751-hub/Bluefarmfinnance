@@ -602,7 +602,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         <DataTable columns={historyCols} rows={history} empty="No monthly closings saved yet" />
         {history.map((r) => (
           <Collapse in={expandedId === r.id} key={r.id} unmountOnExit>
-            <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.tableCardBg }}>
+            <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.panelSoft }}>
               <Typography fontWeight={800} sx={{ mb: 1.5, color: brand.ink }}>
                 {MONTHS[r.month - 1]} {r.year} — Saved Snapshot
               </Typography>
