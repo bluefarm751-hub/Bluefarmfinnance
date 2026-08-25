@@ -94,3 +94,7 @@ img{
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-12px); }
 }
+
+/* Employee form / page safety: never create an accidental horizontal scrollbar. */
+html, body, #root { max-width: 100%; overflow-x: hidden; }
+.MuiContainer-root, .MuiPaper-root, .MuiCard-root, .MuiCardContent-root { min-width: 0; }

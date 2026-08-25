@@ -68,7 +68,7 @@ export default function AddEmployee() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: 3, pt: 1, pb: 3 }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: 1, pb: 3, width: "100%", maxWidth: "100%", minWidth: 0, overflowX: "hidden" }}>
 
         <Box sx={{
           display: "inline-flex", alignItems: "center", gap: 0.6,

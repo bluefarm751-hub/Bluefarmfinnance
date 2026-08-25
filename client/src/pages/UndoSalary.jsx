@@ -14,6 +14,49 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { brand, shadowCard, tableHeadRowSx, tableBodyRowSx } from "../theme";
 
+// Raised white + sky-blue "convex/embossed" row treatment used only on Undo Salary tables.
+const undoTableSx = {
+  borderCollapse: "separate",
+  borderSpacing: "0 8px",
+};
+
+const undoBodyRowSx = (i) => ({
+  ...tableBodyRowSx(i),
+  "& .MuiTableCell-root": {
+    color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
+    borderBottom: "0",
+    borderTop: "1px solid rgba(255,255,255,0.78)",
+    borderRight: "0",
+    background: "radial-gradient(ellipse 125% 145% at 50% 0%, #ffffff 0%, #f6fbff 32%, #dff2ff 68%, #b7d9ee 100%)",
+    boxShadow: "inset 0 2px 6px rgba(255,255,255,0.96), inset 0 -5px 10px rgba(69,128,164,0.16)",
+    py: 1.6,
+  },
+  "& .MuiTableCell-root:first-of-type": {
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+    boxShadow: "inset 3px 2px 8px rgba(255,255,255,0.9), inset 0 -5px 10px rgba(69,128,164,0.16), -2px 4px 8px rgba(21,79,116,0.08)",
+  },
+  "& .MuiTableCell-root:last-of-type": {
+    borderTopRightRadius: 14,
+    borderBottomRightRadius: 14,
+    boxShadow: "inset -3px 2px 8px rgba(255,255,255,0.9), inset 0 -5px 10px rgba(69,128,164,0.16), 2px 4px 8px rgba(21,79,116,0.08)",
+  },
+  "&:hover .MuiTableCell-root": {
+    background: "radial-gradient(ellipse 125% 145% at 50% 0%, #ffffff 0%, #eef9ff 34%, #d2ecfb 70%, #a9d0e8 100%) !important",
+    color: `${brand.rowText} !important`,
+  },
+});
+
+const undoHeaderSx = {
+  ...tableHeadRowSx,
+  background: "linear-gradient(180deg, #245f8e 0%, #184f7c 100%)",
+  "& .MuiTableCell-root": {
+    ...tableHeadRowSx["& .MuiTableCell-root"],
+    borderBottom: `2px solid ${brand.gold}`,
+    py: 1.8,
+  },
+};
+
 export default function UndoSalary() {
   const { showToast, ToastUI } = useToast();
   const [batches, setBatches] = useState([]);
@@ -147,9 +190,9 @@ export default function UndoSalary() {
           <Card elevation={0} sx={{ width: "100%", borderRadius: 0, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
             <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
               <TableContainer>
-                <Table>
+                <Table sx={undoTableSx}>
                   <TableHead>
-                    <TableRow sx={tableHeadRowSx}>
+                    <TableRow sx={undoHeaderSx}>
                       <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Batch</TableCell>
                       <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Employees</TableCell>
                       <TableCell sx={{ fontWeight: 800, py: 1.8 }}>Total Amount</TableCell>
@@ -163,7 +206,7 @@ export default function UndoSalary() {
 
                       return (
                         <Fragment key={key}>
-                          <TableRow hover sx={{ ...tableBodyRowSx(i), "& .MuiTableCell-root": { ...tableBodyRowSx(i)["& .MuiTableCell-root"], py: 1.6 } }}>
+                          <TableRow hover sx={undoBodyRowSx(i)}>
                             <TableCell sx={{ fontWeight: 700 }}>{b.month} {b.year}</TableCell>
                             <TableCell>{b.employeeCount} employee(s)</TableCell>
                             <TableCell sx={{ fontWeight: 700 }}>Rs. {Number(b.totalNet || 0).toLocaleString()}</TableCell>
@@ -206,10 +249,10 @@ export default function UndoSalary() {
                                   )}
 
                                   {!loadingEmployees && batchEmployees.length > 0 && (
-                                    <TableContainer sx={{ borderRadius: 0, overflow: "hidden", boxShadow: shadowCard }}>
-                                      <Table>
+                                    <TableContainer sx={{ borderRadius: 2.5, overflow: "hidden", boxShadow: shadowCard, background: "rgba(255,255,255,0.3)", p: 0.5 }}>
+                                      <Table sx={undoTableSx}>
                                         <TableHead>
-                                          <TableRow sx={tableHeadRowSx}>
+                                          <TableRow sx={undoHeaderSx}>
                                             <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Employee Name</TableCell>
                                             <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Emp No</TableCell>
                                             <TableCell sx={{ fontWeight: 800, py: 1.6 }}>Net Salary</TableCell>
@@ -218,7 +261,7 @@ export default function UndoSalary() {
                                         </TableHead>
                                         <TableBody>
                                           {batchEmployees.map((emp, j) => (
-                                            <TableRow key={emp.id} hover sx={{ ...tableBodyRowSx(j), "& .MuiTableCell-root": { ...tableBodyRowSx(j)["& .MuiTableCell-root"], py: 1.5 } }}>
+                                            <TableRow key={emp.id} hover sx={undoBodyRowSx(j)}>
                                               <TableCell sx={{ fontWeight: 700 }}>{emp.employeeName}</TableCell>
                                               <TableCell>{emp.employeeNo}</TableCell>
                                               <TableCell>Rs. {Number(emp.netSalary || 0).toLocaleString()}</TableCell>
