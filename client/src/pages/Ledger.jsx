@@ -1,15 +1,12 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { FaBook, FaBalanceScale, FaFileInvoiceDollar, FaFileAlt } from "react-icons/fa";
+import { FaBook, FaBalanceScale, FaFileInvoiceDollar } from "react-icons/fa";
 
 const TABS = [
-  { label: "Main Ledger", path: "/ledger/general", icon: <FaBook />, gradient: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)" },
-  { label: "Party Ledger", path: "/ledger/party", icon: <FaBalanceScale />, gradient: "linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)" },
-  { label: "Balance Sheet", path: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, gradient: "linear-gradient(135deg,#A24BD1 0%,#7A1FA2 100%)" },
-  { label: "Report Ledger", path: "/ledger/report-excel", icon: <FaFileAlt />, gradient: "linear-gradient(135deg,#F0574D 0%,#C0392B 100%)" },
-  { label: "Report Party Ledger", path: "/ledger/party-report-excel", icon: <FaFileAlt />, gradient: "linear-gradient(135deg,#D9B64A 0%,#B8912C 100%)" },
-  { label: "Report Balance Sheet", path: "/ledger/balance-sheet-report", icon: <FaFileAlt />, gradient: "linear-gradient(135deg,#16608f 0%,#12507a 100%)" },
+  { label: "Main Ledger", path: "/ledger/general", icon: <FaBook />, gradient: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)", text: "Heads, bills and running balances" },
+  { label: "Party Ledger", path: "/ledger/party", icon: <FaBalanceScale />, gradient: "linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)", text: "Contractor-wise paid and payable balances" },
+  { label: "Balance Sheet", path: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, gradient: "linear-gradient(135deg,#A24BD1 0%,#7A1FA2 100%)", text: "Head-wise remaining and payable summary" },
 ];
 
 export default function Ledger() {
@@ -18,50 +15,82 @@ export default function Ledger() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: 3, pt: 1, pb: 4 }}>
+      <Box sx={{ px: { xs: 1.5, md: 3 }, pt: 1, pb: 4 }}>
         <Box sx={{
-          textAlign: "center",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
-          borderRadius: 4, py: 5, px: 3, mb: 4,
-          border: "3px solid #D4AF37",
-          boxShadow: "0 10px 40px rgba(102,126,234,0.4), inset 0 2px 4px rgba(255,255,255,0.2)",
-          position: "relative", overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box",
+          borderRadius: 4,
+          p: { xs: 2, md: 4 },
+          background: "#fff",
+          border: "1px solid #d9e4ec",
+          boxShadow: "0 12px 35px rgba(8,33,63,0.12)",
         }}>
-          <Box sx={{ position: "absolute", top: -40, left: -40, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
-          <Box sx={{ position: "absolute", bottom: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
-          <Typography sx={{ color: "#fff", fontSize: 15, mb: 0.5, position: "relative", zIndex: 1 }}>Welcome to</Typography>
-          <Typography variant="h4" fontWeight="bold" sx={{ color: "#fff", mb: 0.5, position: "relative", zIndex: 1, textShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
-            {farm} Ledger
-          </Typography>
-          <Typography sx={{ color: "rgba(255,255,255,0.92)", fontSize: 15, position: "relative", zIndex: 1 }}>
-            Main Ledger, Party Ledger, Balance Sheet &amp; Reports
-          </Typography>
-        </Box>
+          <Box sx={{
+            textAlign: "center",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
+            borderRadius: 4,
+            py: { xs: 4, md: 5 },
+            px: 3,
+            mb: 4,
+            border: "3px solid #D4AF37",
+            boxShadow: "0 10px 40px rgba(102,126,234,0.32), inset 0 2px 4px rgba(255,255,255,0.2)",
+            position: "relative",
+            overflow: "hidden",
+          }}>
+            <Box sx={{ position: "absolute", top: -40, left: -40, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.15)" }} />
+            <Box sx={{ position: "absolute", bottom: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+            <Typography sx={{ color: "#fff", fontSize: 16, mb: 0.5, position: "relative", zIndex: 1 }}>Welcome to</Typography>
+            <Typography variant="h3" fontWeight="bold" sx={{ color: "#fff", mb: 0.7, position: "relative", zIndex: 1, textShadow: "0 2px 6px rgba(0,0,0,0.3)", fontSize: { xs: "2rem", md: "3rem" } }}>
+              {farm} Ledger
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.94)", fontSize: { xs: 14, md: 16 }, position: "relative", zIndex: 1 }}>
+              Main Ledger, Party Ledger &amp; Balance Sheet
+            </Typography>
+          </Box>
 
-        <Typography variant="h5" fontWeight={800} mb={2}>Ledger Sections</Typography>
-        <Grid container spacing={2.5}>
-          {TABS.map((tab) => (
-            <Grid item xs={12} sm={6} md={4} key={tab.path}>
-              <Box sx={{
-                borderRadius: 3.5, background: tab.gradient, color: "#fff", p: 2.5, minHeight: 145,
-                display: "flex", flexDirection: "column", justifyContent: "space-between",
-                boxShadow: "0 10px 28px rgba(8,33,63,0.22)", border: "2px solid rgba(255,255,255,0.25)",
-                transition: "transform .2s, box-shadow .2s",
-                "&:hover": { transform: "translateY(-5px)", boxShadow: "0 16px 35px rgba(8,33,63,0.32)" },
-              }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Box sx={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 21 }}>
+          <Typography variant="h5" fontWeight={900} mb={2.5} sx={{ color: "#0F4C81" }}>
+            Ledger Sections
+          </Typography>
+
+          <Grid container spacing={3}>
+            {TABS.map((tab) => (
+              <Grid item xs={12} md={4} key={tab.path}>
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(tab.path)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(tab.path); }}
+                  sx={{
+                    cursor: "pointer",
+                    borderRadius: 4,
+                    background: tab.gradient,
+                    color: "#fff",
+                    p: { xs: 3, md: 3.5 },
+                    minHeight: { xs: 190, md: 235 },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    boxShadow: "0 14px 32px rgba(8,33,63,0.24)",
+                    border: "2px solid rgba(255,255,255,0.28)",
+                    transition: "transform .2s, box-shadow .2s",
+                    outline: "none",
+                    "&:hover": { transform: "translateY(-6px)", boxShadow: "0 20px 40px rgba(8,33,63,0.32)" },
+                    "&:focus-visible": { boxShadow: "0 0 0 4px rgba(212,175,55,.45), 0 20px 40px rgba(8,33,63,0.32)" },
+                  }}
+                >
+                  <Box sx={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, mb: 2, border: "2px solid rgba(255,255,255,.28)" }}>
                     {tab.icon}
                   </Box>
-                  <Typography fontWeight={900}>{tab.label}</Typography>
+                  <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, md: 23 }, mb: 1 }}>{tab.label}</Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,.9)", fontSize: 14, maxWidth: 280 }}>{tab.text}</Typography>
+                  <Typography sx={{ mt: 2, fontWeight: 800, fontSize: 13, opacity: .92 }}>Click card to open →</Typography>
                 </Box>
-                <Button variant="contained" onClick={() => navigate(tab.path)} sx={{ alignSelf: "flex-start", mt: 2, background: "rgba(255,255,255,.2)", color: "#fff", border: "1px solid rgba(255,255,255,.35)", "&:hover": { background: "rgba(255,255,255,.32)" } }}>
-                  Open
-                </Button>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </Box>
     </MainLayout>
   );
