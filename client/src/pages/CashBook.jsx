@@ -115,10 +115,12 @@ export default function CashBook() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: "calc(100vh - 150px)" }}>
+      <Box sx={{ p: { xs: 1, md: 1.5 }, pt: 0, minHeight: "calc(100vh - 84px)", display: "flex", flexDirection: "column" }}>
         <Box sx={{
           width: "100%",
-          minHeight: "calc(100vh - 200px)",
+          minHeight: "calc(100vh - 84px)",
+          height: "calc(100vh - 84px)",
+          flex: 1,
           boxSizing: "border-box",
           background: "#fff",
           borderRadius: 5,

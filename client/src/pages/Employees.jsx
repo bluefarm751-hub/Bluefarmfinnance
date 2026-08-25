@@ -71,13 +71,14 @@ export default function Employees() {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box sx={{ p: { xs: 1.5, md: 1.5 }, pt: 0, minHeight: "calc(100vh - 84px)", height: "calc(100vh - 84px)", display: "flex", flexDirection: "column" }}>
         {/* One large page card that fills the whole dashboard height */}
         <Box sx={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          minHeight: "calc(100vh - 150px)",
+          minHeight: "calc(100vh - 84px)",
+          height: "calc(100vh - 84px)",
           background: "#fff",
           borderRadius: 5,
           p: { xs: 2.5, md: 3.5 },

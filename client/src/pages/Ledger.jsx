@@ -24,7 +24,9 @@ export default function Ledger() {
           background: "#fff",
           border: "1px solid #d9e4ec",
           boxShadow: "0 12px 35px rgba(8,33,63,0.12)",
-          minHeight: "calc(100vh - 150px)",
+          minHeight: "calc(100vh - 84px)",
+          height: "calc(100vh - 84px)",
+          flex: 1,
         }}>
           <Box sx={{
             textAlign: "center",
@@ -86,8 +88,7 @@ export default function Ledger() {
                   </Box>
                   <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, md: 23 }, mb: 1 }}>{tab.label}</Typography>
                   <Typography sx={{ color: "rgba(255,255,255,.9)", fontSize: 14, maxWidth: 280 }}>{tab.text}</Typography>
-                  <Typography sx={{ mt: 2, fontWeight: 800, fontSize: 13, opacity: .92 }}>Click card to open →</Typography>
-                </Box>
+                                  </Box>
               </Grid>
             ))}
           </Grid>
