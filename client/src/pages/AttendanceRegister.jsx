@@ -278,8 +278,8 @@ export default function AttendanceRegister() {
                 <TextField fullWidth size="small" label="Year" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} />
               </Grid>
               <Grid item xs={12} md={7} sx={{ display: "flex", justifyContent: "flex-end", gap: 1, flexWrap: "wrap" }}>
-                <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadAttendance} disabled={loading}>Refresh</Button>
-                <Button variant="contained" endIcon={<ArrowForwardIcon />} sx={{ background: gradients.brand }} onClick={() => navigate("/salary/update")}>Continue to Update Salary</Button>
+                <Button variant="contained" startIcon={<RefreshIcon />} onClick={loadAttendance} disabled={loading} sx={{ background: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#1565C0 0%,#0D47A1 100%)" } }}>Refresh</Button>
+                <Button variant="contained" endIcon={<ArrowForwardIcon />} sx={{ background: "linear-gradient(135deg,#A24BD1 0%,#7A1FA2 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#7A1FA2 0%,#5E1480 100%)" } }} onClick={() => navigate("/salary/update")}>Continue to Update Salary</Button>
               </Grid>
             </Grid>
           </CardContent>
@@ -304,11 +304,11 @@ export default function AttendanceRegister() {
         <Card sx={{ borderRadius: 3, boxShadow: shadowCard, border: "1px solid rgba(15,76,129,0.14)" }}>
           <CardContent>
             <Box sx={{ mb: 1.5, display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
-              <Button size="small" variant="outlined" onClick={selectAllEmployees}>Select All</Button>
-              <Button size="small" variant="text" onClick={clearSelectedEmployees}>Clear Selection</Button>
-              <Button size="small" variant="contained" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("P")}>Present All Days</Button>
-              <Button size="small" variant="outlined" color="error" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("A")}>Absent All Days</Button>
-              <Button size="small" variant="outlined" disabled={!selectedIds.length || bulkSaving} onClick={saveSelectedEmployees}>{bulkSaving ? "Saving..." : "Save Selected"}</Button>
+              <Button size="small" variant="contained" onClick={selectAllEmployees} sx={{ background: "linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#1B8A50 0%,#11653A 100%)" } }}>Select All</Button>
+              <Button size="small" variant="contained" onClick={clearSelectedEmployees} sx={{ background: "linear-gradient(135deg,#7B8794 0%,#52606D 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#52606D 0%,#3E4C59 100%)" } }}>Clear Selection</Button>
+              <Button size="small" variant="contained" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("P")} sx={{ background: "linear-gradient(135deg,#00897B 0%,#00695C 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#00695C 0%,#004D40 100%)" } }}>Present All Days</Button>
+              <Button size="small" variant="contained" color="error" disabled={!selectedIds.length || bulkSaving} onClick={() => markSelectedAllDays("A")} sx={{ background: "linear-gradient(135deg,#F0574D 0%,#C0392B 100%)", color: "#fff", fontWeight: 800, "&:hover": { background: "linear-gradient(135deg,#C0392B 0%,#922B21 100%)" } }}>Absent All Days</Button>
+              <Button size="small" variant="contained" disabled={!selectedIds.length || bulkSaving} onClick={saveSelectedEmployees} sx={{ background: "linear-gradient(135deg,#D9B64A 0%,#B8912C 100%)", color: "#12283f", fontWeight: 900, "&:hover": { background: "linear-gradient(135deg,#B8912C 0%,#927321 100%)" } }}>{bulkSaving ? "Saving..." : "Save Selected"}</Button>
               <Chip label={`${selectedIds.length} selected`} size="small" sx={{ fontWeight: 800 }} />
             </Box>
             <Box sx={{ mb: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>

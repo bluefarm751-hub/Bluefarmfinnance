@@ -12,6 +12,17 @@ import { printDocument, tableHtml } from "../utils/print";
 import { useToast } from "../utils/useToast";
 import { brand } from "../theme";
 
+const HEAD_COLORS = [
+  { bg: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)", soft: "#EAF3FF", border: "#8CB9EE" },
+  { bg: "linear-gradient(135deg,#2FBF71 0%,#1B8A50 100%)", soft: "#EAF9F0", border: "#8BD5AB" },
+  { bg: "linear-gradient(135deg,#A24BD1 0%,#7A1FA2 100%)", soft: "#F5ECFB", border: "#C9A0E2" },
+  { bg: "linear-gradient(135deg,#F0574D 0%,#C0392B 100%)", soft: "#FDEDEC", border: "#E8A29C" },
+  { bg: "linear-gradient(135deg,#D9B64A 0%,#B8912C 100%)", soft: "#FFF8DE", border: "#E3C86A" },
+  { bg: "linear-gradient(135deg,#16608f 0%,#12507a 100%)", soft: "#EAF5FA", border: "#8CBFD9" },
+  { bg: "linear-gradient(135deg,#00897B 0%,#00695C 100%)", soft: "#E7F7F4", border: "#86CFC5" },
+  { bg: "linear-gradient(135deg,#EF6C00 0%,#E65100 100%)", soft: "#FFF0E2", border: "#F2B27C" },
+];
+
 const columns = [
   { key: "date", label: "Date" },
   { key: "voucherNo", label: "Voucher No" },
@@ -64,12 +75,30 @@ export default function GeneralLedger() {
             <Typography sx={{ py: 6, textAlign: "center" }}>No Heads or Bills found.</Typography>
           ) : (
             <>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2.5 }}>
-                {rows.map((head) => (
-                  <Button key={head.id} size="small" variant={openHead === head.id ? "contained" : "outlined"} onClick={() => setOpenHead(head.id)}>
-                    {head.headName}
-                  </Button>
-                ))}
+              <Box sx={{ display: "flex", gap: 1.25, flexWrap: "wrap", mb: 2.5 }}>
+                {rows.map((head, index) => {
+                  const c = HEAD_COLORS[index % HEAD_COLORS.length];
+                  const active = openHead === head.id;
+                  return (
+                    <Button
+                      key={head.id}
+                      size="small"
+                      variant="contained"
+                      onClick={() => setOpenHead(head.id)}
+                      sx={{
+                        minHeight: 42, px: 2, borderRadius: 2.5, textTransform: "none", fontWeight: 900,
+                        color: active ? "#fff" : "#18344d",
+                        background: active ? c.bg : c.soft,
+                        border: `2px solid ${active ? "rgba(255,255,255,.3)" : c.border}`,
+                        boxShadow: active ? "0 8px 18px rgba(8,33,63,.22)" : "0 3px 8px rgba(8,33,63,.08)",
+                        "&:hover": { background: c.bg, color: "#fff", transform: "translateY(-2px)" },
+                        transition: "all .18s",
+                      }}
+                    >
+                      {head.headName}
+                    </Button>
+                  );
+                })}
               </Box>
 
               <Box sx={{ mb: 2.5, p: 2, borderRadius: 3, background: "#f1f6fa", display: "flex", gap: 3, flexWrap: "wrap" }}>
