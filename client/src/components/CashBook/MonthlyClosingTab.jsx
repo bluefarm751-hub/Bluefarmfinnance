@@ -599,7 +599,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
       </SectionCard>
 
       <SectionCard title="Monthly Closing History">
-        <DataTable columns={historyCols} rows={history} empty="No monthly closings saved yet" plainRows />
+        <DataTable columns={historyCols} rows={history} empty="No monthly closings saved yet" />
         {history.map((r) => (
           <Collapse in={expandedId === r.id} key={r.id} unmountOnExit>
             <Box sx={{ p: 2, borderTop: "1px solid #E5E9F2", background: brand.tableCardBg }}>
@@ -622,7 +622,6 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                           columns={sheet.columns.map((c) => ({ key: c.key, label: c.label, align: c.key === "amount" || c.key === "cash" || c.key === "bank" || c.key === "qty" ? "right" : undefined }))}
                           rows={sheet.rows}
                           empty="No records"
-                          plainRows
                         />
                       </Box>
                     </Box>

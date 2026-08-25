@@ -229,7 +229,7 @@ export default function ReportsTab() {
         Bank Deposit, HQ Remittance, Temporary Receipts and Daily Closing. {rows.length} record(s).
       </Typography>
 
-      <DataTable columns={displayColumns} rows={rows} empty="No records for the selected filters" plainRows />
+      <DataTable columns={displayColumns} rows={rows} empty="No records for the selected filters" />
     </SectionCard>
   );
 }

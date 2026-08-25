@@ -214,8 +214,8 @@ export default function CashBook() {
           </Tabs>
         </Box>
 
-        {tab === 0 && <SideTab side="receipt" onChanged={refresh} showToast={showToast} plainRows />}
-        {tab === 1 && <SideTab side="payment" onChanged={refresh} showToast={showToast} plainRows />}
+        {tab === 0 && <SideTab side="receipt" onChanged={refresh} showToast={showToast} />}
+        {tab === 1 && <SideTab side="payment" onChanged={refresh} showToast={showToast} />}
         {tab === 2 && <WithdrawalTab summary={summary} onChanged={refresh} showToast={showToast} />}
         {tab === 3 && <BankDepositTab summary={summary} onChanged={refresh} showToast={showToast} />}
         {tab === 4 && <HORemittanceTab summary={summary} onChanged={refresh} showToast={showToast} />}

@@ -100,7 +100,7 @@ export default function HORemittanceTab({ summary, onChanged, showToast }) {
           <Grid item xs={12} sm={3}><TextField fullWidth size="small" label="Remarks" value={form.remarks} onChange={e => setForm({...form, remarks: e.target.value})} /></Grid>
           <Grid item xs={12}><Button variant="contained" onClick={submit} startIcon={<FaSave />} sx={{ background: brand.blueDeep, fontWeight: 800, mr: 1 }}>Update</Button><Button variant="outlined" onClick={() => { setEditId(null); setForm({ entryDate: today(), voucherNo: "", bankRef: "", transferMode: "RTGS", amount: "", remarks: "" }); }} startIcon={<FaTimes />}>Cancel</Button></Grid>
         </Grid></Box>}
-      <DataTable columns={columns} rows={rows} empty="No HQ Remittances yet" totalsRow={{ entryDate: "TOTAL", amount: money(totalRemitted) }} plainRows />
+      <DataTable columns={columns} rows={rows} empty="No HQ Remittances yet" totalsRow={{ entryDate: "TOTAL", amount: money(totalRemitted) }} />
     </SectionCard>
     <ConfirmDialog open={!!deleteTarget} title="Delete HQ Remittance?" message="This will increase Bank balance by the remitted amount." confirmLabel="Yes, Delete" cancelLabel="No" onConfirm={confirmDelete} onCancel={() => setDeleteTarget(null)} />
   </>);
