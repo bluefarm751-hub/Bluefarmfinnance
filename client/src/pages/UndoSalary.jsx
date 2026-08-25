@@ -33,9 +33,9 @@ const headRowSx = {
 };
 
 const bodyRowSx = (i) => ({
-  background: i % 2 === 0 ? brand.rowBlue : "#eef4fb",
+  background: i % 2 === 0 ? brand.rowBlue : brand.rowWhiteGradient,
   "& .MuiTableCell-root": {
-    background: `${i % 2 === 0 ? brand.rowBlue : "#eef4fb"} !important`,
+    background: `${i % 2 === 0 ? brand.rowBlue : brand.rowWhiteGradient} !important`,
     color: `${i % 2 === 0 ? brand.rowText : brand.rowTextOnWhite} !important`,
     borderBottom: "1px solid rgba(8,33,63,.14)",
     borderRight: "1px solid rgba(8,33,63,.10)",

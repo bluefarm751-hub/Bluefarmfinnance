@@ -117,23 +117,25 @@ export default function DateFieldDMY({ label, name, value, onChange, fullWidth =
         onChange={handleTyping}
         onClick={openPicker}
         sx={sx}
-        InputLabelProps={{ shrink: true }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={openPicker}
-                onMouseDown={(e) => e.preventDefault()}
-                edge="end"
-                size="small"
-                disabled={disabled}
-                aria-label="open calendar"
-                sx={{ color: "#16608f" }}
-              >
-                <CalendarMonthIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          ),
+        slotProps={{
+          inputLabel: { shrink: true },
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={openPicker}
+                  onMouseDown={(e) => e.preventDefault()}
+                  edge="end"
+                  size="small"
+                  disabled={disabled}
+                  aria-label="open calendar"
+                  sx={{ color: "#16608f" }}
+                >
+                  <CalendarMonthIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
         }}
       />
       {/* Native date input used only programmatically (via showPicker/click) to
