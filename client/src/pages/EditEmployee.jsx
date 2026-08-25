@@ -33,7 +33,7 @@ export default function EditEmployee() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1, sm: 1.5, md: 1.75 }, pt: 1, pb: 4, width: "100%", maxWidth: "none", mx: 0, minWidth: 0, overflowX: "hidden", background: "rgba(207,224,247,.72)", borderRadius: 1.5, minHeight: "100%" }}>
+      <Box sx={{ px: { xs: 1, sm: 1.5, md: 1.75 }, pt: 1, pb: 4, width: "100%", maxWidth: "none", mx: 0, minWidth: 0, overflowX: "hidden", background: "transparent", borderRadius: 1.5, minHeight: "100%" }}>
         <Box sx={{ mb: 1.2 }}>
           <Box sx={{ display: "inline-flex", alignItems: "center", border: "1px solid #c9a227", borderRadius: 999, px: 1.25, py: .3, mb: .35, background: "transparent" }}>
             <Typography sx={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 1.25, color: "#a27b00", lineHeight: 1.1 }}>EDIT RECORD</Typography>

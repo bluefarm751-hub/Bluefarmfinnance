@@ -136,7 +136,7 @@ export default function EmployeeForm({ formData, setFormData }) {
         <Box sx={twoCol}>
           <Field label="Appointment"><TextField hiddenLabel size="small" sx={inputSx} name="appointment" value={formData.appointment || ""} onChange={handleChange} /></Field>
           <Field label="Department"><TextField hiddenLabel size="small" sx={inputSx} name="department" value={formData.department || ""} onChange={handleChange} /></Field>
-          <Field label="Joining Date"><DateFieldDMY label="Joining Date" name="joiningDate" value={formData.joiningDate} onChange={handleChange} /></Field>
+          <Field label="Joining Date"><DateFieldDMY label="Joining Date" name="joiningDate" size="small" sx={inputSx} value={formData.joiningDate} onChange={handleChange} /></Field>
           <Field label="Marital Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="maritalStatus" value={formData.maritalStatus || ""} onChange={handleChange}><MenuItem value="Single">Single</MenuItem><MenuItem value="Married">Married</MenuItem><MenuItem value="Divorced">Divorced</MenuItem><MenuItem value="Widowed">Widowed</MenuItem></TextField></Field>
           <Field label="Employee Type"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="employeeType" value={formData.employeeType || ""} onChange={handleChange}><MenuItem value="Permanent">Permanent</MenuItem><MenuItem value="Contract">Contract</MenuItem><MenuItem value="Daily Wages">Daily Wages</MenuItem></TextField></Field>
           <Field label="Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="status" value={formData.status || "Active"} onChange={handleChange}><MenuItem value="Active">Active</MenuItem><MenuItem value="Inactive">Inactive</MenuItem></TextField></Field>
@@ -157,7 +157,7 @@ export default function EmployeeForm({ formData, setFormData }) {
           <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
           <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
           <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />
-          <Field label="Remarks"><TextField hiddenLabel size="small" sx={inputSx} fullWidth multiline minRows={3} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} /></Field>
+          <Field label="Remarks"><TextField hiddenLabel size="small" fullWidth multiline minRows={1} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], height: 84, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], height: "100% !important", overflow: "auto !important" } }} /></Field>
         </Box>
       </Section>
 
