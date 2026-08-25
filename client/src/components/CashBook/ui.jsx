@@ -51,7 +51,14 @@ export function SectionCard({ title, action, children }) {
 export function DataTable({ columns, rows, empty = "No records found", totalsRow }) {
   return (
     <Box sx={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 5px", fontSize: 13.5 }}>
+      <table style={{
+        width: "100%",
+        borderCollapse: "collapse",
+        borderSpacing: 0,
+        borderRadius: 0,
+        overflow: "hidden",
+        fontSize: 13.5,
+      }}>
         <thead>
           <tr>
             {columns.map((c) => (
@@ -64,7 +71,9 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
                   padding: "10px 12px",
                   fontWeight: 800,
                   borderBottom: `2px solid ${brand.gold}`,
+                  borderRight: "1px solid rgba(255,255,255,0.14)",
                   whiteSpace: "nowrap",
+                  borderRadius: 0,
                 }}
               >
                 {c.label}
@@ -92,6 +101,8 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
                     padding: "9px 12px",
                     textAlign: c.align || "left",
                     color: i % 2 ? brand.rowTextOnWhite : brand.rowText,
+                    borderBottom: "1px solid rgba(8,33,63,0.18)",
+                    borderRight: "1px solid rgba(8,33,63,0.10)",
                   }}
                 >
                   {c.render ? c.render(row, i) : (row[c.key] ?? "")}
@@ -110,6 +121,8 @@ export function DataTable({ columns, rows, empty = "No records found", totalsRow
                     fontWeight: 800,
                     color: "#fff",
                     background: brand.blueDeep,
+                    borderTop: `1px solid rgba(255,255,255,0.12)`,
+                    borderRight: "1px solid rgba(255,255,255,0.12)",
                   }}
                 >
                   {totalsRow[c.key] ?? ""}

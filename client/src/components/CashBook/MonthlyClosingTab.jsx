@@ -481,7 +481,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                     Count Physical Cash — as of {preview.toDate}
                   </Typography>
                 </Box>
-                <Box sx={{ borderRadius: 2, overflow: "hidden", border: "1px solid #E5E9F2" }}>
+                <Box sx={{ borderRadius: 0, overflow: "hidden", border: "1px solid #E5E9F2" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr>
@@ -613,11 +613,11 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   return sheets.map((sheet) => (
                     <Box key={sheet.name} sx={{ mb: 2 }}>
                       <Box sx={{
-                        px: 1.5, py: 0.8, borderRadius: "8px 8px 0 0", background: brand.blueDeep,
+                        px: 1.5, py: 0.8, borderRadius: 0, background: brand.blueDeep,
                       }}>
                         <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 12.5 }}>{sheet.name}</Typography>
                       </Box>
-                      <Box sx={{ borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid #E5E9F2", background: "#dfebfa" }}>
+                      <Box sx={{ borderRadius: 0, overflow: "hidden", border: "1px solid #E5E9F2", background: "#dfebfa" }}>
                         <DataTable
                           columns={sheet.columns.map((c) => ({ key: c.key, label: c.label, align: c.key === "amount" || c.key === "cash" || c.key === "bank" || c.key === "qty" ? "right" : undefined }))}
                           rows={sheet.rows}
