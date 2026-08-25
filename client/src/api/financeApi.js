@@ -65,12 +65,11 @@ export const deleteAllocation = async (id) => {
 // ---------- BILLS ----------
 
 // Get bills (optionally for one head)
-export const getBills = async (headId) => {
+export const getBills = async (headId, options = {}) => {
   const farm = localStorage.getItem("farm");
-
-  return axios.get(`${API}/bills`, {
-    params: { farm, headId },
-  });
+  const params = { headId };
+  if (!options.allFarms) params.farm = farm;
+  return axios.get(`${API}/bills`, { params });
 };
 
 // Add a bill (multipart — supports bill picture)

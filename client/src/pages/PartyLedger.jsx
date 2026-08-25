@@ -6,7 +6,8 @@ import { FaFileExcel, FaFilePdf, FaPrint, FaBalanceScale, FaUsersCog, FaChevronD
 import MainLayout from "../layouts/MainLayout";
 import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard, money } from "../components/CashBook/ui";
-import { getPartyLedgerSummary, getParties } from "../api/ledgerApi";
+import { getParties } from "../api/ledgerApi";
+import { getBills } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
 import { brand } from "../theme";
 import { exportExcel } from "../utils/exportExcel";
@@ -55,15 +56,87 @@ export default function PartyLedger() {
       return;
     }
     setLoading(true);
-    getPartyLedgerSummary(party)
-      .then((r) => {
-        setData(r.data || { summary: [], totals: { business: 0, paid: 0, payable: 0 } });
+
+    const normalize = (v) => String(v ?? "").trim().toLowerCase();
+    const buildFromBills = (bills) => {
+      const matching = (bills || []).filter((b) => normalize(b.contractorName) === normalize(party));
+      const groups = new Map();
+      let business = 0;
+      let paidTotal = 0;
+      let payableTotal = 0;
+
+      matching.forEach((b) => {
+        const amount = Number(b.amount || 0);
+        const isPaid = normalize(b.status) === "paid";
+        const paid = isPaid ? amount : 0;
+        const payable = isPaid ? 0 : amount;
+        business += amount;
+        paidTotal += paid;
+        payableTotal += payable;
+
+        const headId = b.headId ?? null;
+        const headName = String(b.headName || "Unassigned Head").trim() || "Unassigned Head";
+        const key = `${headId ?? `name:${normalize(headName)}`}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            headId, headName, totalBill: 0, paid: 0, payable: 0, remaining: 0, bills: [],
+          });
+        }
+        const g = groups.get(key);
+        g.totalBill += amount;
+        g.paid += paid;
+        g.payable += payable;
+        g.bills.push({
+          id: b.id, sNo: b.sNo, billDate: b.billDate || "", item: b.item || b.remarks || "",
+          amount, status: b.status || "Not Paid", paid, payable, paymentMode: b.paymentMode || "", remarks: b.remarks || "",
+        });
+      });
+
+      groups.forEach((g) => {
+        g.bills.sort((a, b) => {
+          const ap = a.paid > 0 ? 0 : 1;
+          const bp = b.paid > 0 ? 0 : 1;
+          if (ap !== bp) return ap - bp;
+          const dc = String(a.billDate).localeCompare(String(b.billDate));
+          if (dc !== 0) return dc;
+          return Number(a.id) - Number(b.id);
+        });
+        let running = g.paid;
+        g.bills.forEach((b) => {
+          if (b.paid > 0) running = Math.max(0, running - b.paid);
+          b.remaining = running;
+        });
+        g.remaining = running;
+      });
+
+      const summary = Array.from(groups.values()).sort((a, b) => a.headName.localeCompare(b.headName));
+      return { summary, totals: { business, paid: paidTotal, payable: payableTotal } };
+    };
+
+    (async () => {
+      try {
+        // Party Ledger is intentionally driven by the actual Bills table.
+        // First use the current farm, then fall back to all bills when older
+        // records have a missing/different farm tag.
+        let billRes = await getBills();
+        let nextData = buildFromBills(billRes.data || []);
+
+        if (!nextData.summary.length) {
+          const allRes = await getBills(undefined, { allFarms: true });
+          nextData = buildFromBills(allRes.data || []);
+        }
+
+        setData(nextData);
         const next = {};
-        (r.data?.summary || []).forEach((g, i) => { next[g.headId || `h${i}`] = true; });
+        nextData.summary.forEach((g, i) => { next[g.headId || `h${i}`] = true; });
         setOpenHeads(next);
-      })
-      .catch((e) => console.log(e))
-      .finally(() => setLoading(false));
+      } catch (e) {
+        console.error("Party Ledger bills load:", e);
+        setData({ summary: [], totals: { business: 0, paid: 0, payable: 0 } });
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [party]);
 
   const flatRows = useMemo(() => data.summary.flatMap((g) => g.bills.map((b) => ({
