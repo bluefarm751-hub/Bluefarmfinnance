@@ -84,6 +84,14 @@ export const tableBodyRowSx = (i) => ({
     borderRight: "1px solid rgba(8,33,63,0.10)",
   },
   "& .MuiTableCell-root:last-of-type": { borderRight: "none" },
+  // Row hover — a light golden highlight (matches the DataGrid hover
+  // elsewhere in the app) instead of MUI Table's default dark-grey hover.
+  "&:hover": {
+    background: `${brand.goldLight} !important`,
+  },
+  "&:hover .MuiTableCell-root": {
+    color: `${brand.rowText} !important`,
+  },
 });
 
 // MUI DataGrid equivalent — spread into the DataGrid's sx prop.

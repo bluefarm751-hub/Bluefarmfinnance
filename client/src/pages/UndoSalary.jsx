@@ -116,14 +116,15 @@ export default function UndoSalary() {
         {/* Premium summary cards */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
           {[
-            { label: "Generated Batches", value: totalBatches, grad: "linear-gradient(135deg, #1E88E5 0%, #1565C0 100%)" },
-            { label: "Total Employees", value: totalEmployees, grad: "linear-gradient(135deg, #2FBF71 0%, #1B8A50 100%)" },
-            { label: "Total Amount", value: `Rs. ${totalAmount.toLocaleString()}`, grad: "linear-gradient(135deg, #A24BD1 0%, #7A1FA2 100%)" },
+            { label: "Generated Batches", value: totalBatches, grad: "radial-gradient(120% 100% at 50% 0%, #6EC1FF 0%, #1E88E5 45%, #0D47A1 100%)" },
+            { label: "Total Employees", value: totalEmployees, grad: "radial-gradient(120% 100% at 50% 0%, #6EE7A8 0%, #2FBF71 45%, #145C36 100%)" },
+            { label: "Total Amount", value: `Rs. ${totalAmount.toLocaleString()}`, grad: "radial-gradient(120% 100% at 50% 0%, #D68FFF 0%, #A24BD1 45%, #5B1075 100%)" },
           ].map((c) => (
             <Grid item xs={4} key={c.label}>
               <Box sx={{
                 borderRadius: 4, background: c.grad, color: "#fff", p: 3, textAlign: "center",
-                boxShadow: shadowCard, border: "2px solid rgba(255,255,255,0.25)",
+                boxShadow: `${shadowCard}, inset 0 2px 6px rgba(255,255,255,0.35), inset 0 -12px 20px rgba(0,0,0,0.25)`,
+                border: "2px solid rgba(255,255,255,0.25)",
                 transition: "transform 0.2s",
                 "&:hover": { transform: "translateY(-4px)" },
               }}>

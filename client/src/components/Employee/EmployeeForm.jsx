@@ -254,7 +254,7 @@ export default function EmployeeForm({ formData, setFormData }) {
                 value={formData.iban || ""}
                 onChange={handleChange}
                 slotProps={{ input: viewAdornment("IBAN", formData.iban) }}
-                sx={{ width: { xs: "100%", md: "75%" } }}
+                sx={{ width: { xs: "100%", md: "85%" } }}
               />
             </Grid>
           </Grid>
