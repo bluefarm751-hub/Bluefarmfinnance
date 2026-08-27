@@ -118,21 +118,33 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
     border-color:rgba(15,76,129,0.35) !important;
 }
 
-/* Finance/Cash Book labels stay ABOVE the white input instead of sitting
-   inside the field. Keep the label colour stable even while focused. */
+/* Finance/Cash Book labels sit clearly ABOVE the white input box — not on
+   the border and not inside the field. No background chip behind the text
+   (that white patch was reading as its own "white shade" over the box), so
+   the label is just plain bold black text floating above the box outline.
+   Keep the label colour/position stable even while focused. */
 .finance-cash-scope .MuiInputLabel-root {
-    color:#38536f !important;
-    background:#ffffff !important;
-    padding:0 5px !important;
+    color:#000000 !important;
+    background:transparent !important;
+    padding:0 4px !important;
     z-index:1 !important;
-    transform:translate(14px, -9px) scale(0.75) !important;
+    font-weight:600 !important;
+    transform:translate(14px, -20px) scale(0.8) !important;
     transform-origin:top left !important;
     pointer-events:none;
 }
 
 .finance-cash-scope .MuiInputLabel-root.Mui-focused,
 .finance-cash-scope .MuiInputLabel-root.MuiInputLabel-shrink {
-    color:#38536f !important;
+    color:#000000 !important;
+}
+
+/* The label now floats higher (clear of the box outline instead of sitting
+   on top of the border), so give every field a little extra headroom or the
+   lifted label would get clipped by whatever sits above it. */
+.finance-cash-scope .MuiFormControl-root,
+.finance-cash-scope .MuiTextField-root {
+    margin-top:20px !important;
 }
 
 /* Prevent the typed/selected value from switching to the focus blue. */
