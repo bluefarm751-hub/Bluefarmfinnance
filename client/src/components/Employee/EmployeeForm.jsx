@@ -140,6 +140,7 @@ export default function EmployeeForm({ formData, setFormData }) {
           <Field label="Marital Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="maritalStatus" value={formData.maritalStatus || ""} onChange={handleChange}><MenuItem value="Single">Single</MenuItem><MenuItem value="Married">Married</MenuItem><MenuItem value="Divorced">Divorced</MenuItem><MenuItem value="Widowed">Widowed</MenuItem></TextField></Field>
           <Field label="Employee Type"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="employeeType" value={formData.employeeType || ""} onChange={handleChange}><MenuItem value="Permanent">Permanent</MenuItem><MenuItem value="Contract">Contract</MenuItem><MenuItem value="Daily Wages">Daily Wages</MenuItem></TextField></Field>
           <Field label="Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="status" value={formData.status || "Active"} onChange={handleChange}><MenuItem value="Active">Active</MenuItem><MenuItem value="Inactive">Inactive</MenuItem></TextField></Field>
+          <Field label="Remarks"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="remarks" value={formData.remarks || ""} onChange={handleChange} /></Field>
         </Box>
       </Section>
 
@@ -152,7 +153,7 @@ export default function EmployeeForm({ formData, setFormData }) {
         </Box>
       </Section>
 
-      <Section icon={<DescriptionIcon fontSize="small" />} title="Documents & Remarks">
+      <Section icon={<DescriptionIcon fontSize="small" />} title="Documents">
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.6 }}>
           <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
           <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
@@ -160,7 +161,6 @@ export default function EmployeeForm({ formData, setFormData }) {
           <Field label="Police Verification Date">
             <DateFieldDMY label="" name="policeVerificationDate" size="small" sx={inputSx} value={formData.policeVerificationDate} onChange={handleChange} />
           </Field>
-          <Field label="Remarks"><TextField hiddenLabel size="small" fullWidth multiline minRows={1} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], height: 82, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], height: "100% !important", overflow: "auto !important" } }} /></Field>
         </Box>
       </Section>
 
