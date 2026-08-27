@@ -133,6 +133,18 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
     transform:translate(14px, -20px) scale(0.8) !important;
     transform-origin:top left !important;
     pointer-events:none;
+    /* The default MUI label clips to the field's own width (max-width:
+       calc(100% - 24px); overflow:hidden), so on any field that ends up
+       narrower than its label text (a squeezed column, a long label like
+       "Opening Balance", a font-metrics edge case), only the first letter
+       or two survives and the rest of the word is silently cut off — e.g.
+       "Party Name" rendering as just "P". The label is a small, empty,
+       absolutely-positioned strip floating above the box, so letting it
+       size to its own text instead of the field's width costs nothing and
+       guarantees the full word always shows. */
+    max-width:none !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
 }
 
 .finance-cash-scope .MuiInputLabel-root.Mui-focused,

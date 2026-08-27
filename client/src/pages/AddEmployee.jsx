@@ -46,7 +46,7 @@ export default function AddEmployee() {
           <Typography sx={{ mt: .25, fontSize: 14, color: "#26384e" }}>Enter employee information below.</Typography>
         </Box>
         <EmployeeForm formData={formData} setFormData={setFormData} />
-        <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 1.2, flexWrap: "wrap" }}>
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1.2, flexWrap: "wrap" }}>
           <Button variant="outlined" color="inherit" startIcon={<ArrowBackIcon />} onClick={() => navigate("/employees/list")}>Cancel</Button>
           <Button variant="contained" startIcon={<SaveIcon />} disabled={saving} onClick={handleSave} sx={{ background: gradients.brand }}>{saving ? "Saving..." : "Save Employee"}</Button>
         </Box>

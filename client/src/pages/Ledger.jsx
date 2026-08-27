@@ -1,5 +1,4 @@
 import { Box, Grid, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { FaBook, FaBalanceScale, FaFileInvoiceDollar } from "react-icons/fa";
 import { shadowCard } from "../theme";
@@ -59,10 +58,13 @@ export default function Ledger() {
             {TABS.map((tab) => (
               <Grid item xs={12} md={4} key={tab.path}>
                 <Box
-                  component={Link}
-                  to={tab.path}
                   sx={{
-                    cursor: "pointer",
+                    // Purely a visual summary card — Main Ledger / Party Ledger /
+                    // Balance Sheet are already reachable from the sidebar's
+                    // Ledger tabs, so this card intentionally does not link or
+                    // navigate anywhere; no pointer cursor, no hover/focus
+                    // "clickable" affordance either.
+                    cursor: "default",
                     borderRadius: 4,
                     background: tab.gradient,
                     color: "#fff",
@@ -79,10 +81,7 @@ export default function Ledger() {
                     overflow: "hidden",
                     boxShadow: shadowCard,
                     border: "2px solid rgba(255,255,255,0.25)",
-                    transition: "transform .2s, box-shadow .2s",
                     outline: "none",
-                    "&:hover": { transform: "translateY(-6px)", boxShadow: "0 18px 45px rgba(8,33,63,0.45)" },
-                    "&:focus-visible": { boxShadow: "0 0 0 4px rgba(212,175,55,.45), 0 20px 40px rgba(8,33,63,0.32)" },
                   }}
                 >
                   <Box sx={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, mb: 2, border: "2px solid rgba(255,255,255,.3)", position: "relative", zIndex: 1 }}>
