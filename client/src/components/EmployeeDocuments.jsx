@@ -157,7 +157,7 @@ export default function EmployeeDocuments({ employee, employeeId, onChanged, sho
 
             <Box sx={{ display: "flex", gap: 1 }}>
               <Tooltip title="View">
-                <IconButton size="small" onClick={() => handleView(doc)} sx={{ background: gradients.brand, color: "#fff", "&:hover": { opacity: 0.9, background: gradients.brand } }}>
+                <IconButton size="small" className="bf-action-view" onClick={() => handleView(doc)} sx={{ background: gradients.brand, color: "#fff", "&:hover": { opacity: 0.9, background: gradients.brand } }}>
                   <VisibilityIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -172,7 +172,7 @@ export default function EmployeeDocuments({ employee, employeeId, onChanged, sho
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
-                <IconButton size="small" onClick={() => setDeleteTarget(doc.key)} color="error">
+                <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(doc.key)} color="error">
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>

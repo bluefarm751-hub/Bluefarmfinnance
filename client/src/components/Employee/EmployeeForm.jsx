@@ -104,7 +104,7 @@ function UploadBox({ label, previewUrl, isImage, fileName, onChange }) {
 export default function EmployeeForm({ formData, setFormData }) {
   const [viewField, setViewField] = useState(null);
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const viewAdornment = (label, value) => ({ endAdornment: <InputAdornment position="end"><IconButton size="small" edge="end" onClick={() => setViewField({ label, value })} sx={{ color: brand.blueDeep }}><VisibilityIcon fontSize="small" /></IconButton></InputAdornment> });
+  const viewAdornment = (label, value) => ({ endAdornment: <InputAdornment position="end"><IconButton size="small" edge="end" className="bf-action-view" onClick={() => setViewField({ label, value })} sx={{ color: brand.blueDeep }}><VisibilityIcon fontSize="small" /></IconButton></InputAdornment> });
 
   const photoPreview = formData.photo instanceof File ? URL.createObjectURL(formData.photo) : formData.photo ? `${formData.photo}` : null;
   const cnicIsImage = formData.cnicCopy instanceof File ? formData.cnicCopy.type.startsWith("image/") : (typeof formData.cnicCopy === "string" && /\.(jpg|jpeg|png|gif|webp)$/i.test(formData.cnicCopy));

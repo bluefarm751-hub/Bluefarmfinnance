@@ -108,7 +108,7 @@ export default function EmployeeList() {
           <Tooltip title="View">
             <IconButton
               size="small"
-              onClick={() => navigate(`/employees/view/${params.row.id}`)}
+              className="bf-action-view" onClick={() => navigate(`/employees/view/${params.row.id}`)}
               sx={{
                 width: 30, height: 30,
                 background: brand.success, color: "#fff",
@@ -121,7 +121,7 @@ export default function EmployeeList() {
           <Tooltip title="Edit">
             <IconButton
               size="small"
-              onClick={() => navigate(`/employees/edit/${params.row.id}`)}
+              className="bf-action-edit" onClick={() => navigate(`/employees/edit/${params.row.id}`)}
               sx={{
                 width: 30, height: 30,
                 background: brand.blueDeep, color: "#fff",
@@ -134,7 +134,7 @@ export default function EmployeeList() {
           <Tooltip title="Delete">
             <IconButton
               size="small"
-              onClick={() => setConfirmId(params.row.id)}
+              className="bf-action-delete" onClick={() => setConfirmId(params.row.id)}
               sx={{
                 width: 30, height: 30,
                 background: brand.danger, color: "#fff",

@@ -16,7 +16,7 @@ export default function Header() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); }, []);
   const today = now.toLocaleDateString("en-GB", { day:"2-digit", month:"long", year:"numeric" });
-  const time = now.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  const time = now.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true });
   const handleLogout = () => { logout(); localStorage.removeItem("auth"); localStorage.removeItem("farm"); localStorage.removeItem("token"); delete axios.defaults.headers.common.Authorization; navigate("/"); };
   return <>
     <header style={{height:"78px",background:gradients.topbar,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 30px",borderBottom:`2px solid ${brand.gold}55`,boxShadow:"0 6px 22px rgba(8,33,63,0.25)"}}>

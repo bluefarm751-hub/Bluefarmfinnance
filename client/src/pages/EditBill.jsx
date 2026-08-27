@@ -290,16 +290,16 @@ export default function EditBill() {
                         <IconButton
                           size="small"
                           disabled={!b.billPic}
-                          onClick={() => setViewPic(b.billPic)}
+                          className="bf-action-view" onClick={() => setViewPic(b.billPic)}
                           sx={{ color: brand.goldDark }}
                           title="View bill"
                         >
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" onClick={() => openEdit(b)} sx={{ color: brand.blueDeep }} title="Edit">
+                        <IconButton size="small" className="bf-action-edit" onClick={() => openEdit(b)} sx={{ color: brand.blueDeep }} title="Edit">
                           <EditIcon fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" onClick={() => setDeleteTarget(b)} sx={{ color: brand.danger }} title="Delete">
+                        <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(b)} sx={{ color: brand.danger }} title="Delete">
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </TableCell>

@@ -353,7 +353,7 @@ export default function AddAllocation() {
                       <TableCell>{a.letterReference || "—"}</TableCell>
                       <TableCell>{a.remarks || "—"}</TableCell>
                       <TableCell align="center">
-                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(a)}>
+                        <IconButton size="small" color="error" className="bf-action-delete" onClick={() => setDeleteTarget(a)}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </TableCell>

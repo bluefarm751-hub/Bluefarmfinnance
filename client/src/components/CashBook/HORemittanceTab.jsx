@@ -32,8 +32,8 @@ export default function HORemittanceTab({ summary, onChanged, showToast }) {
     { key: "remarks", label: "Remarks" },
     { key: "actions", label: "", align: "center",
       render: (r) => (<>
-        <IconButton size="small" onClick={() => { setEditId(r.id); setForm({ entryDate: r.entryDate || today(), voucherNo: r.voucherNo || "", bankRef: r.bankRef || "", transferMode: r.transferMode || "RTGS", amount: String(r.amount || ""), remarks: r.remarks || "" }); setShowForm(false); }} sx={{ color: brand.blueDeep, mr: 0.5 }}><FaEdit size={12} /></IconButton>
-        <IconButton size="small" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}><FaTrashAlt size={12} /></IconButton>
+        <IconButton size="small" className="bf-action-edit" onClick={() => { setEditId(r.id); setForm({ entryDate: r.entryDate || today(), voucherNo: r.voucherNo || "", bankRef: r.bankRef || "", transferMode: r.transferMode || "RTGS", amount: String(r.amount || ""), remarks: r.remarks || "" }); setShowForm(false); }} sx={{ color: brand.blueDeep, mr: 0.5 }}><FaEdit size={12} /></IconButton>
+        <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}><FaTrashAlt size={12} /></IconButton>
       </>),
     },
   ];

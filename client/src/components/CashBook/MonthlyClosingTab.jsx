@@ -423,7 +423,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           <IconButton size="small" disabled={exportingRowId === `${r.id}-pdf`} onClick={() => exportSavedPdf(r)} sx={{ color: brand.danger, mr: 0.5 }}>
             <FaFilePdf size={12} />
           </IconButton>
-          <IconButton size="small" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
+          <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
             <FaTrashAlt size={12} />
           </IconButton>
         </>

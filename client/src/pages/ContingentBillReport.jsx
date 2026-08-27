@@ -326,7 +326,7 @@ export default function ContingentBillReport() {
                         variant="contained"
                         startIcon={<EditIcon />}
                         onClick={() => navigate(`/finance/edit-contingent-bill/${b.id}`)}
-                        sx={{ background: "#9C7A1E", "&:hover": { background: "#7A5F16" }, whiteSpace: "nowrap" }}
+                        sx={{ background: "#0F4C81", "&:hover": { background: "#08213F" }, whiteSpace: "nowrap" }}
                       >
                         Edit
                       </Button>
@@ -346,7 +346,7 @@ export default function ContingentBillReport() {
                       >
                         Download PDF
                       </Button>
-                      <IconButton color="error" onClick={() => setConfirmDelete(b)}>
+                      <IconButton color="error" className="bf-action-delete" onClick={() => setConfirmDelete(b)}>
                         <DeleteIcon />
                       </IconButton>
                     </Box>

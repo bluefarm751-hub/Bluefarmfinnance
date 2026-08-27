@@ -177,12 +177,12 @@ export default function EditHead() {
                       <TableCell>{h.allocationDate || "—"}</TableCell>
                       <TableCell>{h.letterReference || "—"}</TableCell>
                       <TableCell align="right">
-                        <IconButton size="small" onClick={() => openEdit(h)} sx={{ color: brand.blueDeep }}>
+                        <IconButton size="small" className="bf-action-edit" onClick={() => openEdit(h)} sx={{ color: brand.blueDeep }}>
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleDeleteClick(h)}
+                          className="bf-action-delete" onClick={() => handleDeleteClick(h)}
                           title={
                             Number(h.billCount ?? 0) > 0
                               ? "Locked — delete this head's bills first"

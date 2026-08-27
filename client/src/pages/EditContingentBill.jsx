@@ -422,7 +422,7 @@ export default function EditContingentBill() {
                   <Grid item xs={2} md={0.5}>
                     <IconButton
                       color="error"
-                      onClick={() => removeRow(idx)}
+                      className="bf-action-delete" onClick={() => removeRow(idx)}
                       disabled={rows.length === 1}
                     >
                       <DeleteIcon fontSize="small" />

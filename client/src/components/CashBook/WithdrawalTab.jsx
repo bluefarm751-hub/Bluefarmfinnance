@@ -67,7 +67,7 @@ export default function WithdrawalTab({ summary, onChanged, showToast }) {
     {
       key: "actions", label: "", align: "center",
       render: (r) => (
-        <IconButton size="small" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
+        <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
           <FaTrashAlt size={12} />
         </IconButton>
       ),

@@ -115,8 +115,8 @@ export default function ManageParties() {
       key: "actions", label: "Actions", align: "center",
       render: (r) => r.manual ? (
         <>
-          <IconButton size="small" onClick={() => handleEdit(r)}><EditIcon fontSize="small" /></IconButton>
-          <IconButton size="small" color="error" onClick={() => setConfirmDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
+          <IconButton size="small" className="bf-action-edit" onClick={() => handleEdit(r)}><EditIcon fontSize="small" /></IconButton>
+          <IconButton size="small" color="error" className="bf-action-delete" onClick={() => setConfirmDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
         </>
       ) : "—",
     },

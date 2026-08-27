@@ -171,3 +171,48 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
     background-color:#ffffff !important;
     color:#0B1B33 !important;
 }
+
+
+/* ============================================================
+   GLOBAL ACTION BUTTON STANDARD
+   Every View / Edit / Delete icon button in the software uses the
+   same round style and colours as the Employee "View Employee" page.
+   ============================================================ */
+.MuiIconButton-root.bf-action-view,
+.MuiIconButton-root.bf-action-edit,
+.MuiIconButton-root.bf-action-delete {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 5px rgba(8,33,63,.18) !important;
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease !important;
+}
+.MuiIconButton-root.bf-action-view { background: #1E8E5A !important; }
+.MuiIconButton-root.bf-action-edit { background: #0F4C81 !important; }
+.MuiIconButton-root.bf-action-delete { background: #C0392B !important; }
+.MuiIconButton-root.bf-action-view:hover { background: #166A44 !important; }
+.MuiIconButton-root.bf-action-edit:hover { background: #08213F !important; }
+.MuiIconButton-root.bf-action-delete:hover { background: #8E281C !important; }
+.MuiIconButton-root.bf-action-view:hover,
+.MuiIconButton-root.bf-action-edit:hover,
+.MuiIconButton-root.bf-action-delete:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 4px 9px rgba(8,33,63,.25) !important;
+}
+.MuiIconButton-root.bf-action-view .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-edit .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-delete .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-view svg,
+.MuiIconButton-root.bf-action-edit svg,
+.MuiIconButton-root.bf-action-delete svg {
+  font-size: 16px !important;
+  color: #fff !important;
+}
