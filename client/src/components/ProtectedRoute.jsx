@@ -14,10 +14,14 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
     } catch {
       role = null;
     }
-    // Blue Farm / Blue Remounts logins are locked out of Finance, Cash Book,
-    // and Ledger — this blocks reaching those pages by typing/bookmarking
-    // the URL directly, not just hiding them in the sidebar.
-    if (role !== "admin") {
+    // Administrator has full access. A managed ID can enter areas that were
+    // explicitly enabled for it from Settings.
+    let permissions = [];
+    try { permissions = JSON.parse(auth)?.permissions || []; } catch { permissions = []; }
+    if (role !== "admin" && !Array.isArray(permissions) && !permissions.length) {
+      return <Navigate to="/employees" replace />;
+    }
+    if (role !== "admin" && Array.isArray(permissions) && permissions.length === 0) {
       return <Navigate to="/employees" replace />;
     }
   }

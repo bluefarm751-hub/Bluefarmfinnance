@@ -230,9 +230,13 @@ async function initDatabase() {
         password TEXT NOT NULL,
         name TEXT,
         role TEXT NOT NULL,
-        farm TEXT
+        farm TEXT,
+        permissions JSONB DEFAULT NULL
       )
     `);
+
+    // Existing installations: add permissions without requiring a manual migration.
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT NULL`);
 
     // ============================================================
     // DEFAULT USERS

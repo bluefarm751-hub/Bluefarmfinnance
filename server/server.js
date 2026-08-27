@@ -14,7 +14,7 @@ const initLedger = require("./database/initLedger");
 // UTILITIES
 // ============================================================
 const { loginLimiter } = require("./utils/rateLimiter");
-const { requireAuth, requireAdmin } = require("./middleware/authMiddleware");
+const { requireAuth, requireAdmin, requireManagedAccess } = require("./middleware/authMiddleware");
 
 // ============================================================
 // ROUTES
@@ -139,10 +139,10 @@ app.use("/api/employees", employeeRoutes);
 // Sidebar shows them locked for non-admin "farm" accounts) — requireAdmin
 // enforces that same rule on the server, so a non-admin session token
 // can't be used to call these endpoints directly and bypass the UI lock.
-app.use("/api/payroll", requireAdmin, payrollRoutes);
-app.use("/api/finance", requireAdmin, financeRoutes);
-app.use("/api/cashbook", requireAdmin, cashbookRoutes);
-app.use("/api/ledger", requireAdmin, ledgerRoutes);
+app.use("/api/payroll", requireManagedAccess(["salary-"]), payrollRoutes);
+app.use("/api/finance", requireManagedAccess(["finance-"]), financeRoutes);
+app.use("/api/cashbook", requireManagedAccess(["cashbook-"]), cashbookRoutes);
+app.use("/api/ledger", requireManagedAccess(["ledger-"]), ledgerRoutes);
 // Backup status/trigger — admin only, see routes/admin.js.
 app.use("/api/admin", requireAdmin, adminRoutes);
 

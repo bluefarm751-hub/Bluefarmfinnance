@@ -16,7 +16,8 @@ const {
 
 const {
     createSession,
-    revokeSession
+    revokeSession,
+    getSession
 } = require("../utils/sessionStore");
 
 
@@ -135,13 +136,17 @@ router.post("/login", async (req, res) => {
 
         const user = {
 
+            id: row.id,
+
             username: row.username,
 
             name: row.name,
 
             role: row.role,
 
-            farm: row.farm
+            farm: row.farm,
+
+            permissions: Array.isArray(row.permissions) ? row.permissions : null
 
         };
 
@@ -184,6 +189,35 @@ router.post("/login", async (req, res) => {
 
     }
 
+});
+
+
+// =====================================================
+// CHANGE OWN PASSWORD
+// =====================================================
+router.post("/change-password", async (req, res) => {
+    try {
+        const header = req.headers.authorization || "";
+        const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+        const session = getSession(token);
+        if (!session) return res.status(401).json({ success:false, message:"Session expired or not logged in" });
+        const username = String(session.username || "").trim().toLowerCase();
+        const currentPassword = String(req.body.currentPassword || "");
+        const newPassword = String(req.body.newPassword || "");
+        if (!currentPassword || newPassword.length < 4) {
+            return res.status(400).json({ success:false, message:"Current password and a new password (minimum 4 characters) are required" });
+        }
+        const result = await db.query(`SELECT id,password FROM users WHERE LOWER(username)=$1 LIMIT 1`, [username]);
+        const row = result.rows[0];
+        if (!row || !verifyPassword(currentPassword, row.password)) {
+            return res.status(401).json({ success:false, message:"Current password is incorrect" });
+        }
+        await db.query(`UPDATE users SET password=$1 WHERE id=$2`, [hashPassword(newPassword), row.id]);
+        return res.json({ success:true, message:"Password changed successfully" });
+    } catch (err) {
+        console.error("CHANGE PASSWORD ERROR:", err);
+        return res.status(500).json({ success:false, message:"Could not change password" });
+    }
 });
 
 

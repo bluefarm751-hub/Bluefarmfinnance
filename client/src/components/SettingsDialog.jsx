@@ -1,0 +1,46 @@
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { FaTimes, FaKey, FaUsersCog, FaPlus, FaSave, FaTrash, FaUserEdit } from "react-icons/fa";
+
+const TABS = [
+  ["employees","Employees"],["employees-add","Add Employee"],["employees-list","View Employee"],
+  ["salary-attendance","Attendance Register"],["salary-update","Update Salary"],["salary-generate","Generate Salary"],["salary-undo","Undo Salary"],["salary-report","Report Salary"],["report-info","Report Info"],
+  ["finance-add-allocation","Add Head & Allocation"],["finance-edit-head","Edit Head & Allocation"],["finance-add-income","Add Income"],["finance-add-bill","Add Bill"],["finance-edit-bill","Edit Bill"],["finance-contingent","Add Contingent Bill"],["finance-existing","Contingent Bill From Existing"],["finance-temp","Temporary Receipt"],["finance-bill-report","Bill Report"],["finance-contingent-report","Report Contingent Bill"],["finance-report-allocation","Report Allocation"],
+  ["cashbook-receipt","Cash Book: Receipt"],["cashbook-payment","Cash Book: Payment"],["cashbook-withdrawal","Cash Withdrawal"],["cashbook-deposit","Bank Deposit"],["cashbook-remittance","HQ Remittance"],["cashbook-daily","Daily Closing"],["cashbook-monthly","Monthly Closing"],["cashbook-reports","Cash Book Reports"],
+  ["ledger-main","Main Ledger"],["ledger-party","Party Ledger"],["ledger-balance","Balance Sheet"],["ledger-report","Report Ledger"],["ledger-party-report","Report Party Ledger"],["ledger-balance-report","Report Balance Sheet"],["about","About"]
+];
+const blank={name:"",username:"",password:"",role:"farm",farm:"Blue Farm",permissions:[]};
+export default function SettingsDialog({open,onClose,isAdmin}){
+ const [mode,setMode]=useState("password"),[currentPassword,setCurrentPassword]=useState(""),[newPassword,setNewPassword]=useState(""),[message,setMessage]=useState("");
+ const [users,setUsers]=useState([]),[form,setForm]=useState(blank),[selected,setSelected]=useState(null),[loading,setLoading]=useState(false);
+ const token=localStorage.getItem("token");
+ const headers=useMemo(()=>({headers:{Authorization:`Bearer ${token}`}}),[token]);
+ const loadUsers=async()=>{try{const r=await axios.get('/api/admin/users',headers);setUsers(r.data.users||[])}catch(e){setMessage(e.response?.data?.message||'Could not load IDs')}};
+ useEffect(()=>{if(open&&isAdmin)loadUsers()},[open,isAdmin]);
+ if(!open)return null;
+ const changePassword=async(e)=>{e.preventDefault();setLoading(true);setMessage("");try{const r=await axios.post('/api/auth/change-password',{currentPassword,newPassword},headers);setMessage(r.data.message);setCurrentPassword('');setNewPassword('')}catch(err){setMessage(err.response?.data?.message||'Could not change password')}finally{setLoading(false)}};
+ const selectUser=(u)=>{setSelected(u.id);setForm({name:u.name||'',username:u.username||'',password:'',role:u.role||'farm',farm:u.farm||'Blue Farm',permissions:Array.isArray(u.permissions)?u.permissions:[]});setMode('manage')};
+ const toggle=(key)=>setForm(x=>({...x,permissions:x.permissions.includes(key)?x.permissions.filter(a=>a!==key):[...x.permissions,key]}));
+ const saveUser=async(e)=>{e.preventDefault();setLoading(true);setMessage('');try{let r;if(selected){r=await axios.put(`/api/admin/users/${selected}`,{name:form.name,username:form.username,role:form.role,farm:form.farm,permissions:form.permissions},headers);if(form.password)await axios.put(`/api/admin/users/${selected}/password`,{password:form.password},headers)}else{r=await axios.post('/api/admin/users',form,headers)}setMessage('ID saved successfully');setForm(blank);setSelected(null);await loadUsers()}catch(err){setMessage(err.response?.data?.message||'Could not save ID')}finally{setLoading(false)}};
+ const remove=async(id)=>{if(!confirm('Delete this ID?'))return;try{await axios.delete(`/api/admin/users/${id}`,headers);await loadUsers();if(selected===id){setSelected(null);setForm(blank)}}catch(e){setMessage(e.response?.data?.message||'Could not delete ID')}};
+ const style={position:'fixed',inset:0,zIndex:3000,background:'rgba(3,18,35,.62)',display:'flex',alignItems:'center',justifyContent:'center',padding:20};
+ const panel={width:'min(1050px,96vw)',maxHeight:'90vh',overflow:'auto',background:'#f5f8fc',borderRadius:18,boxShadow:'0 25px 80px rgba(0,0,0,.4)',border:'1px solid rgba(212,175,55,.45)'};
+ const btn=(active=false)=>({padding:'10px 14px',border:0,borderRadius:9,cursor:'pointer',fontWeight:700,background:active?'#1d5d8f':'#e5edf5',color:active?'#fff':'#17324d'});
+ return <div style={style} onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div style={panel}>
+  <div style={{padding:'18px 24px',background:'linear-gradient(135deg,#12385d,#246b9b)',color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><div style={{fontSize:21,fontWeight:800}}>⚙ Settings</div><div style={{fontSize:12,opacity:.8}}>{isAdmin?'Administrator: manage IDs, passwords and available tabs':'Change your password'}</div></div><button onClick={onClose} style={{background:'transparent',border:0,color:'#fff',fontSize:22,cursor:'pointer'}}><FaTimes/></button></div>
+  <div style={{padding:22}}>
+   <div style={{display:'flex',gap:8,marginBottom:18,borderBottom:'1px solid #d9e1ea',paddingBottom:12}}><button onClick={()=>setMode('password')} style={btn(mode==='password')}><FaKey/> Password</button>{isAdmin&&<button onClick={()=>{setMode('manage');setSelected(null);setForm(blank)}} style={btn(mode==='manage')}><FaUsersCog/> Manage IDs</button>}</div>
+   {message&&<div style={{padding:10,marginBottom:14,borderRadius:8,background:'#e8f4ec',color:'#16633b',fontWeight:600}}>{message}</div>}
+   {mode==='password'&&<form onSubmit={changePassword} style={{maxWidth:520,display:'grid',gap:14}}><label>Current Password<input required type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} style={input}/></label><label>New Password<input required minLength="4" type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={input}/></label><button disabled={loading} style={{...btn(true),width:190}}><FaSave/> Change Password</button></form>}
+   {mode==='manage'&&isAdmin&&<div style={{display:'grid',gridTemplateColumns:'290px 1fr',gap:20}}>
+    <div style={{background:'#fff',border:'1px solid #dbe5ee',borderRadius:12,padding:10}}><button onClick={()=>{setSelected(null);setForm(blank)}} style={{...btn(true),width:'100%',marginBottom:10}}><FaPlus/> Issue New ID</button>{users.map(u=><div key={u.id} onClick={()=>selectUser(u)} style={{padding:'11px 10px',borderRadius:9,cursor:'pointer',background:selected===u.id?'#e3eef7':'transparent',marginBottom:4}}><b>{u.username}</b><div style={{fontSize:12,color:'#667'}}>{u.name||'No name'} · {u.role}</div></div>)}</div>
+    <form onSubmit={saveUser} style={{background:'#fff',border:'1px solid #dbe5ee',borderRadius:12,padding:18}}><div style={{fontSize:18,fontWeight:800,marginBottom:14}}>{selected?'Edit ID':'Issue New ID'}</div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><label>Name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} style={input}/></label><label>Username<input required value={form.username} onChange={e=>setForm({...form,username:e.target.value})} style={input}/></label><label>Password {selected&&'(leave blank to keep current)'}<input type="password" required={!selected} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} style={input}/></label><label>Farm<select value={form.farm} onChange={e=>setForm({...form,farm:e.target.value})} style={input}><option>Blue Farm</option><option>Blue Remounts</option></select></label><label>Role<select value={form.role} onChange={e=>setForm({...form,role:e.target.value})} style={input}><option value="farm">Normal ID</option><option value="admin">Administrator</option></select></label></div>
+      {form.role!=='admin'&&<><div style={{fontWeight:800,margin:'18px 0 8px'}}>Available Tabs for this ID</div><div style={{fontSize:12,color:'#667',marginBottom:10}}>Tick the tabs that should remain available. Unticked tabs are blocked.</div><div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:7,maxHeight:330,overflow:'auto',paddingRight:4}}>{TABS.map(([k,n])=><label key={k} style={{display:'flex',gap:7,alignItems:'center',padding:8,border:'1px solid #e1e8ef',borderRadius:7,fontSize:13}}><input type="checkbox" checked={form.permissions.includes(k)} onChange={()=>toggle(k)}/>{n}</label>)}</div></>}
+      {form.role==='admin'&&<div style={{padding:12,marginTop:14,background:'#eef6fb',borderRadius:8}}>Administrator IDs have full access and can manage other IDs.</div>}
+      <div style={{display:'flex',gap:10,marginTop:18}}><button disabled={loading} style={btn(true)}><FaSave/> Save ID</button>{selected&&<button type="button" onClick={()=>remove(selected)} style={{...btn(),background:'#c74636',color:'#fff'}}><FaTrash/> Delete ID</button>}</div>
+    </form>
+   </div>}
+  </div>
+ </div></div>
+}
+const input={display:'block',boxSizing:'border-box',width:'100%',marginTop:5,padding:'10px 11px',border:'1px solid #cbd7e2',borderRadius:8,outline:'none',background:'#fff'};

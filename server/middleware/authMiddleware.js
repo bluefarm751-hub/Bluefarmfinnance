@@ -41,4 +41,14 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireAdmin };
+function requireManagedAccess(prefixes = []) {
+  return (req,res,next) => {
+    if (!req.user) return res.status(401).json({ success:false, message:"Session expired or not logged in." });
+    if (req.user.role === "admin") return next();
+    const permissions = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+    if (permissions.some(p => prefixes.some(prefix => p.startsWith(prefix)))) return next();
+    return res.status(403).json({ success:false, message:"This tab is not available for your ID." });
+  };
+}
+
+module.exports = { requireAuth, requireAdmin, requireManagedAccess };

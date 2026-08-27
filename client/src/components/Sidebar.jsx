@@ -45,6 +45,8 @@ export default function Sidebar() {
   const auth = JSON.parse(localStorage.getItem("auth") || "null");
   const isAdmin = auth?.role === "admin";
   const isRemounts = farm === "Blue Remounts";
+  const permissions = Array.isArray(auth?.permissions) ? auth.permissions : null;
+  const canAccess = (key, legacyLocked = false) => isAdmin || (permissions ? permissions.includes(key) : !legacyLocked);
   const farmLogo = isRemounts ? blueRemountsLogo : blueFarmLogo;
 
   // ---- Main tabs (collapsible groups) ----
@@ -54,49 +56,49 @@ export default function Sidebar() {
   // the exact "/employees" path, same as before an "Add Employee" or "View
   // Employee" sub-route existed.
   const payrollLinks = [
-    { to: "/employees", end: true, icon: <FaUsers />, text: "Employees", locked: false },
-    { to: "/employees/add", icon: <FaUserPlus />, text: "Add Employee", locked: false },
-    { to: "/employees/list", icon: <FaAddressCard />, text: "View Employee", locked: false },
-    { to: "/salary/attendance", icon: <FaCalendarCheck />, text: "Attendance Register", locked: !isAdmin },
-    { to: "/salary/update", icon: <FaMoneyCheckAlt />, text: "Update Salary", locked: !isAdmin },
-    { to: "/salary/generate", icon: <FaFileInvoiceDollar />, text: "Generate Salary", locked: !isAdmin },
-    { to: "/salary/undo", icon: <FaUndoAlt />, text: "Undo Salary", locked: !isAdmin },
-    { to: "/salary/report", icon: <FaFileAlt />, text: "Report Salary", locked: !isAdmin },
-    { to: "/reports/info", icon: <FaFileAlt />, text: "Report Info", locked: false },
+    { to: "/employees", end: true, icon: <FaUsers />, text: "Employees", locked: !canAccess("employees") },
+    { to: "/employees/add", icon: <FaUserPlus />, text: "Add Employee", locked: !canAccess("employees-add") },
+    { to: "/employees/list", icon: <FaAddressCard />, text: "View Employee", locked: !canAccess("employees-list") },
+    { to: "/salary/attendance", icon: <FaCalendarCheck />, text: "Attendance Register", locked: !canAccess("salary-attendance", true) },
+    { to: "/salary/update", icon: <FaMoneyCheckAlt />, text: "Update Salary", locked: !canAccess("salary-update", true) },
+    { to: "/salary/generate", icon: <FaFileInvoiceDollar />, text: "Generate Salary", locked: !canAccess("salary-generate", true) },
+    { to: "/salary/undo", icon: <FaUndoAlt />, text: "Undo Salary", locked: !canAccess("salary-undo", true) },
+    { to: "/salary/report", icon: <FaFileAlt />, text: "Report Salary", locked: !canAccess("salary-report", true) },
+    { to: "/reports/info", icon: <FaFileAlt />, text: "Report Info", locked: !canAccess("report-info") },
   ];
 
   const financeLinks = [
-    { to: "/finance/add-allocation", icon: <FaCoins />, text: "Add Head & Allocation", locked: !isAdmin },
-    { to: "/finance/edit-head", icon: <FaEdit />, text: "Edit Head & Allocation", locked: !isAdmin },
-    { to: "/finance/add-income", icon: <FaMoneyBillWave />, text: "Add Income", locked: !isAdmin },
-    { to: "/finance/add-bill", icon: <FaReceipt />, text: "Add Bill", locked: !isAdmin },
-    { to: "/finance/edit-bill", icon: <FaEdit />, text: "Edit Bill", locked: !isAdmin },
-    { to: "/finance/add-contingent-bill", icon: <FaFileContract />, text: "Add Contingent Bill", locked: !isAdmin },
-    { to: "/finance/add-contingent-bill-from-existing", icon: <FaExchangeAlt />, text: "Add Contingent Bill (From Existing)", locked: !isAdmin },
-    { to: "/finance/temporary-receipt", icon: <FaReceipt />, text: "Temporary Receipt", locked: !isAdmin },
-    { to: "/finance/bill-report", icon: <FaFileAlt />, text: "Bill Report", locked: !isAdmin },
-    { to: "/finance/contingent-bill-report", icon: <FaFileAlt />, text: "Report Contingent Bill", locked: !isAdmin },
-    { to: "/finance/report-allocation", icon: <FaFileInvoiceDollar />, text: "Report Allocation", locked: !isAdmin },
+    { to: "/finance/add-allocation", icon: <FaCoins />, text: "Add Head & Allocation", locked: !canAccess("finance-add-allocation", true) },
+    { to: "/finance/edit-head", icon: <FaEdit />, text: "Edit Head & Allocation", locked: !canAccess("finance-edit-head", true) },
+    { to: "/finance/add-income", icon: <FaMoneyBillWave />, text: "Add Income", locked: !canAccess("finance-add-income", true) },
+    { to: "/finance/add-bill", icon: <FaReceipt />, text: "Add Bill", locked: !canAccess("finance-add-bill", true) },
+    { to: "/finance/edit-bill", icon: <FaEdit />, text: "Edit Bill", locked: !canAccess("finance-edit-bill", true) },
+    { to: "/finance/add-contingent-bill", icon: <FaFileContract />, text: "Add Contingent Bill", locked: !canAccess("finance-contingent", true) },
+    { to: "/finance/add-contingent-bill-from-existing", icon: <FaExchangeAlt />, text: "Add Contingent Bill (From Existing)", locked: !canAccess("finance-existing", true) },
+    { to: "/finance/temporary-receipt", icon: <FaReceipt />, text: "Temporary Receipt", locked: !canAccess("finance-temp", true) },
+    { to: "/finance/bill-report", icon: <FaFileAlt />, text: "Bill Report", locked: !canAccess("finance-bill-report", true) },
+    { to: "/finance/contingent-bill-report", icon: <FaFileAlt />, text: "Report Contingent Bill", locked: !canAccess("finance-contingent-report", true) },
+    { to: "/finance/report-allocation", icon: <FaFileInvoiceDollar />, text: "Report Allocation", locked: !canAccess("finance-report-allocation", true) },
   ];
 
   const cashBookLinks = [
-    { to: "/cashbook", state: { tab: 0 }, icon: <FaReceipt />, text: "Receipt Side", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 1 }, icon: <FaMoneyBillWave />, text: "Payment Side", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 2 }, icon: <FaLandmark />, text: "Cash Withdrawal", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 3 }, icon: <FaExchangeAlt />, text: "Bank Deposit", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 4 }, icon: <FaUniversity />, text: "HQ Remittance", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 5 }, icon: <FaBalanceScale />, text: "Daily Closing", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 6 }, icon: <FaFileInvoiceDollar />, text: "Monthly Closing", locked: !isAdmin },
-    { to: "/cashbook", state: { tab: 7 }, icon: <FaBook />, text: "Reports", locked: !isAdmin },
+    { to: "/cashbook", state: { tab: 0 }, icon: <FaReceipt />, text: "Receipt Side", locked: !canAccess("cashbook-receipt", true) },
+    { to: "/cashbook", state: { tab: 1 }, icon: <FaMoneyBillWave />, text: "Payment Side", locked: !canAccess("cashbook-payment", true) },
+    { to: "/cashbook", state: { tab: 2 }, icon: <FaLandmark />, text: "Cash Withdrawal", locked: !canAccess("cashbook-withdrawal", true) },
+    { to: "/cashbook", state: { tab: 3 }, icon: <FaExchangeAlt />, text: "Bank Deposit", locked: !canAccess("cashbook-deposit", true) },
+    { to: "/cashbook", state: { tab: 4 }, icon: <FaUniversity />, text: "HQ Remittance", locked: !canAccess("cashbook-remittance", true) },
+    { to: "/cashbook", state: { tab: 5 }, icon: <FaBalanceScale />, text: "Daily Closing", locked: !canAccess("cashbook-daily", true) },
+    { to: "/cashbook", state: { tab: 6 }, icon: <FaFileInvoiceDollar />, text: "Monthly Closing", locked: !canAccess("cashbook-monthly", true) },
+    { to: "/cashbook", state: { tab: 7 }, icon: <FaBook />, text: "Reports", locked: !canAccess("cashbook-reports", true) },
   ];
 
   const ledgerLinks = [
-    { to: "/ledger/general", icon: <FaBook />, text: "Main Ledger", locked: !isAdmin },
-    { to: "/ledger/party", icon: <FaBalanceScale />, text: "Party Ledger", locked: !isAdmin },
-    { to: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, text: "Balance Sheet", locked: !isAdmin },
-    { to: "/ledger/report-excel", icon: <FaFileAlt />, text: "Report Ledger", locked: !isAdmin },
-    { to: "/ledger/party-report-excel", icon: <FaFileAlt />, text: "Report Party Ledger", locked: !isAdmin },
-    { to: "/ledger/balance-sheet-report", icon: <FaFileAlt />, text: "Report Balance Sheet", locked: !isAdmin },
+    { to: "/ledger/general", icon: <FaBook />, text: "Main Ledger", locked: !canAccess("ledger-main", true) },
+    { to: "/ledger/party", icon: <FaBalanceScale />, text: "Party Ledger", locked: !canAccess("ledger-party", true) },
+    { to: "/ledger/balance-sheet", icon: <FaFileInvoiceDollar />, text: "Balance Sheet", locked: !canAccess("ledger-balance", true) },
+    { to: "/ledger/report-excel", icon: <FaFileAlt />, text: "Report Ledger", locked: !canAccess("ledger-report", true) },
+    { to: "/ledger/party-report-excel", icon: <FaFileAlt />, text: "Report Party Ledger", locked: !canAccess("ledger-party-report", true) },
+    { to: "/ledger/balance-sheet-report", icon: <FaFileAlt />, text: "Report Balance Sheet", locked: !canAccess("ledger-balance-report", true) },
   ];
 
   const groups = [
