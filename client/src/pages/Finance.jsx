@@ -85,7 +85,7 @@ export default function Finance() {
 
   return (
     <MainLayout>
-      <Box sx={{ px: { xs: 1.5, md: 3 }, pt: 0, pb: 2, minHeight: "calc(100vh - 84px)", display: "flex", flexDirection: "column" }}>
+      <Box sx={{ px: { xs: 1.5, md: 3 }, pt: { xs: 1.5, md: 2.5 }, pb: 2, minHeight: "calc(100vh - 84px)", display: "flex", flexDirection: "column" }}>
         <Box sx={{
           width: "100%",
           minHeight: "calc(100vh - 84px)",
