@@ -117,52 +117,58 @@ export default function EmployeeForm({ formData, setFormData }) {
   const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.1 };
 
   return (
-    <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.2 }}>
-      <Section icon={<PersonIcon fontSize="small" />} title="Personal Information">
-        <Box sx={twoCol}>
-          <Field label="Employee No"><TextField hiddenLabel size="small" sx={inputSx} name="employeeNo" value={formData.employeeNo || ""} onChange={handleChange} /></Field>
-          <Field label="Employee Name"><TextField hiddenLabel size="small" sx={inputSx} name="name" value={formData.name || ""} onChange={handleChange} /></Field>
-          <Field label="Father Name"><TextField hiddenLabel size="small" sx={inputSx} name="fatherName" value={formData.fatherName || ""} onChange={handleChange} /></Field>
-          <Field label="CNIC"><TextField hiddenLabel size="small" sx={inputSx} name="cnic" value={formData.cnic || ""} onChange={handleChange} /></Field>
-          <Field label="Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="mobile" value={formData.mobile || ""} onChange={handleChange} /></Field>
-          <Field label="Family Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} /></Field>
-          <Field label="Address" span={2}>
-            <TextField hiddenLabel fullWidth multiline minRows={1} maxRows={2} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 48, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .6 } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
-          </Field>
-        </Box>
-      </Section>
+    <Box sx={{ width: "100%", minWidth: 0, display: "flex", flexDirection: { xs: "column", lg: "row" }, gap: 1.6 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.6, flex: 1, minWidth: 0 }}>
+        <Section icon={<PersonIcon fontSize="small" />} title="Personal Information">
+          <Box sx={twoCol}>
+            <Field label="Employee No"><TextField hiddenLabel size="small" sx={inputSx} name="employeeNo" value={formData.employeeNo || ""} onChange={handleChange} /></Field>
+            <Field label="Employee Name"><TextField hiddenLabel size="small" sx={inputSx} name="name" value={formData.name || ""} onChange={handleChange} /></Field>
+            <Field label="Father Name"><TextField hiddenLabel size="small" sx={inputSx} name="fatherName" value={formData.fatherName || ""} onChange={handleChange} /></Field>
+            <Field label="CNIC"><TextField hiddenLabel size="small" sx={inputSx} name="cnic" value={formData.cnic || ""} onChange={handleChange} /></Field>
+            <Field label="Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="mobile" value={formData.mobile || ""} onChange={handleChange} /></Field>
+            <Field label="Family Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} /></Field>
+            <Field label="Address" span={2}>
+              <TextField hiddenLabel fullWidth multiline minRows={2} maxRows={3} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 64, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .6 } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
+            </Field>
+          </Box>
+        </Section>
 
-      <Section icon={<WorkIcon fontSize="small" />} title="Employment Information">
-        <Box sx={twoCol}>
-          <Field label="Appointment"><TextField hiddenLabel size="small" sx={inputSx} name="appointment" value={formData.appointment || ""} onChange={handleChange} /></Field>
-          <Field label="Department"><TextField hiddenLabel size="small" sx={inputSx} name="department" value={formData.department || ""} onChange={handleChange} /></Field>
-          <Field label="Joining Date"><DateFieldDMY label="" name="joiningDate" size="small" sx={inputSx} value={formData.joiningDate} onChange={handleChange} /></Field>
-          <Field label="Marital Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="maritalStatus" value={formData.maritalStatus || ""} onChange={handleChange}><MenuItem value="Single">Single</MenuItem><MenuItem value="Married">Married</MenuItem><MenuItem value="Divorced">Divorced</MenuItem><MenuItem value="Widowed">Widowed</MenuItem></TextField></Field>
-          <Field label="Employee Type"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="employeeType" value={formData.employeeType || ""} onChange={handleChange}><MenuItem value="Permanent">Permanent</MenuItem><MenuItem value="Contract">Contract</MenuItem><MenuItem value="Daily Wages">Daily Wages</MenuItem></TextField></Field>
-          <Field label="Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="status" value={formData.status || "Active"} onChange={handleChange}><MenuItem value="Active">Active</MenuItem><MenuItem value="Inactive">Inactive</MenuItem></TextField></Field>
-          <Field label="Remarks"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="remarks" value={formData.remarks || ""} onChange={handleChange} /></Field>
-        </Box>
-      </Section>
+        <Section icon={<AccountBalanceWalletIcon fontSize="small" />} title="Salary & Bank Information">
+          <Box sx={twoCol}>
+            <Field label="Gross Salary"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="grossSalary" value={formData.grossSalary || ""} onChange={handleChange} /></Field>
+            <Field label="Bank Name"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="bankName" value={formData.bankName || ""} onChange={handleChange} /></Field>
+            <Field label="Account Title"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} /></Field>
+            <Field label="IBAN"><TextField hiddenLabel fullWidth size="small" name="iban" value={formData.iban || ""} onChange={handleChange} sx={inputSx} slotProps={{ input: viewAdornment("IBAN", formData.iban) }} /></Field>
+          </Box>
+        </Section>
+      </Box>
 
-      <Section icon={<AccountBalanceWalletIcon fontSize="small" />} title="Salary & Bank Information">
-        <Box sx={twoCol}>
-          <Field label="Gross Salary"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="grossSalary" value={formData.grossSalary || ""} onChange={handleChange} /></Field>
-          <Field label="Bank Name"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="bankName" value={formData.bankName || ""} onChange={handleChange} /></Field>
-          <Field label="Account Title"><TextField hiddenLabel size="small" sx={inputSx} fullWidth name="accountTitle" value={formData.accountTitle || ""} onChange={handleChange} /></Field>
-          <Field label="IBAN" span={2}><TextField hiddenLabel fullWidth size="small" name="iban" value={formData.iban || ""} onChange={handleChange} sx={{ ...inputSx, width: { xs: "100%", sm: "min(760px, 86%)", lg: "min(820px, 86%)" } }} slotProps={{ input: viewAdornment("IBAN", formData.iban) }} /></Field>
-        </Box>
-      </Section>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.6, flex: 1, minWidth: 0 }}>
+        <Section icon={<WorkIcon fontSize="small" />} title="Employment Information">
+          <Box sx={twoCol}>
+            <Field label="Appointment"><TextField hiddenLabel size="small" sx={inputSx} name="appointment" value={formData.appointment || ""} onChange={handleChange} /></Field>
+            <Field label="Department"><TextField hiddenLabel size="small" sx={inputSx} name="department" value={formData.department || ""} onChange={handleChange} /></Field>
+            <Field label="Joining Date"><DateFieldDMY label="" name="joiningDate" size="small" sx={inputSx} value={formData.joiningDate} onChange={handleChange} /></Field>
+            <Field label="Marital Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="maritalStatus" value={formData.maritalStatus || ""} onChange={handleChange}><MenuItem value="Single">Single</MenuItem><MenuItem value="Married">Married</MenuItem><MenuItem value="Divorced">Divorced</MenuItem><MenuItem value="Widowed">Widowed</MenuItem></TextField></Field>
+            <Field label="Employee Type"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="employeeType" value={formData.employeeType || ""} onChange={handleChange}><MenuItem value="Permanent">Permanent</MenuItem><MenuItem value="Contract">Contract</MenuItem><MenuItem value="Daily Wages">Daily Wages</MenuItem></TextField></Field>
+            <Field label="Status"><TextField hiddenLabel size="small" sx={inputSx} fullWidth select name="status" value={formData.status || "Active"} onChange={handleChange}><MenuItem value="Active">Active</MenuItem><MenuItem value="Inactive">Inactive</MenuItem></TextField></Field>
+            <Field label="Remarks" span={2}>
+              <TextField hiddenLabel size="small" fullWidth multiline minRows={2} maxRows={3} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 64, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .6 } }} />
+            </Field>
+          </Box>
+        </Section>
 
-      <Section icon={<DescriptionIcon fontSize="small" />} title="Documents">
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.6 }}>
-          <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
-          <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
-          <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />
-          <Field label="Police Verification Date">
-            <DateFieldDMY label="" name="policeVerificationDate" size="small" sx={inputSx} value={formData.policeVerificationDate} onChange={handleChange} />
-          </Field>
-        </Box>
-      </Section>
+        <Section icon={<DescriptionIcon fontSize="small" />} title="Documents">
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.6 }}>
+            <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
+            <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
+            <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />
+            <Field label="Police Verification Date">
+              <DateFieldDMY label="" name="policeVerificationDate" size="small" sx={inputSx} value={formData.policeVerificationDate} onChange={handleChange} />
+            </Field>
+          </Box>
+        </Section>
+      </Box>
 
       <Dialog open={!!viewField} onClose={() => setViewField(null)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 800, color: brand.ink }}>{viewField?.label}</DialogTitle>

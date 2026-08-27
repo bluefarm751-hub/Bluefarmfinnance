@@ -1,10 +1,10 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBell, FaCog, FaUserCircle, FaCalendarAlt, FaSignOutAlt, FaClock, FaExclamationTriangle, FaIdCard } from "react-icons/fa";
+import { FaBell, FaCog, FaUserCircle, FaCalendarAlt, FaSignOutAlt, FaClock, FaExclamationTriangle, FaIdCard, FaMoneyBillWave } from "react-icons/fa";
 import { brand, gradients } from "../theme";
 import { logout } from "../api/authApi";
-import { getTRs } from "../api/cashbookApi";
+import { getTRs, getCashSummary } from "../api/cashbookApi";
 import { getEmployees } from "../api/employeeApi";
 import SettingsDialog from "./SettingsDialog";
 
@@ -16,6 +16,11 @@ const TR_CLEAR_LIMIT_DAYS = 15;
 // Police verification is only valid for this many months from the date it
 // was done. Once that date passes, it shows up as an expired alert.
 const POLICE_VERIFICATION_VALID_MONTHS = 3;
+
+// The office is not supposed to hold more cash in hand than this at any
+// time (matches the backend's SAFE_LIMIT used on the Cash Book / Withdrawal
+// screens). Crossing it shows up as an alert in the topbar bell.
+const CASH_SAFE_LIMIT_FALLBACK = 500000;
 
 function parseIsoDate(iso) {
   if (!iso) return null;
@@ -51,6 +56,14 @@ function daysSinceExpiry(verificationDate) {
   return Math.floor((startOfToday() - expiry) / (1000 * 60 * 60 * 24));
 }
 
+// ISO (yyyy-mm-dd) -> dd-mm-yyyy, to show the TR's actual issue date in the alert.
+function formatDMY(iso) {
+  if (!iso) return "";
+  const [y, m, d] = String(iso).slice(0, 10).split("-");
+  if (!y || !m || !d) return "";
+  return `${d}-${m}-${y}`;
+}
+
 export default function Header() {
   const navigate = useNavigate();
   const auth = JSON.parse(localStorage.getItem("auth") || "null");
@@ -61,6 +74,7 @@ export default function Header() {
   const [now, setNow] = useState(new Date());
   const [overdueTRs, setOverdueTRs] = useState([]);
   const [expiredPoliceVerifications, setExpiredPoliceVerifications] = useState([]);
+  const [cashAlert, setCashAlert] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
   useEffect(() => { const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); }, []);
@@ -87,9 +101,18 @@ export default function Header() {
         if (!cancelled) setExpiredPoliceVerifications(expired);
       } catch (e) { /* silent — notifications are best-effort */ }
     };
+    const loadCashAlert = async () => {
+      try {
+        const res = await getCashSummary();
+        const cashInHand = Number(res.data?.cashInHand || 0);
+        const limit = Number(res.data?.safeLimit || CASH_SAFE_LIMIT_FALLBACK);
+        if (!cancelled) setCashAlert(cashInHand > limit ? { cashInHand, limit } : null);
+      } catch (e) { /* silent — notifications are best-effort */ }
+    };
     loadOverdueTRs();
     loadExpiredPoliceVerifications();
-    const poll = setInterval(() => { loadOverdueTRs(); loadExpiredPoliceVerifications(); }, 5 * 60 * 1000); // re-check every 5 min
+    loadCashAlert();
+    const poll = setInterval(() => { loadOverdueTRs(); loadExpiredPoliceVerifications(); loadCashAlert(); }, 5 * 60 * 1000); // re-check every 5 min
     return () => { cancelled = true; clearInterval(poll); };
   }, []);
 
@@ -105,7 +128,8 @@ export default function Header() {
   const handleLogout = () => { logout(); localStorage.removeItem("auth"); localStorage.removeItem("farm"); localStorage.removeItem("token"); delete axios.defaults.headers.common.Authorization; navigate("/"); };
   const goToTRs = () => { setNotifOpen(false); navigate("/finance/temporary-receipt"); };
   const goToEmployee = (id) => { setNotifOpen(false); navigate(`/employees/view/${id}`); };
-  const alertCount = overdueTRs.length + expiredPoliceVerifications.length;
+  const goToCashBook = () => { setNotifOpen(false); navigate("/cashbook"); };
+  const alertCount = overdueTRs.length + expiredPoliceVerifications.length + (cashAlert ? 1 : 0);
 
   return <>
     <header style={{height:"78px",background:gradients.topbar,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 30px",borderBottom:`2px solid ${brand.gold}55`,boxShadow:"0 6px 22px rgba(8,33,63,0.25)"}}>
@@ -142,6 +166,23 @@ export default function Header() {
                 <div style={{ padding: "18px 16px", fontSize: 12.5, color: "#777" }}>No pending alerts.</div>
               ) : (
                 <>
+                  {cashAlert && (
+                    <div onClick={goToCashBook} style={{
+                      display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 16px",
+                      borderBottom: "1px solid #f2f2f2", cursor: "pointer",
+                    }}
+                      onMouseEnter={(ev) => (ev.currentTarget.style.background = "#fbf6ea")}
+                      onMouseLeave={(ev) => (ev.currentTarget.style.background = "transparent")}
+                    >
+                      <FaMoneyBillWave size={14} color={brand.danger} style={{ marginTop: 2, flexShrink: 0 }} />
+                      <div style={{ fontSize: 12.5, color: brand.navy, lineHeight: 1.45 }}>
+                        <div style={{ fontWeight: 700 }}>Cash in hand over safe limit</div>
+                        <div style={{ color: "#666" }}>
+                          Rs. {cashAlert.cashInHand.toLocaleString()} in hand (limit Rs. {cashAlert.limit.toLocaleString()})
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {overdueTRs.map((r) => (
                     <div key={`tr-${r.id}`} onClick={goToTRs} style={{
                       display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 16px",
@@ -154,7 +195,7 @@ export default function Header() {
                       <div style={{ fontSize: 12.5, color: brand.navy, lineHeight: 1.45 }}>
                         <div style={{ fontWeight: 700 }}>TR not cleared — {r.issuedTo || "Unknown"}</div>
                         <div style={{ color: "#666" }}>
-                          Issued {daysSince(r.entryDate)} days ago (limit {TR_CLEAR_LIMIT_DAYS} days) · Rs. {Number(r.amount || 0).toLocaleString()}
+                          Issued on {formatDMY(r.entryDate)} · {daysSince(r.entryDate)} days ago (limit {TR_CLEAR_LIMIT_DAYS} days) · Rs. {Number(r.amount || 0).toLocaleString()}
                         </div>
                       </div>
                     </div>
