@@ -184,7 +184,7 @@ export default function AddAllocation() {
 
         <Card elevation={4} sx={{ borderRadius: 3, mb: 3 }}>
           <CardContent sx={{ p: 3 }}>
-            <Box className="bf-finance-hq-header bf-finance-hq-header-p3" sx={{
+            <Box className="bf-finance-hq-header bf-finance-hq-header-top bf-finance-hq-header-p3" sx={{
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
               px: 2, py: 1.1, borderRadius: 2, mb: 2,
             }}>

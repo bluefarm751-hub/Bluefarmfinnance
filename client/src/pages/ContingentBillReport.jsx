@@ -173,8 +173,13 @@ export default function ContingentBillReport() {
         </Typography>
 
         {/* Filters */}
-        <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
-          <CardContent>
+        <Card elevation={3} sx={{ borderRadius: 3, mb: 3, overflow: "hidden" }}>
+          <Box className="bf-finance-hq-header bf-finance-report-header">
+            <Typography sx={{ color: "#fff", fontWeight: 800, letterSpacing: 0.4, fontSize: 15 }}>
+              Contingent Bill Report
+            </Typography>
+          </Box>
+          <CardContent sx={{ p: 3 }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={3}>
                 <TextField

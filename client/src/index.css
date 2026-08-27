@@ -192,6 +192,8 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   align-items: center !important;
   justify-content: center !important;
   box-shadow: 0 2px 5px rgba(8,33,63,.18) !important;
+  margin: 0 4px !important;
+  vertical-align: middle !important;
   transition: transform .15s ease, filter .15s ease, box-shadow .15s ease !important;
 }
 .MuiIconButton-root.bf-action-view { background: #1E8E5A !important; }
@@ -218,27 +220,56 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 }
 
 
-/* Finance form section headers: use the exact HQ Remittance dark-blue
-   treatment and span the full Card width instead of stopping at CardContent padding. */
+/* Finance section headers: exact HQ Remittance treatment.
+   Full-width dark-blue bar, 52px high, with the same gradient and no
+   pale-blue strip showing above it inside Finance cards. */
 .bf-finance-hq-header {
   background: linear-gradient(90deg, #0F4C81 0%, #16608F 100%) !important;
   color: #fff !important;
   min-height: 52px !important;
+  height: 52px !important;
   box-sizing: border-box !important;
   display: flex !important;
   align-items: center !important;
   border-radius: 0 !important;
   padding: 0 20px !important;
+  margin-top: 0 !important;
   margin-bottom: 16px !important;
+}
+.bf-finance-hq-header-top {
+  margin-top: -28px !important;
 }
 .bf-finance-hq-header-p35 {
   width: calc(100% + 56px) !important;
   margin-left: -28px !important;
+  margin-right: -28px !important;
+}
+.bf-finance-hq-header-top.bf-finance-hq-header-p3 {
+  margin-top: -24px !important;
+}
+.bf-finance-hq-header-top.bf-finance-hq-header-p35 {
+  margin-top: -28px !important;
 }
 .bf-finance-hq-header-p3 {
   width: calc(100% + 48px) !important;
   margin-left: -24px !important;
+  margin-right: -24px !important;
 }
 .bf-finance-hq-header .MuiTypography-root {
   color: #fff !important;
+}
+
+/* Full-bleed report header: card edge to card edge, like HQ Remittance. */
+.bf-finance-report-header {
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Keep every MUI action cluster readable even when source JSX uses fragments. */
+.MuiTableCell-root .bf-action-view + .bf-action-edit,
+.MuiTableCell-root .bf-action-edit + .bf-action-delete,
+.MuiTableCell-root .bf-action-view + .bf-action-delete {
+  margin-left: 8px !important;
 }
