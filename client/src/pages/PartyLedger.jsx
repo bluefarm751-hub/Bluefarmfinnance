@@ -174,7 +174,7 @@ export default function PartyLedger() {
         <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Party Ledger — {farm}</>}>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} md={4}>
-              <TextField fullWidth size="small" select label="Party / Contractor" value={party} onChange={(e) => setParty(e.target.value)}>
+              <TextField fullWidth size="small" select label="Party / Contractor" sx={{ minWidth: 220 }} value={party} onChange={(e) => setParty(e.target.value)}>
                 <MenuItem value="">Select a party</MenuItem>
                 {parties.map((p) => <MenuItem key={p.name} value={p.name}>{p.name}</MenuItem>)}
               </TextField>

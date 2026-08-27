@@ -239,7 +239,7 @@ export default function EditHead() {
             <Grid item xs={12} md={6}>
               <TextField fullWidth label="Letter Reference" name="letterReference" value={formData.letterReference} onChange={handleChange} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField fullWidth multiline minRows={2} label="Remarks" name="remarks" value={formData.remarks} onChange={handleChange} />
             </Grid>
           </Grid>

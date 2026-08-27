@@ -50,11 +50,11 @@ export default function Ledger() {
             </Typography>
           </Box>
 
-          <Typography variant="h5" fontWeight={900} mb={2.5} sx={{ color: "#0F4C81" }}>
+          <Typography variant="h5" fontWeight={900} mb={3.5} sx={{ color: "#0F4C81" }}>
             Ledger Sections
           </Typography>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
             {TABS.map((tab) => (
               <Grid item xs={12} md={4} key={tab.path}>
                 <Box

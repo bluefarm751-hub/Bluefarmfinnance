@@ -301,8 +301,8 @@ export default function AddBill() {
                 </>
               )}
 
-              {/* Remarks — next to Payment Mode */}
-              <Grid item xs={12} md={formData.paymentMode === "Bank" ? 3 : 6}>
+              {/* Remarks — same width as the other fields in this row */}
+              <Grid item xs={12} md={3}>
                 <TextField fullWidth multiline minRows={2} label="Remarks" name="remarks" value={formData.remarks} onChange={handleChange} />
               </Grid>
 

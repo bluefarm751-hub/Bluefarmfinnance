@@ -17,7 +17,7 @@ const inputSx = {
   width: "100%",
   minWidth: 0,
   "& .MuiOutlinedInput-root": {
-    minHeight: 48,
+    minHeight: 40,
     borderRadius: 1.4,
     background: "#fff",
     "& fieldset": { borderColor: "#b7c8d8" },
@@ -27,8 +27,8 @@ const inputSx = {
       "& fieldset": { borderColor: `${brand.blueBright} !important`, borderWidth: "1px !important" },
     },
   },
-  "& .MuiInputBase-input": { fontSize: 15.5, py: 1.05, color: "#111827" },
-  "& .MuiSelect-select": { fontSize: 15.5, py: 1.05, color: "#111827" },
+  "& .MuiInputBase-input": { fontSize: 14, py: .7, color: "#111827" },
+  "& .MuiSelect-select": { fontSize: 14, py: .7, color: "#111827" },
 };
 
 function Section({ icon, title, children }) {
@@ -42,25 +42,25 @@ function Section({ icon, title, children }) {
       boxShadow: "0 5px 14px rgba(8,33,63,.07)",
     }}>
       <Box sx={{
-        px: 1.8,
-        py: 1.15,
+        px: 1.6,
+        py: .8,
         display: "flex",
         alignItems: "center",
-        gap: 1.2,
+        gap: 1,
         background: "linear-gradient(180deg,#0f4c81 0%,#123f68 100%)",
         color: "#fff",
       }}>
         <Box sx={{
-          width: 34,
-          height: 34,
+          width: 28,
+          height: 28,
           borderRadius: 1.2,
           background: "rgba(255,255,255,.13)",
           display: "grid",
           placeItems: "center",
         }}>{icon}</Box>
-        <Typography sx={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>{title}</Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{title}</Typography>
       </Box>
-      <Box sx={{ p: { xs: 1.8, md: 2.4 } }}>
+      <Box sx={{ p: { xs: 1.3, md: 1.6 } }}>
         {children}
       </Box>
     </Box>
@@ -70,7 +70,7 @@ function Section({ icon, title, children }) {
 function Field({ label, children, span = 1 }) {
   return (
     <Box sx={{ minWidth: 0, gridColumn: { xs: "1 / -1", md: span === 2 ? "1 / -1" : "auto" } }}>
-      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#111827", mb: .55, lineHeight: 1.15 }}>
+      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: "#111827", mb: .35, lineHeight: 1.1 }}>
         {label}
       </Typography>
       {children}
@@ -81,9 +81,9 @@ function Field({ label, children, span = 1 }) {
 function UploadBox({ label, previewUrl, isImage, fileName, onChange }) {
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#111827", mb: .55, lineHeight: 1.15 }}>{label}</Typography>
+      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: "#111827", mb: .35, lineHeight: 1.1 }}>{label}</Typography>
       <Box component="label" sx={{
-        height: 112,
+        height: 82,
         border: `1px dashed ${previewUrl ? brand.gold : "#9bb2c7"}`,
         borderRadius: 1.5,
         background: previewUrl ? "#eef7ff" : "#fff",
@@ -93,8 +93,8 @@ function UploadBox({ label, previewUrl, isImage, fileName, onChange }) {
         "&:hover": { borderColor: brand.blueBright, background: "#f5fbff" },
       }}>
         {previewUrl && isImage && <img src={previewUrl} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-        {previewUrl && !isImage && <Box sx={{ textAlign: "center", p: 1 }}><InsertDriveFileIcon sx={{ fontSize: 34, color: brand.goldDark }} /><Typography sx={{ fontSize: 11.5, color: "#111827", wordBreak: "break-all" }}>{fileName}</Typography></Box>}
-        {!previewUrl && <Box sx={{ textAlign: "center" }}><UploadFileIcon sx={{ fontSize: 30, color: brand.blueDeep }} /><Typography sx={{ fontSize: 11.5, fontWeight: 600, color: "#111827" }}>Upload file</Typography></Box>}
+        {previewUrl && !isImage && <Box sx={{ textAlign: "center", p: 1 }}><InsertDriveFileIcon sx={{ fontSize: 28, color: brand.goldDark }} /><Typography sx={{ fontSize: 10.5, color: "#111827", wordBreak: "break-all" }}>{fileName}</Typography></Box>}
+        {!previewUrl && <Box sx={{ textAlign: "center" }}><UploadFileIcon sx={{ fontSize: 24, color: brand.blueDeep }} /><Typography sx={{ fontSize: 10.5, fontWeight: 600, color: "#111827" }}>Upload file</Typography></Box>}
         <input hidden type="file" accept="image/*,.pdf" onChange={onChange} />
       </Box>
     </Box>
@@ -114,10 +114,10 @@ export default function EmployeeForm({ formData, setFormData }) {
   const policePreview = formData.policeVerification instanceof File ? URL.createObjectURL(formData.policeVerification) : formData.policeVerification ? `${formData.policeVerification}` : null;
   const policeFileName = formData.policeVerification instanceof File ? formData.policeVerification.name : (formData.policeVerification ? "Police verification uploaded" : null);
 
-  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.5 };
+  const twoCol = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,minmax(0,1fr))" }, gap: 1.1 };
 
   return (
-    <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.8 }}>
+    <Box sx={{ width: "100%", minWidth: 0, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2,minmax(0,1fr))" }, gap: 1.2 }}>
       <Section icon={<PersonIcon fontSize="small" />} title="Personal Information">
         <Box sx={twoCol}>
           <Field label="Employee No"><TextField hiddenLabel size="small" sx={inputSx} name="employeeNo" value={formData.employeeNo || ""} onChange={handleChange} /></Field>
@@ -127,7 +127,7 @@ export default function EmployeeForm({ formData, setFormData }) {
           <Field label="Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="mobile" value={formData.mobile || ""} onChange={handleChange} /></Field>
           <Field label="Family Mobile No"><TextField hiddenLabel size="small" sx={inputSx} name="familyMobile" value={formData.familyMobile || ""} onChange={handleChange} /></Field>
           <Field label="Address" span={2}>
-            <TextField hiddenLabel fullWidth multiline minRows={2} maxRows={3} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 72, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .85 } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
+            <TextField hiddenLabel fullWidth multiline minRows={1} maxRows={2} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], minHeight: 48, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], py: .6 } }} name="address" value={formData.address || ""} onChange={handleChange} slotProps={{ input: viewAdornment("Address", formData.address) }} />
           </Field>
         </Box>
       </Section>
@@ -157,7 +157,7 @@ export default function EmployeeForm({ formData, setFormData }) {
           <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
           <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
           <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />
-          <Field label="Remarks"><TextField hiddenLabel size="small" fullWidth multiline minRows={1} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], height: 112, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], height: "100% !important", overflow: "auto !important" } }} /></Field>
+          <Field label="Remarks"><TextField hiddenLabel size="small" fullWidth multiline minRows={1} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], height: 82, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], height: "100% !important", overflow: "auto !important" } }} /></Field>
         </Box>
       </Section>
 
