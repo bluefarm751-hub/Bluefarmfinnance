@@ -5,7 +5,7 @@ import { FaFileExcel, FaFilePdf, FaPrint, FaBalanceScale, FaUsersCog, FaChevronD
 
 import MainLayout from "../layouts/MainLayout";
 import LedgerTabs from "../components/LedgerTabs";
-import { SectionCard, money } from "../components/CashBook/ui";
+import { SectionCard, DataTable, money } from "../components/CashBook/ui";
 import { getParties } from "../api/ledgerApi";
 import { getBills } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
@@ -18,13 +18,13 @@ const fmt = (v) => `Rs. ${num(v).toLocaleString()}`;
 
 const billColumns = [
   { key: "billNo", label: "Bill No" },
-  { key: "billDate", label: "Date" },
-  { key: "item", label: "Description" },
+  { key: "billDate", label: "Date", render: (r) => r.billDate || "—" },
+  { key: "item", label: "Description", render: (r) => r.item || "—" },
   { key: "amount", label: "Bill Amount", align: "right", render: (r) => fmt(r.amount) },
-  { key: "status", label: "Status" },
+  { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status || "Not Paid"} color={String(r.status).toLowerCase() === "paid" ? "success" : "error"} variant="outlined" /> },
   { key: "paid", label: "Paid", align: "right", render: (r) => fmt(r.paid) },
   { key: "payable", label: "Payable", align: "right", render: (r) => fmt(r.payable) },
-  { key: "remaining", label: "Paid Balance After Bill", align: "right", render: (r) => fmt(r.remaining) },
+  { key: "remaining", label: "Paid Balance After Bill", align: "right", render: (r) => <span style={{ fontWeight: 900, color: r.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(r.remaining)}</span> },
 ];
 
 function SummaryCard({ label, value, gradient }) {
@@ -207,16 +207,18 @@ export default function PartyLedger() {
                     </Box>
 
                     {open && (
-                      <Box sx={{ p: 1.5, background: "#fff" }}>
-                        <Box sx={{ overflowX: "auto" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 950 }}>
-                            <thead><tr>{["#","Bill No","Date","Description","Bill Amount","Status","Paid","Payable","Remaining Amount"].map((h) => <th key={h} style={{ textAlign: ["Bill Amount","Paid","Payable","Remaining Amount"].includes(h) ? "right" : "left", padding: "11px 10px", background: "#f1f6fa", color: "#0F4C81", borderBottom: "1px solid #d9e4ec", fontSize: 12.5 }}>{h}</th>)}</tr></thead>
-                            <tbody>
-                              {g.bills.map((b, i) => <tr key={b.id}><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{i + 1}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4", fontWeight: 700 }}>{b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{b.billDate || "—"}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}>{b.item || "—"}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 800 }}>{fmt(b.amount)}</td><td style={{ padding: "10px", borderBottom: "1px solid #edf1f4" }}><Chip size="small" label={b.status || "Not Paid"} color={String(b.status).toLowerCase() === "paid" ? "success" : "error"} variant="outlined" /></td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(b.paid)}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(b.payable)}</td><td style={{ padding: "10px", textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 900, color: b.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(b.remaining)}</td></tr>)}
-                            </tbody>
-                            <tfoot><tr><td colSpan={4} style={{ padding: "12px 10px", fontWeight: 900, color: "#0F4C81" }}>Head Total / Final Paid Balance</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.totalBill)}</td><td></td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.paid)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900 }}>{fmt(g.payable)}</td><td style={{ padding: "12px 10px", textAlign: "right", fontWeight: 900, color: g.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(g.remaining)}</td></tr></tfoot>
-                          </table>
-                        </Box>
+                      <Box sx={{ p: 1.5, background: brand.panelSoft }}>
+                        <DataTable
+                          columns={billColumns}
+                          rows={g.bills.map((b) => ({ ...b, billNo: b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}` }))}
+                          totalsRow={{
+                            billNo: "Head Total / Final Paid Balance",
+                            amount: fmt(g.totalBill),
+                            paid: fmt(g.paid),
+                            payable: fmt(g.payable),
+                            remaining: <span style={{ color: g.remaining < 0 ? "#FFD2D2" : "#fff" }}>{fmt(g.remaining)}</span>,
+                          }}
+                        />
                       </Box>
                     )}
                   </Box>

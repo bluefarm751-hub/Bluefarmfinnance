@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Chip, Grid, Typography } from "@mui/material";
 import { FaFileExcel, FaFilePdf, FaPrint, FaBook } from "react-icons/fa";
 
 import MainLayout from "../layouts/MainLayout";
@@ -111,31 +111,36 @@ export default function GeneralLedger() {
 
               {rows.filter((r) => openHead === null || r.id === openHead).map((head) => {
                 let running = Number(head.totalAmount || 0);
+                const billRows = (head.bills || []).map((bill) => {
+                  running -= Number(bill.amount || 0);
+                  return { ...bill, __running: running };
+                });
+                const billColumns = [
+                  { key: "billNo", label: "Bill No", render: (r) => <span style={{ fontWeight: 800 }}>{r.billNo}</span> },
+                  { key: "billDate", label: "Date", render: (r) => r.billDate || "\u2014" },
+                  { key: "contractorName", label: "Contractor", render: (r) => r.contractorName || "\u2014" },
+                  { key: "item", label: "Description", render: (r) => r.item || r.remarks || "\u2014" },
+                  { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status || "Payable"} color={String(r.status).toLowerCase() === "paid" ? "success" : "error"} variant="outlined" /> },
+                  { key: "amount", label: "Bill Amount", align: "right", render: (r) => fmt(r.amount) },
+                  { key: "remaining", label: "Remaining Amount", align: "right", render: (r) => <span style={{ fontWeight: 900, color: r.__running < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(r.__running)}</span> },
+                ];
                 return (
-                  <Box key={head.id} sx={{ border: "1px solid #d9e4ec", borderRadius: 3, overflow: "hidden" }}>
+                  <Box key={head.id} sx={{ border: `1px solid ${brand.tableCardBorder}`, borderRadius: 3, overflow: "hidden", mb: 2.5, boxShadow: "0 10px 30px rgba(8,33,63,0.18)" }}>
                     <Box sx={{ p: 2, background: "linear-gradient(135deg,#0F4C81 0%,#16608f 100%)", color: "#fff", display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
                       <Box><Typography fontWeight={900} fontSize={19}>{head.headName}</Typography><Typography fontSize={12.5}>Opening / Full Head Balance: {fmt(head.totalAmount)}</Typography></Box>
                       <Box sx={{ textAlign: { xs: "left", sm: "right" } }}><Typography fontWeight={900}>Final Remaining: {fmt(head.remaining)}</Typography><Typography fontSize={12.5}>Payable: {fmt(head.payableAmount)}</Typography></Box>
                     </Box>
-                    {!head.bills?.length ? <Typography sx={{ p: 3 }}>No bills under this Head.</Typography> : (
-                      <Box sx={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
-                          <thead><tr>{["#", "Bill No", "Date", "Contractor", "Description", "Status", "Bill Amount", "Remaining Amount"].map((h) => <th key={h} style={{ textAlign: ["Bill Amount", "Remaining Amount"].includes(h) ? "right" : "left", padding: "11px 10px", background: "#f1f6fa", color: "#0F4C81", borderBottom: "1px solid #d9e4ec" }}>{h}</th>)}</tr></thead>
-                          <tbody>{head.bills.map((bill, i) => {
-                            running -= Number(bill.amount || 0);
-                            return <tr key={bill.id}>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4" }}>{i + 1}</td>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4", fontWeight: 800 }}>{bill.billNo}</td>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4" }}>{bill.billDate || "—"}</td>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4" }}>{bill.contractorName || "—"}</td>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4" }}>{bill.item || bill.remarks || "—"}</td>
-                              <td style={{ padding: 10, borderBottom: "1px solid #edf1f4", fontWeight: 700, color: String(bill.status).toLowerCase() === "paid" ? "#1B8A50" : "#C0392B" }}>{bill.status || "Payable"}</td>
-                              <td style={{ padding: 10, textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 800 }}>{fmt(bill.amount)}</td>
-                              <td style={{ padding: 10, textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 900, color: running < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(running)}</td>
-                            </tr>;
-                          })}</tbody>
-                          <tfoot><tr><td colSpan={6} style={{ padding: 12, fontWeight: 900, color: "#0F4C81" }}>Head Final Balance</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(head.billAmount)}</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(head.remaining)}</td></tr></tfoot>
-                        </table>
+                    {!head.bills?.length ? <Typography sx={{ p: 3, background: brand.panelSoft }}>No bills under this Head.</Typography> : (
+                      <Box sx={{ p: 1.5, background: brand.panelSoft }}>
+                        <DataTable
+                          columns={billColumns}
+                          rows={billRows}
+                          totalsRow={{
+                            billNo: "Head Final Balance",
+                            amount: fmt(head.billAmount),
+                            remaining: <span style={{ color: head.remaining < 0 ? "#FFD2D2" : "#fff" }}>{fmt(head.remaining)}</span>,
+                          }}
+                        />
                       </Box>
                     )}
                   </Box>

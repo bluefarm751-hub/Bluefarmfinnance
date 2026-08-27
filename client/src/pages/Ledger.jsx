@@ -2,6 +2,7 @@ import { Box, Grid, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { FaBook, FaBalanceScale, FaFileInvoiceDollar } from "react-icons/fa";
+import { shadowCard } from "../theme";
 
 const TABS = [
   { label: "Main Ledger", path: "/ledger/general", icon: <FaBook />, gradient: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)", text: "Heads, bills and running balances" },
@@ -75,20 +76,24 @@ export default function Ledger() {
                     justifyContent: "center",
                     alignItems: "center",
                     textAlign: "center",
-                    boxShadow: "0 14px 32px rgba(8,33,63,0.24)",
-                    border: "2px solid rgba(255,255,255,0.28)",
+                    position: "relative",
+                    overflow: "hidden",
+                    boxShadow: shadowCard,
+                    border: "2px solid rgba(255,255,255,0.25)",
                     transition: "transform .2s, box-shadow .2s",
                     outline: "none",
-                    "&:hover": { transform: "translateY(-6px)", boxShadow: "0 20px 40px rgba(8,33,63,0.32)" },
+                    "&:hover": { transform: "translateY(-6px)", boxShadow: "0 18px 45px rgba(8,33,63,0.45)" },
                     "&:focus-visible": { boxShadow: "0 0 0 4px rgba(212,175,55,.45), 0 20px 40px rgba(8,33,63,0.32)" },
                   }}
                 >
-                  <Box sx={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, mb: 2, border: "2px solid rgba(255,255,255,.28)" }}>
+                  <Box sx={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, mb: 2, border: "2px solid rgba(255,255,255,.3)", position: "relative", zIndex: 1 }}>
                     {tab.icon}
                   </Box>
-                  <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, md: 23 }, mb: 1 }}>{tab.label}</Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,.9)", fontSize: 14, maxWidth: 280 }}>{tab.text}</Typography>
-                                  </Box>
+                  <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, md: 23 }, mb: 1, position: "relative", zIndex: 1, textShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>{tab.label}</Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,.9)", fontSize: 14, maxWidth: 280, position: "relative", zIndex: 1 }}>{tab.text}</Typography>
+                  <Box sx={{ position: "absolute", right: -24, bottom: -24, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }} />
+                  <Box sx={{ position: "absolute", left: -30, top: -30, width: 90, height: 90, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
+                </Box>
               </Grid>
             ))}
           </Grid>

@@ -3,7 +3,7 @@ import { Box, Button, Chip, Grid, Typography } from "@mui/material";
 import { FaBalanceScale, FaFileExcel, FaFilePdf, FaPrint, FaSync } from "react-icons/fa";
 import MainLayout from "../layouts/MainLayout";
 import LedgerTabs from "../components/LedgerTabs";
-import { SectionCard } from "../components/CashBook/ui";
+import { SectionCard, DataTable } from "../components/CashBook/ui";
 import { getBalanceSheet } from "../api/ledgerApi";
 import { exportExcel } from "../utils/exportExcel";
 import { printDocument, tableHtml } from "../utils/print";
@@ -13,12 +13,12 @@ import { brand } from "../theme";
 const fmt = (v) => `Rs. ${Number(v || 0).toLocaleString()}`;
 
 const columns = [
-  { key: "headName", label: "Head" },
+  { key: "headName", label: "Head", render: (r) => <span style={{ fontWeight: 800 }}>{r.headName}</span> },
   { key: "totalAmount", label: "Total Head Amount", align: "right", render: (r) => fmt(r.totalAmount) },
   { key: "billAmount", label: "Total Bills", align: "right", render: (r) => fmt(r.billAmount) },
-  { key: "paidAmount", label: "Paid", align: "right", render: (r) => fmt(r.paidAmount) },
-  { key: "payableAmount", label: "Payable", align: "right", render: (r) => fmt(r.payableAmount) },
-  { key: "remaining", label: "Remaining Balance", align: "right", render: (r) => fmt(r.remaining) },
+  { key: "paidAmount", label: "Paid", align: "right", render: (r) => <Chip size="small" label={fmt(r.paidAmount)} color="success" variant="outlined" /> },
+  { key: "payableAmount", label: "Payable", align: "right", render: (r) => <Chip size="small" label={fmt(r.payableAmount)} color="error" variant="outlined" /> },
+  { key: "remaining", label: "Remaining Balance", align: "right", render: (r) => <span style={{ fontWeight: 900, color: r.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(r.remaining)}</span> },
 ];
 
 function Card({ label, value, gradient }) {
@@ -55,9 +55,20 @@ export default function BalanceSheet() {
       <Button size="small" variant="outlined" startIcon={<FaFilePdf />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>PDF</Button>
       <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>Print</Button>
     </Box>}>
-      {loading ? <Typography sx={{ py: 5, textAlign: "center" }}>Loading balance sheet...</Typography> : rows.length === 0 ? <Box sx={{ py: 6, textAlign: "center", borderRadius: 3, border: `1.5px dashed ${brand.gold}` }}><Typography fontWeight={700}>No finance heads found for {farm}.</Typography></Box> : <Box sx={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}><thead><tr>{["Head","Total Head Amount","Total Bills","Paid","Payable","Remaining Balance"].map((h) => <th key={h} style={{ textAlign: h === "Head" ? "left" : "right", padding: "12px 10px", background: "#f1f6fa", color: "#0F4C81", borderBottom: "1px solid #d9e4ec" }}>{h}</th>)}</tr></thead><tbody>{rows.map((r) => <tr key={r.id}><td style={{ padding: 12, borderBottom: "1px solid #edf1f4", fontWeight: 800 }}>{r.headName}</td><td style={{ padding: 12, textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(r.totalAmount)}</td><td style={{ padding: 12, textAlign: "right", borderBottom: "1px solid #edf1f4" }}>{fmt(r.billAmount)}</td><td style={{ padding: 12, textAlign: "right", borderBottom: "1px solid #edf1f4" }}><Chip size="small" label={fmt(r.paidAmount)} color="success" variant="outlined" /></td><td style={{ padding: 12, textAlign: "right", borderBottom: "1px solid #edf1f4" }}><Chip size="small" label={fmt(r.payableAmount)} color="error" variant="outlined" /></td><td style={{ padding: 12, textAlign: "right", borderBottom: "1px solid #edf1f4", fontWeight: 900, color: r.remaining < 0 ? "#C0392B" : "#1B5E3B" }}>{fmt(r.remaining)}</td></tr>)}</tbody><tfoot><tr><td style={{ padding: 12, fontWeight: 900 }}>TOTAL</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(totals.totalAmount)}</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(totals.billAmount)}</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(totals.paidAmount)}</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(totals.payableAmount)}</td><td style={{ padding: 12, textAlign: "right", fontWeight: 900 }}>{fmt(totals.remaining)}</td></tr></tfoot></table>
-      </Box>}
+      {loading ? <Typography sx={{ py: 5, textAlign: "center" }}>Loading balance sheet...</Typography> : rows.length === 0 ? <Box sx={{ py: 6, textAlign: "center", borderRadius: 3, border: `1.5px dashed ${brand.gold}` }}><Typography fontWeight={700}>No finance heads found for {farm}.</Typography></Box> : (
+        <DataTable
+          columns={columns}
+          rows={rows}
+          totalsRow={{
+            headName: "TOTAL",
+            totalAmount: fmt(totals.totalAmount),
+            billAmount: fmt(totals.billAmount),
+            paidAmount: fmt(totals.paidAmount),
+            payableAmount: fmt(totals.payableAmount),
+            remaining: fmt(totals.remaining),
+          }}
+        />
+      )}
     </SectionCard>
   </Box>{ToastUI}</MainLayout>;
 }
