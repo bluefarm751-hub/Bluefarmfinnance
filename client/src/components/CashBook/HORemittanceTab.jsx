@@ -60,8 +60,8 @@ export default function HORemittanceTab({ summary, onChanged, showToast }) {
     <SectionCard title="HQ Remittance — Permanent Transfer to Head Office" action={<>
       <Button size="small" variant="contained" startIcon={<FaPlus />} onClick={() => setShowForm(s => !s)} disabled={!!editId}
         sx={{ background: brand.gold, color: brand.ink, fontWeight: 800, "&:hover": { background: brand.goldDark, color: "#fff" } }}>Add Remittance</Button>
-      <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }} onClick={() => exportExcel("HQ Remittances", exportCols, rows)}>Excel</Button>
-      <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }} onClick={() => printDocument({ title: "HQ Remittances", subtitle: "Head Office", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>Print</Button>
+      <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }} onClick={() => exportExcel("HQ Remittances", exportCols, rows)}>Excel</Button>
+      <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }} onClick={() => printDocument({ title: "HQ Remittances", subtitle: "Head Office", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>Print</Button>
     </>}>
       <Box sx={{ display: "flex", gap: 3, mb: 2, flexWrap: "wrap" }}>
         <Box sx={{ borderRadius: 3, px: 3, py: 1.5, background: "linear-gradient(135deg, #F0574D 0%, #C0392B 100%)", color: "#fff", minWidth: 200 }}>

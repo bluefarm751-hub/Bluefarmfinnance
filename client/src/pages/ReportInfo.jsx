@@ -95,10 +95,10 @@ export default function ReportInfo() {
 
         <Card sx={{ borderRadius: 3, boxShadow: shadowCard, mb: 2, border: "1px solid rgba(15,76,129,0.14)" }}>
           <CardContent sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <Button variant="outlined" startIcon={<GridOnIcon / className="bf-export-button bf-export-excel">} onClick={handleExportExcel}>
+            <Button variant="outlined" startIcon={<GridOnIcon />} onClick={handleExportExcel}>
               Export Excel
             </Button>
-            <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">} onClick={handleExportPdf}>
+            <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} onClick={handleExportPdf}>
               Export PDF
             </Button>
           </CardContent>

@@ -145,12 +145,12 @@ export default function ReportSalary() {
                 </Button>
               </Grid>
               <Grid item xs={12} md={2.25}>
-                <Button fullWidth variant="outlined" startIcon={<GridOnIcon / className="bf-export-button bf-export-excel">} sx={{ height: 56 }} onClick={handleExportExcel}>
+                <Button fullWidth variant="outlined" startIcon={<GridOnIcon />} sx={{ height: 56 }} onClick={handleExportExcel}>
                   Export Excel
                 </Button>
               </Grid>
               <Grid item xs={12} md={2.25}>
-                <Button fullWidth variant="outlined" color="error" startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">} sx={{ height: 56 }} onClick={handleExportPdf}>
+                <Button fullWidth variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} sx={{ height: 56 }} onClick={handleExportPdf}>
                   Export PDF
                 </Button>
               </Grid>

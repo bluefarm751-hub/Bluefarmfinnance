@@ -164,11 +164,11 @@ export default function SideTab({ side, onChanged, showToast, allowAdd = false }
                 Add Income
               </Button>
             )}
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => exportExcel(`${title}`, exportCols, rows)}>
               Excel
             </Button>
-            <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => printDocument({ title, subtitle: "Cash Book", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>
               Print
             </Button>

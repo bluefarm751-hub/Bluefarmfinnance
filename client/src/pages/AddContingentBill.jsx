@@ -249,9 +249,9 @@ export default function AddContingentBill() {
 
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 3.5 }}>
-            <Box sx={{
+            <Box className="bf-finance-hq-header bf-finance-hq-header-p35" sx={{
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
-              px: 2.5, py: 1.8, borderRadius: 0, mb: 2, mt: -3.5, mx: -3.5,
+              px: 2, py: 1.1, borderRadius: 2, mb: 2,
             }}>
               <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>Voucher Details</Typography>
             </Box>
@@ -349,7 +349,7 @@ export default function AddContingentBill() {
             <Divider sx={{ my: 3 }} />
 
             {/* Bill rows table */}
-            <Box sx={{
+            <Box className="bf-finance-hq-header bf-finance-hq-header-p35" sx={{
               display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5,
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
               px: 2, py: 1.1, borderRadius: 2,
@@ -438,7 +438,7 @@ export default function AddContingentBill() {
 
             <Divider sx={{ my: 3 }} />
 
-            <Box sx={{
+            <Box className="bf-finance-hq-header bf-finance-hq-header-p35" sx={{
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
               px: 2, py: 1.1, borderRadius: 2, mb: 2,
             }}>
@@ -492,11 +492,11 @@ export default function AddContingentBill() {
                 sx={{ background: "#6B7280", "&:hover": { background: "#4B5563" } }}>
                 Cancel
               </Button>
-              <Button variant="contained" startIcon={<PrintIcon / className="bf-export-button bf-export-print">} onClick={handlePrintPreview}
+              <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrintPreview}
                 sx={{ background: "#16608f", "&:hover": { background: "#124d72" } }}>
                 Print Preview
               </Button>
-              <Button variant="contained" startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">} onClick={handleDownloadPreview}
+              <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPreview}
                 sx={{ background: "#B3261E", "&:hover": { background: "#8E1E17" } }}>
                 Download PDF
               </Button>

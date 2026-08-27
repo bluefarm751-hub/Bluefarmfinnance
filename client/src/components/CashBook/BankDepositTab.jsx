@@ -56,9 +56,9 @@ export default function BankDepositTab({ summary, onChanged, showToast }) {
     <SectionCard title="Bank Deposit — Cash from Safe → Shared Bank Account" action={<>
       <Button size="small" variant="contained" startIcon={<FaPlus />} onClick={() => setShowForm(s => !s)}
         sx={{ background: brand.gold, color: brand.ink, fontWeight: 800, "&:hover": { background: brand.goldDark, color: "#fff" } }}>Add Deposit</Button>
-      <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+      <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
         onClick={() => exportExcel("Bank Deposits", exportCols, rows)}>Excel</Button>
-      <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+      <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
         onClick={() => printDocument({ title: "Bank Deposits", subtitle: "Cash → Bank", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>Print</Button>
     </>}>
       <FarmSourceBadge type="CONTRA" />

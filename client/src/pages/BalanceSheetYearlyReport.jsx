@@ -105,7 +105,7 @@ export default function BalanceSheetYearlyReport() {
         <Button variant="outlined" startIcon={<FaSync />} onClick={load}>Refresh</Button>
       </Box>
     </Box>
-    <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />{title} — {farm}</>} action={<Box sx={{ display: "flex", gap: 1 }}><Button size="small" variant="contained" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} disabled={loading || !rows.length} onClick={() => exportReport(false)}>Excel</Button><Button size="small" variant="contained" color="error" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">} disabled={loading || !rows.length} onClick={() => exportReport(true)}>PDF</Button></Box>}>
+    <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />{title} — {farm}</>} action={<Box sx={{ display: "flex", gap: 1 }}><Button size="small" variant="contained" startIcon={<FaFileExcel />} disabled={loading || !rows.length} onClick={() => exportReport(false)}>Excel</Button><Button size="small" variant="contained" color="error" startIcon={<FaFilePdf />} disabled={loading || !rows.length} onClick={() => exportReport(true)}>PDF</Button></Box>}>
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}><TextField fullWidth size="small" select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))}>{years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}</TextField></Grid>
         <Grid item xs={12} md={8}><Box sx={{ display: "flex", alignItems: "center", height: "100%" }}><Chip label={`${year} compared with ${year - 1}`} sx={{ fontWeight: 800 }} /></Box></Grid>

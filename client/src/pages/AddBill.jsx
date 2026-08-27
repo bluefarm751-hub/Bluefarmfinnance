@@ -159,9 +159,9 @@ export default function AddBill() {
 
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 3.5 }}>
-            <Box sx={{
+            <Box className="bf-finance-hq-header bf-finance-hq-header-p35" sx={{
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
-              px: 2.5, py: 1.8, borderRadius: 0, mb: 2, mt: -3.5, mx: -3.5,
+              px: 2, py: 1.1, borderRadius: 2, mb: 2,
             }}>
               <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>Bill Details</Typography>
             </Box>

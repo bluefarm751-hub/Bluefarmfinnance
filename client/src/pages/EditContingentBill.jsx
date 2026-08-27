@@ -499,11 +499,11 @@ export default function EditContingentBill() {
                 sx={{ background: "#6B7280", "&:hover": { background: "#4B5563" } }}>
                 Cancel
               </Button>
-              <Button variant="contained" startIcon={<PrintIcon / className="bf-export-button bf-export-print">} onClick={handlePrintPreview}
+              <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrintPreview}
                 sx={{ background: "#16608f", "&:hover": { background: "#124d72" } }}>
                 Print Voucher
               </Button>
-              <Button variant="contained" startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">} onClick={handleDownloadPreview}
+              <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPreview}
                 sx={{ background: "#B3261E", "&:hover": { background: "#8E1E17" } }}>
                 Download PDF
               </Button>

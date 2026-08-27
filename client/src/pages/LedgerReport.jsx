@@ -116,7 +116,7 @@ export default function LedgerReport({ mode = "excel" }) {
             <Grid item xs={12} md={4}><DateFieldDMY label="From Date" value={filters.from} onChange={(v) => setFilters((p) => ({ ...p, from: v }))} /></Grid>
             <Grid item xs={12} md={4}><DateFieldDMY label="To Date" value={filters.to} onChange={(v) => setFilters((p) => ({ ...p, to: v }))} /></Grid>
             <Grid item xs={12} md={4} sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-              <Button variant="contained" startIcon={isExcel ? <FaFileExcel / className="bf-export-button bf-export-excel"> : <FaFilePdf />} onClick={isExcel ? handleExcel : handlePdf} disabled={!reportRows.length || loading} sx={{ background: isExcel ? "#1B8A50" : "#C0392B", "&:hover": { background: isExcel ? "#14683A" : "#96281B" } }}>
+              <Button variant="contained" startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={isExcel ? handleExcel : handlePdf} disabled={!reportRows.length || loading} sx={{ background: isExcel ? "#1B8A50" : "#C0392B", "&:hover": { background: isExcel ? "#14683A" : "#96281B" } }}>
                 Download {isExcel ? "Excel" : "PDF"}
               </Button>
               <Button variant="outlined" onClick={() => setFilters({ from: "", to: "" })}>Clear Dates</Button>

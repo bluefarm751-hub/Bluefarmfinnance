@@ -120,9 +120,9 @@ export default function BalanceSheetReport() {
           title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Balance Sheet Report — {farm}</>}
           action={
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              <Button size="small" variant="contained" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} onClick={exportExcelReport} disabled={!rows.length}>Excel Report</Button>
-              <Button size="small" variant="contained" color="error" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">} onClick={exportPdfReport} disabled={!rows.length}>PDF Report</Button>
-              <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-pdf">} onClick={exportPdfReport} disabled={!rows.length}>Print</Button>
+              <Button size="small" variant="contained" startIcon={<FaFileExcel />} onClick={exportExcelReport} disabled={!rows.length}>Excel Report</Button>
+              <Button size="small" variant="contained" color="error" startIcon={<FaFilePdf />} onClick={exportPdfReport} disabled={!rows.length}>PDF Report</Button>
+              <Button size="small" variant="outlined" startIcon={<FaPrint />} onClick={exportPdfReport} disabled={!rows.length}>Print</Button>
             </Box>
           }
         >
