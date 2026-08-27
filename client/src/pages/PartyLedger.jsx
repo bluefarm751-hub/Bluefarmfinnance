@@ -7,7 +7,7 @@ import MainLayout from "../layouts/MainLayout";
 import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard, DataTable, money } from "../components/CashBook/ui";
 import { getParties } from "../api/ledgerApi";
-import { getBills } from "../api/financeApi";
+import { getBills, getFinanceHeads } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
 import { brand } from "../theme";
 import { months, years, currentYearValue, monthRange } from "../utils/ledgerFilters";
@@ -48,9 +48,12 @@ export default function PartyLedger() {
   const [openHeads, setOpenHeads] = useState({});
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(currentYearValue);
+  const [heads, setHeads] = useState([]);
+  const [head, setHead] = useState("");
 
   useEffect(() => {
     getParties().then((r) => setParties(r.data || [])).catch(() => {});
+    getFinanceHeads().then((r) => setHeads(r.data || [])).catch(() => setHeads([]));
   }, []);
 
   useEffect(() => {
@@ -65,8 +68,10 @@ export default function PartyLedger() {
     const buildFromBills = (bills) => {
       const matching = (bills || []).filter((b) => {
         const d = String(b.billDate || "").slice(0, 10);
-        return normalize(b.contractorName) === normalize(party) &&
-          (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
+        const partyOk = normalize(b.contractorName) === normalize(party);
+        const dateOk = (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
+        const headOk = !head || String(b.headId ?? "") === String(head);
+        return partyOk && dateOk && headOk;
       });
       const groups = new Map();
       let business = 0;
@@ -145,7 +150,7 @@ export default function PartyLedger() {
         setLoading(false);
       }
     })();
-  }, [party, month, year]);
+  }, [party, month, year, head]);
 
   const flatRows = useMemo(() => data.summary.flatMap((g) => g.bills.map((b) => ({
     ...b, billNo: b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`, headName: g.headName,
@@ -181,11 +186,17 @@ export default function PartyLedger() {
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" select label="Head" value={head} onChange={(e) => setHead(e.target.value)}>
+                <MenuItem value="">All Heads</MenuItem>
+                {heads.map((h) => <MenuItem key={h.id} value={String(h.id)}>{h.headName}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
               <TextField fullWidth size="small" select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))} disabled={!month}>
                 {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={2}>
               <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1, flexWrap: "wrap" }}>
                 <Button size="small" variant="contained" disabled={!flatRows.length} startIcon={<FaFileExcel />} sx={{ background: "#1E8E5A", color: "#fff", "&:hover": { background: "#166A44" } }} onClick={() => exportExcel(`Party Ledger - ${party}`, exportColumns, flatRows)}>Excel</Button>
                 <Button size="small" variant="contained" disabled={!flatRows.length} startIcon={<FaFilePdf />} sx={{ background: "#C0392B", color: "#fff", "&:hover": { background: "#96281B" } }} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}${month ? ` · ${months[month - 1].label} ${year}` : ""}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>PDF</Button>
