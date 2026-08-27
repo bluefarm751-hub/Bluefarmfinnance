@@ -184,9 +184,14 @@ export default function AddAllocation() {
 
         <Card elevation={4} sx={{ borderRadius: 3, mb: 3 }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography fontWeight={800} sx={{ color: brand.ink, mb: 1.5 }}>
-              Add Head
-            </Typography>
+            <Box sx={{
+              background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
+              px: 2, py: 1.1, borderRadius: 2, mb: 2,
+            }}>
+              <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>
+                Add Head
+              </Typography>
+            </Box>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <TextField
