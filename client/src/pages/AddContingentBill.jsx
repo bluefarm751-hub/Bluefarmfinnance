@@ -249,7 +249,12 @@ export default function AddContingentBill() {
 
         <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 3.5 }}>
-            <Typography sx={{ fontWeight: 800, color: brand.ink, mb: 1.5 }}>Voucher Details</Typography>
+            <Box sx={{
+              background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
+              px: 2, py: 1.1, borderRadius: 2, mb: 2,
+            }}>
+              <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>Voucher Details</Typography>
+            </Box>
             <Grid container spacing={2}>
               <Grid item xs={12} md={2.5}>
                 <TextField
@@ -346,8 +351,10 @@ export default function AddContingentBill() {
             {/* Bill rows table */}
             <Box sx={{
               display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5,
+              background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
+              px: 2, py: 1.1, borderRadius: 2,
             }}>
-              <Typography sx={{ fontWeight: 800, color: brand.ink }}>Bill Rows</Typography>
+              <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>Bill Rows</Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Button size="small" variant="contained" startIcon={<SortIcon />} onClick={handleSortByDate}
                   sx={{ background: "#9C7A1E", "&:hover": { background: "#7A5F16" } }}>
@@ -431,9 +438,14 @@ export default function AddContingentBill() {
 
             <Divider sx={{ my: 3 }} />
 
-            <Typography sx={{ fontWeight: 800, color: brand.ink, mb: 1.5 }}>
-              Payment &amp; Receipt Details
-            </Typography>
+            <Box sx={{
+              background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
+              px: 2, py: 1.1, borderRadius: 2, mb: 2,
+            }}>
+              <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>
+                Payment &amp; Receipt Details
+              </Typography>
+            </Box>
             <Grid container spacing={2}>
               <Grid item xs={12} md={3}>
                 <TextField

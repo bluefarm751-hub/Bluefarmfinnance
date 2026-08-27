@@ -247,18 +247,18 @@ export default function EmployeeProfile() {
           sx={{
             mb: 3, minHeight: 48,
             p: 0.6, borderRadius: 3,
-            background: "#dfe8f6",
-            border: "1px solid #bcd0ea",
-            boxShadow: "inset 0 1px 3px rgba(15,76,129,0.08)",
+            background: brand.tableCardBg,
+            border: `1px solid ${brand.tableCardBorder}`,
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.25)",
             "& .MuiTab-root": {
               textTransform: "none", fontWeight: 700, minHeight: 40,
-              borderRadius: 2, mx: 0.4, px: 2.4, color: brand.slate,
+              borderRadius: 2, mx: 0.4, px: 2.4, color: "rgba(255,255,255,0.7)",
             },
             "& .Mui-selected": {
-              color: `${brand.goldDark} !important`,
-              background: "#e6f0fb",
-              border: `1px solid ${brand.gold}66`,
-              boxShadow: "0 3px 10px rgba(212,175,55,0.22)",
+              color: `${brand.ink} !important`,
+              background: brand.gold,
+              border: `1px solid ${brand.goldDark}`,
+              boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
             },
             "& .MuiTabs-indicator": { display: "none" },
           }}>
@@ -322,28 +322,30 @@ function StatChip({ icon, label, value }) {
   return (
     <Grid item xs={6} sm={4} md={2.4}>
       <Box sx={{
-        background: "#e8edf7",
-        border: "1px solid #c8d6e5",
+        position: "relative",
+        background: "#ffffff",
+        border: `1px solid ${brand.gold}55`,
+        borderTop: `3px solid ${brand.gold}`,
         borderRadius: 3,
-        boxShadow: "0 4px 12px rgba(15,76,129,0.08)",
+        boxShadow: "0 10px 24px rgba(8,33,63,0.28)",
         p: 2,
         display: "flex", alignItems: "center", gap: 1.4,
-        height: "100%", minHeight: 72, width: "100%",
+        height: "100%", minHeight: 76, width: "100%",
         transition: "transform 0.15s, box-shadow 0.15s",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 20px rgba(15,76,129,0.15)" },
+        "&:hover": { transform: "translateY(-3px)", boxShadow: "0 14px 30px rgba(8,33,63,0.35)" },
       }}>
         <Box sx={{
-          width: 42, height: 42, borderRadius: "12px",
+          width: 44, height: 44, borderRadius: "50%",
           background: gradients.brand, color: "#fff",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          boxShadow: "0 4px 10px rgba(15,76,129,0.3)",
+          boxShadow: `0 4px 12px rgba(15,76,129,0.4), 0 0 0 3px ${brand.gold}33`,
         }}>{icon}</Box>
         <Box sx={{ minWidth: 0, width: "100%" }}>
-          <Typography sx={{ fontSize: 10.5, color: brand.slate, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>
+          <Typography sx={{ fontSize: 10.5, color: brand.goldDark, fontWeight: 800, letterSpacing: 0.6, textTransform: "uppercase" }}>
             {label}
           </Typography>
           <Typography sx={{ 
-            fontSize: 14.5, fontWeight: 700, color: brand.ink, 
+            fontSize: 14.5, fontWeight: 800, color: brand.blueDeep, 
             whiteSpace: "normal", wordBreak: "break-word", overflow: "visible", textOverflow: "clip"
           }}>
             {value || "—"}
@@ -366,17 +368,22 @@ function InfoSection({ title, icon, children, accentColor }) {
       borderTop: `4px solid ${accentColor || brand.gold}`,
       overflow: "hidden",
     }}>
+      <Box sx={{
+        display: "flex", alignItems: "center", gap: 1.2,
+        px: 2.5, py: 1.5,
+        background: brand.tableCardBg,
+        borderBottom: `3px solid ${accentColor || brand.gold}`,
+      }}>
+        <Box sx={{
+          width: 32, height: 32, borderRadius: "8px",
+          background: "rgba(255,255,255,0.14)", color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>{icon}</Box>
+        <Typography variant="h6" fontWeight={800} sx={{ color: "#fff", fontSize: 15 }}>
+          {title}
+        </Typography>
+      </Box>
       <CardContent sx={{ p: 2.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mb: 2 }}>
-          <Box sx={{
-            width: 32, height: 32, borderRadius: "8px",
-            background: `${accentColor || brand.gold}18`, color: accentColor || brand.goldDark,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>{icon}</Box>
-          <Typography variant="h6" fontWeight={800} sx={{ color: brand.blueDeep, fontSize: 15 }}>
-            {title}
-          </Typography>
-        </Box>
         <Grid container spacing={1.5} sx={{ flex: 1, alignContent: 'flex-start' }}>
           {children}
         </Grid>
