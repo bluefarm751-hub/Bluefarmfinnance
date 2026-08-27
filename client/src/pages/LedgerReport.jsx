@@ -11,6 +11,7 @@ import { getGeneralLedger } from "../api/ledgerApi";
 import { exportXlsx } from "../utils/xlsxWriter";
 import { downloadMultiSectionPdf } from "../utils/multiSectionPdf";
 import { brand } from "../theme";
+import { months, years, currentYearValue, monthRange } from "../utils/ledgerFilters";
 
 const money = (v) => Number(v || 0).toLocaleString("en-PK", { maximumFractionDigits: 2 });
 
@@ -30,6 +31,8 @@ export default function LedgerReport({ mode = "excel" }) {
   const navigate = useNavigate();
   const farm = localStorage.getItem("farm") || "Blue Farm";
   const [filters, setFilters] = useState({ from: "", to: "" });
+  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(currentYearValue);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export default function LedgerReport({ mode = "excel" }) {
     return a;
   }, { debit: 0, credit: 0, balance: 0 }), [reportRows]);
 
-  const subtitle = `${farm} · ${filters.from || "Beginning"} to ${filters.to || "Current"}`;
+  const subtitle = `${farm} · ${month ? `${months[month - 1].label} ${year}` : `${filters.from || "Beginning"} to ${filters.to || "Current"}`}`;
 
   const handleExcel = async () => {
     const exportColumns = columns.map((c) => ({ ...c }));
@@ -108,18 +111,33 @@ export default function LedgerReport({ mode = "excel" }) {
             <Typography variant="h4" fontWeight="bold">Ledger Report — {isExcel ? "Excel" : "PDF"}</Typography>
             <Typography color="text.secondary" mt={0.5}>Separate export report for the General Ledger. Party Ledger remains a separate ledger.</Typography>
           </Box>
-          <Button variant="outlined" startIcon={<FaArrowLeft />} onClick={() => navigate("/ledger")}>Back to Ledger</Button>
+          <Button variant="contained" startIcon={<FaArrowLeft />} onClick={() => navigate("/ledger")} sx={{ background: brand.blueDeep, color: "#fff", "&:hover": { background: brand.navy } }}>Back to Ledger</Button>
         </Box>
 
         <SectionCard title={`${farm} — ${isExcel ? "Excel Report" : "PDF Report"}`}>
           <Grid container spacing={2} sx={{ mb: 2.5 }}>
-            <Grid item xs={12} md={4}><DateFieldDMY label="From Date" value={filters.from} onChange={(v) => setFilters((p) => ({ ...p, from: v }))} /></Grid>
-            <Grid item xs={12} md={4}><DateFieldDMY label="To Date" value={filters.to} onChange={(v) => setFilters((p) => ({ ...p, to: v }))} /></Grid>
-            <Grid item xs={12} md={4} sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-              <Button variant="contained" startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={isExcel ? handleExcel : handlePdf} disabled={!reportRows.length || loading} sx={{ background: isExcel ? "#1B8A50" : "#C0392B", "&:hover": { background: isExcel ? "#14683A" : "#96281B" } }}>
-                Download {isExcel ? "Excel" : "PDF"}
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField fullWidth size="small" select label="Month" value={month} onChange={(e) => { const m = Number(e.target.value); setMonth(m); const r = monthRange(m, year); setFilters({ from: r.fromDate, to: r.toDate }); }}>
+                <MenuItem value={0}>All Months</MenuItem>
+                {months.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" select label="Year" value={year} onChange={(e) => { const y = Number(e.target.value); setYear(y); const r = monthRange(month, y); setFilters({ from: r.fromDate, to: r.toDate }); }} disabled={!month}>
+                {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <DateFieldDMY label="From Date" value={filters.from} onChange={(v) => { setMonth(0); setFilters((p) => ({ ...p, from: v })); }} />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <DateFieldDMY label="To Date" value={filters.to} onChange={(v) => { setMonth(0); setFilters((p) => ({ ...p, to: v })); }} />
+            </Grid>
+            <Grid item xs={12} md={1} sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              <Button variant="contained" startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={isExcel ? handleExcel : handlePdf} disabled={!reportRows.length || loading} sx={{ background: isExcel ? "#1E8E5A" : "#C0392B", color: "#fff", "&:hover": { background: isExcel ? "#166A44" : "#96281B" }, whiteSpace: "nowrap" }}>
+                {isExcel ? "Excel" : "PDF"}
               </Button>
-              <Button variant="outlined" onClick={() => setFilters({ from: "", to: "" })}>Clear Dates</Button>
+              <Button variant="contained" onClick={() => { setMonth(0); setYear(currentYearValue); setFilters({ from: "", to: "" }); }} sx={{ background: "#0F4C81", color: "#fff", "&:hover": { background: "#08213F" }, whiteSpace: "nowrap" }}>Clear</Button>
             </Grid>
           </Grid>
 
@@ -134,13 +152,13 @@ export default function LedgerReport({ mode = "excel" }) {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
               <thead>
                 <tr>
-                  {columns.map((c) => <th key={c.key} style={{ padding: "11px 9px", background: "#0F4C81", color: "#fff", textAlign: c.align === "right" ? "right" : "left", fontSize: 12 }}>{c.label}</th>)}
+                  {columns.map((c) => <th key={c.key} style={{ padding: "11px 9px", background: brand.tableCardBg, color: brand.tableCardHeaderText, textAlign: c.align === "right" ? "right" : "left", fontSize: 12, fontWeight: 800, borderBottom: `2px solid ${brand.gold}`, borderRight: "1px solid rgba(255,255,255,0.14)" }}>{c.label}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {!loading && !reportRows.length && <tr><td colSpan={columns.length} style={{ padding: 30, textAlign: "center", color: "#6B7280" }}>No ledger entries found for the selected dates.</td></tr>}
-                {reportRows.map((r) => <tr key={`${r.sNo}-${r.voucherNo}`}>
-                  {columns.map((c) => <td key={c.key} style={{ padding: "9px", borderTop: "1px solid #edf1f4", textAlign: c.align === "right" ? "right" : "left", fontSize: 12.5 }}>{["debit","credit","balance"].includes(c.key) ? money(r[c.key]) : r[c.key]}</td>)}
+                {reportRows.map((r, i) => <tr key={`${r.sNo}-${r.voucherNo}`} style={{ background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>
+                  {columns.map((c) => <td key={c.key} style={{ padding: "9px", borderTop: "1px solid rgba(8,33,63,0.18)", borderRight: "1px solid rgba(8,33,63,0.10)", color: i % 2 ? brand.rowTextOnWhite : brand.rowText, textAlign: c.align === "right" ? "right" : "left", fontSize: 12.5 }}>{["debit","credit","balance"].includes(c.key) ? money(r[c.key]) : r[c.key]}</td>)}
                 </tr>)}
               </tbody>
               <tfoot>

@@ -7,6 +7,7 @@ import LedgerTabs from "../components/LedgerTabs";
 import { SectionCard } from "../components/CashBook/ui";
 import { getPartyLedgerSummary, getParties } from "../api/ledgerApi";
 import { brand } from "../theme";
+import { months, years, currentYearValue, monthRange } from "../utils/ledgerFilters";
 import { exportExcel } from "../utils/exportExcel";
 import { printDocument, tableHtml } from "../utils/print";
 
@@ -34,6 +35,8 @@ export default function PartyLedgerReport({ mode = "excel" }) {
   const [data, setData] = useState({ summary: [], totals: { business: 0, paid: 0, payable: 0 } });
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(currentYearValue);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -65,7 +68,7 @@ export default function PartyLedgerReport({ mode = "excel" }) {
   const runExport = () => {
     if (!party || !rows.length || (fromDate && toDate && fromDate > toDate)) return;
     const reportParty = isAll ? "All Contractors" : party;
-    const dateText = fromDate || toDate ? ` · ${fromDate || "Start"} to ${toDate || "End"}` : "";
+    const dateText = month ? ` · ${months[month - 1].label} ${year}` : (fromDate || toDate ? ` · ${fromDate || "Start"} to ${toDate || "End"}` : "");
     if (isExcel) {
       exportExcel(`Party_Ledger_${reportParty.replace(/\s+/g, "_")}`, columns, rows);
       return;
@@ -88,7 +91,7 @@ export default function PartyLedgerReport({ mode = "excel" }) {
             <Typography variant="h4" fontWeight="bold">Party Ledger Report — {isExcel ? "Excel" : "PDF"}</Typography>
             <Typography color="text.secondary" mt={0.5}>Separate contractor-wise report. Payable bills are reported separately and do not reduce the Party Ledger balance.</Typography>
           </Box>
-          <Button variant="outlined" startIcon={<FaArrowLeft />} onClick={() => navigate("/ledger/party")}>Back to Party Ledger</Button>
+          <Button variant="contained" startIcon={<FaArrowLeft />} onClick={() => navigate("/ledger/party")} sx={{ background: brand.blueDeep, color: "#fff", "&:hover": { background: brand.navy } }}>Back to Party Ledger</Button>
         </Box>
 
         <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Party Ledger Report — {farm}</>}>
@@ -101,14 +104,25 @@ export default function PartyLedgerReport({ mode = "excel" }) {
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
-              <TextField fullWidth size="small" type="date" label="From Date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth size="small" select label="Month" value={month} onChange={(e) => { const m = Number(e.target.value); setMonth(m); const r = monthRange(m, year); setFromDate(r.fromDate); setToDate(r.toDate); }}>
+                <MenuItem value={0}>All Months</MenuItem>
+                {months.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
-              <TextField fullWidth size="small" type="date" label="To Date" value={toDate} onChange={(e) => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth size="small" select label="Year" value={year} onChange={(e) => { const y = Number(e.target.value); setYear(y); const r = monthRange(month, y); setFromDate(r.fromDate); setToDate(r.toDate); }} disabled={!month}>
+                {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" type="date" label="From Date" value={fromDate} onChange={(e) => { setMonth(0); setFromDate(e.target.value); }} InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" type="date" label="To Date" value={toDate} onChange={(e) => { setMonth(0); setToDate(e.target.value); }} InputLabelProps={{ shrink: true }} />
             </Grid>
             <Grid item xs={12} md={3}>
               <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1 }}>
-                <Button variant="contained" disabled={!party || !rows.length || loading || (fromDate && toDate && fromDate > toDate)} startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={runExport}>
+                <Button variant="contained" disabled={!party || !rows.length || loading || (fromDate && toDate && fromDate > toDate)} startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={runExport} sx={{ background: isExcel ? "#1E8E5A" : "#C0392B", color: "#fff", "&:hover": { background: isExcel ? "#166A44" : "#96281B" } }}>
                   {isExcel ? "Download Excel" : "Generate PDF"}
                 </Button>
               </Box>
@@ -117,7 +131,7 @@ export default function PartyLedgerReport({ mode = "excel" }) {
 
           {!party ? (
             <Box sx={{ textAlign: "center", py: 6, borderRadius: 4, border: `1.5px dashed ${brand.gold}`, background: "rgba(212,175,55,0.06)" }}>
-              <Typography sx={{ color: brand.slate, fontWeight: 600 }}>Select a contractor or “All Contractors — Consolidated”, then optionally set a date range.</Typography>
+              <Typography sx={{ color: brand.slate, fontWeight: 600 }}>Select a contractor or “All Contractors — Consolidated”, then choose a month or use a custom date range.</Typography>
             </Box>
           ) : loading ? (
             <Typography sx={{ py: 5, textAlign: "center" }}>Loading party ledger...</Typography>
@@ -131,8 +145,8 @@ export default function PartyLedgerReport({ mode = "excel" }) {
               {!rows.length ? <Typography sx={{ py: 5, textAlign: "center" }}>No bills found for {party}.</Typography> : (
                 <Box sx={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
-                    <thead><tr>{columns.map((c) => <th key={c.key} style={{ textAlign: c.align || "left", padding: "11px 10px", background: "#f1f6fa", color: "#0F4C81", borderBottom: "1px solid #d9e4ec", fontSize: 12.5 }}>{c.label}</th>)}</tr></thead>
-                    <tbody>{rows.map((r, i) => <tr key={`${r.id}-${i}`}>{columns.map((c) => <td key={c.key} style={{ textAlign: c.align || "left", padding: "10px", borderBottom: "1px solid #edf1f4", fontWeight: c.key === "amount" ? 800 : 400 }}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}</tr>)}</tbody>
+                    <thead><tr>{columns.map((c) => <th key={c.key} style={{ textAlign: c.align || "left", padding: "11px 10px", background: brand.tableCardBg, color: brand.tableCardHeaderText, borderBottom: `2px solid ${brand.gold}`, borderRight: "1px solid rgba(255,255,255,0.14)", fontSize: 12.5 }}>{c.label}</th>)}</tr></thead>
+                    <tbody>{rows.map((r, i) => <tr key={`${r.id}-${i}`} style={{ background: i % 2 ? brand.rowWhiteGradient : brand.rowBlue }}>{columns.map((c) => <td key={c.key} style={{ textAlign: c.align || "left", padding: "10px", color: i % 2 ? brand.rowTextOnWhite : brand.rowText, borderBottom: "1px solid rgba(8,33,63,0.18)", borderRight: "1px solid rgba(8,33,63,0.10)", fontWeight: c.key === "amount" ? 800 : 400 }}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}</tr>)}</tbody>
                   </table>
                 </Box>
               )}

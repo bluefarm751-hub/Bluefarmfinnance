@@ -10,6 +10,7 @@ import { getParties } from "../api/ledgerApi";
 import { getBills } from "../api/financeApi";
 import { useToast } from "../utils/useToast";
 import { brand } from "../theme";
+import { months, years, currentYearValue, monthRange } from "../utils/ledgerFilters";
 import { exportExcel } from "../utils/exportExcel";
 import { printDocument, tableHtml } from "../utils/print";
 
@@ -45,6 +46,8 @@ export default function PartyLedger() {
   const [data, setData] = useState({ summary: [], totals: { business: 0, paid: 0, payable: 0 } });
   const [loading, setLoading] = useState(false);
   const [openHeads, setOpenHeads] = useState({});
+  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(currentYearValue);
 
   useEffect(() => {
     getParties().then((r) => setParties(r.data || [])).catch(() => {});
@@ -58,8 +61,13 @@ export default function PartyLedger() {
     setLoading(true);
 
     const normalize = (v) => String(v ?? "").trim().toLowerCase();
+    const { fromDate, toDate } = monthRange(month, year);
     const buildFromBills = (bills) => {
-      const matching = (bills || []).filter((b) => normalize(b.contractorName) === normalize(party));
+      const matching = (bills || []).filter((b) => {
+        const d = String(b.billDate || "").slice(0, 10);
+        return normalize(b.contractorName) === normalize(party) &&
+          (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
+      });
       const groups = new Map();
       let business = 0;
       let paidTotal = 0;
@@ -137,7 +145,7 @@ export default function PartyLedger() {
         setLoading(false);
       }
     })();
-  }, [party]);
+  }, [party, month, year]);
 
   const flatRows = useMemo(() => data.summary.flatMap((g) => g.bills.map((b) => ({
     ...b, billNo: b.sNo ? `BILL-${b.sNo}` : `BILL-${b.id}`, headName: g.headName,
@@ -154,23 +162,34 @@ export default function PartyLedger() {
         <LedgerTabs />
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: .5 }}>
           <Typography variant="h4" fontWeight="bold">Party Ledger</Typography>
-          <Button variant="outlined" startIcon={<FaUsersCog />} onClick={() => navigate("/ledger/parties")}>Manage Parties</Button>
+          <Button variant="contained" startIcon={<FaUsersCog />} sx={{ background: brand.blueDeep, color: "#fff", "&:hover": { background: brand.navy } }} onClick={() => navigate("/ledger/parties")}>Manage Parties</Button>
         </Box>
         <Typography color="text.secondary" mb={3}>Contractor-wise data is pulled directly from the bills already added. Bills are grouped head-wise. Total paid is shown first, each paid bill is deducted one-by-one, and payable bills stay separate at the end without reducing the paid balance.</Typography>
 
         <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Party Ledger — {farm}</>}>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth size="small" select label="Party / Contractor" value={party} onChange={(e) => setParty(e.target.value)} sx={{ minWidth: 220 }}>
+            <Grid item xs={12} md={4}>
+              <TextField fullWidth size="small" select label="Party / Contractor" value={party} onChange={(e) => setParty(e.target.value)}>
                 <MenuItem value="">Select a party</MenuItem>
                 {parties.map((p) => <MenuItem key={p.name} value={p.name}>{p.name}</MenuItem>)}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" select label="Month" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+                <MenuItem value={0}>All Months</MenuItem>
+                {months.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField fullWidth size="small" select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))} disabled={!month}>
+                {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
               <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1, flexWrap: "wrap" }}>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFileExcel />} onClick={() => exportExcel(`Party Ledger - ${party}`, exportColumns, flatRows)}>Excel</Button>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFilePdf />} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>PDF</Button>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaPrint />} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>Print</Button>
+                <Button size="small" variant="contained" disabled={!flatRows.length} startIcon={<FaFileExcel />} sx={{ background: "#1E8E5A", color: "#fff", "&:hover": { background: "#166A44" } }} onClick={() => exportExcel(`Party Ledger - ${party}`, exportColumns, flatRows)}>Excel</Button>
+                <Button size="small" variant="contained" disabled={!flatRows.length} startIcon={<FaFilePdf />} sx={{ background: "#C0392B", color: "#fff", "&:hover": { background: "#96281B" } }} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}${month ? ` · ${months[month - 1].label} ${year}` : ""}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>PDF</Button>
+                <Button size="small" variant="contained" disabled={!flatRows.length} startIcon={<FaPrint />} sx={{ background: "#0F4C81", color: "#fff", "&:hover": { background: "#08213F" } }} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}${month ? ` · ${months[month - 1].label} ${year}` : ""}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>Print</Button>
               </Box>
             </Grid>
           </Grid>

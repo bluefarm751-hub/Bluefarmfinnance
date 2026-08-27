@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Chip, Grid, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Chip, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import { FaFileExcel, FaFilePdf, FaPrint, FaBook } from "react-icons/fa";
 
 import MainLayout from "../layouts/MainLayout";
@@ -11,6 +12,7 @@ import { exportExcel } from "../utils/exportExcel";
 import { printDocument, tableHtml } from "../utils/print";
 import { useToast } from "../utils/useToast";
 import { brand } from "../theme";
+import { months, years, currentYearValue, monthRange } from "../utils/ledgerFilters";
 
 const HEAD_COLORS = [
   { bg: "linear-gradient(135deg,#1E88E5 0%,#1565C0 100%)", soft: "#EAF3FF", border: "#8CB9EE" },
@@ -35,16 +37,20 @@ const columns = [
 ];
 
 export default function GeneralLedger() {
+  const navigate = useNavigate();
   const { ToastUI } = useToast();
   const farm = localStorage.getItem("farm") || "Blue Farm";
   const [data, setData] = useState({ rows: [], totals: {} });
   const [loading, setLoading] = useState(true);
   const [openHead, setOpenHead] = useState(null);
+  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(currentYearValue);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await getBalanceSheet();
+      const { fromDate, toDate } = monthRange(month, year);
+      const res = await getBalanceSheet({ fromDate, toDate });
       const next = res.data || { rows: [], totals: {} };
       setData(next);
       if (openHead === null && next.rows?.length) setOpenHead(next.rows[0].id);
@@ -55,20 +61,69 @@ export default function GeneralLedger() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [month, year]);
 
   const rows = data.rows || [];
   const totals = data.totals || {};
   const fmt = (v) => `Rs. ${Number(v || 0).toLocaleString()}`;
+
+  const exportRows = useMemo(() => rows.flatMap((head) => (head.bills || []).map((bill) => ({
+    headName: head.headName,
+    billNo: bill.billNo,
+    billDate: bill.billDate || "—",
+    contractorName: bill.contractorName || "—",
+    item: bill.item || bill.remarks || "—",
+    status: bill.status || "Payable",
+    amount: Number(bill.amount || 0),
+  }))), [rows]);
+
+  const exportColumns = [
+    { key: "headName", label: "Head" },
+    { key: "billNo", label: "Bill No" },
+    { key: "billDate", label: "Date" },
+    { key: "contractorName", label: "Contractor" },
+    { key: "item", label: "Description" },
+    { key: "status", label: "Status" },
+    { key: "amount", label: "Bill Amount", align: "right", render: (r) => fmt(r.amount) },
+  ];
+
+  const periodLabel = month ? `${months[month - 1].label} ${year}` : "All Months";
+  const runExcel = () => {
+    if (!exportRows.length) return;
+    exportExcel(`${farm.replace(/\s+/g, "_")}_Main_Ledger_${month ? `${year}_${String(month).padStart(2, "0")}` : "All"}`, exportColumns, exportRows);
+  };
+  const runPrint = () => {
+    if (!exportRows.length) return;
+    printDocument({
+      title: `Main Ledger — ${farm}`,
+      subtitle: periodLabel,
+      landscape: true,
+      bodyHtml: tableHtml(exportColumns, exportRows),
+    });
+  };
 
   return (
     <MainLayout>
       <Box sx={{ px: 3, pt: 1, pb: 4 }}>
         <Typography variant="h4" fontWeight="bold" mb={0.5}>Main Ledger</Typography>
         <Typography color="text.secondary" mb={2.5}>
-          All Heads are loaded automatically from added bills. Click a Head to see every bill in sequence. Every bill — Paid or Payable — reduces the Head balance.
+          All Heads are loaded automatically from added bills. Select a month to view that period, or keep All Months to view the complete ledger.
         </Typography>
         <LedgerTabs />
+        <Box sx={{ display: "flex", gap: 1.25, alignItems: "center", flexWrap: "wrap", mb: 2.5 }}>
+          <TextField size="small" select label="Month" value={month} onChange={(e) => setMonth(Number(e.target.value))} sx={{ minWidth: 170 }}>
+            <MenuItem value={0}>All Months</MenuItem>
+            {months.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+          </TextField>
+          <TextField size="small" select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))} sx={{ minWidth: 130 }} disabled={!month}>
+            {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+          </TextField>
+          <Box sx={{ ml: { xs: 0, md: "auto" }, display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Button size="small" variant="contained" startIcon={<FaFileExcel />} sx={{ background: "#1E8E5A", color: "#fff", "&:hover": { background: "#166A44" } }} onClick={runExcel} disabled={!exportRows.length}>Excel</Button>
+            <Button size="small" variant="contained" startIcon={<FaFilePdf />} sx={{ background: "#C0392B", color: "#fff", "&:hover": { background: "#96281B" } }} onClick={() => navigate("/ledger/report-pdf")}>PDF</Button>
+            <Button size="small" variant="contained" startIcon={<FaPrint />} sx={{ background: "#0F4C81", color: "#fff", "&:hover": { background: "#08213F" } }} onClick={runPrint} disabled={!exportRows.length}>Print</Button>
+          </Box>
+        </Box>
 
         <SectionCard title={<><FaBook style={{ marginRight: 8, verticalAlign: -2 }} />Main Ledger — {farm}</>}>
           {loading ? <Typography sx={{ py: 6, textAlign: "center" }}>Loading ledger...</Typography> : !rows.length ? (
