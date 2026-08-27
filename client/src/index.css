@@ -100,9 +100,10 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
 .MuiContainer-root, .MuiPaper-root, .MuiCard-root, .MuiCardContent-root { min-width: 0; }
 
 
-/* Finance + Cash Book data-entry fields: clean white typing surfaces.
-   Scope is applied by MainLayout only to /finance* and /cashbook* routes,
-   so Payroll, Employees and other sections keep their existing styling. */
+/* Finance + Cash Book + Ledger data-entry fields: clean white typing surfaces.
+   Scope is applied by MainLayout only to /finance*, /cashbook* and /ledger*
+   routes, so Payroll, Employees and other sections keep their existing
+   styling. */
 .finance-cash-scope .MuiTextField-root .MuiOutlinedInput-root,
 .finance-cash-scope .MuiTextField-root .MuiFilledInput-root,
 .finance-cash-scope .MuiTextField-root .MuiInput-root,

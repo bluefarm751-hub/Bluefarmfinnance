@@ -6,7 +6,8 @@ export default function MainLayout({ children }) {
   const location = useLocation();
   const isFinanceCashScope =
     location.pathname.startsWith("/finance") ||
-    location.pathname.startsWith("/cashbook");
+    location.pathname.startsWith("/cashbook") ||
+    location.pathname.startsWith("/ledger");
 
   return (
     <div

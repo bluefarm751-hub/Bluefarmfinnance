@@ -1,5 +1,5 @@
 import { Box, Grid, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { FaBook, FaBalanceScale, FaFileInvoiceDollar } from "react-icons/fa";
 import { shadowCard } from "../theme";
@@ -11,7 +11,6 @@ const TABS = [
 ];
 
 export default function Ledger() {
-  const navigate = useNavigate();
   const farm = localStorage.getItem("farm") || "Blue Farm";
 
   return (
@@ -60,10 +59,8 @@ export default function Ledger() {
             {TABS.map((tab) => (
               <Grid item xs={12} md={4} key={tab.path}>
                 <Box
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate(tab.path)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(tab.path); }}
+                  component={Link}
+                  to={tab.path}
                   sx={{
                     cursor: "pointer",
                     borderRadius: 4,
@@ -76,7 +73,9 @@ export default function Ledger() {
                     justifyContent: "center",
                     alignItems: "center",
                     textAlign: "center",
+                    textDecoration: "none",
                     position: "relative",
+                    zIndex: 1,
                     overflow: "hidden",
                     boxShadow: shadowCard,
                     border: "2px solid rgba(255,255,255,0.25)",
