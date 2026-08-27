@@ -225,7 +225,7 @@ export default function ContingentBillReport() {
                 <Box sx={{ display: "flex", gap: 1, justifyContent: { md: "flex-end" } }}>
                   <Button
                     variant="contained"
-                    startIcon={<FileDownloadIcon />}
+                    startIcon={<FileDownloadIcon / className="bf-export-button bf-export-excel">}
                     onClick={handleExportExcel}
                     sx={{ background: "#1E8E5A", "&:hover": { background: "#166B44" } }}
                   >
@@ -332,7 +332,7 @@ export default function ContingentBillReport() {
                       </Button>
                       <Button
                         variant="contained"
-                        startIcon={<PrintIcon />}
+                        startIcon={<PrintIcon / className="bf-export-button bf-export-print">}
                         onClick={() => handlePrintVoucher(b)}
                         sx={{ background: "#16608f", "&:hover": { background: "#124d72" }, whiteSpace: "nowrap" }}
                       >
@@ -340,7 +340,7 @@ export default function ContingentBillReport() {
                       </Button>
                       <Button
                         variant="contained"
-                        startIcon={<PictureAsPdfIcon />}
+                        startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">}
                         onClick={() => handleDownloadPdf(b)}
                         sx={{ background: "#B3261E", "&:hover": { background: "#8E1E17" }, whiteSpace: "nowrap" }}
                       >

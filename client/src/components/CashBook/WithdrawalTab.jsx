@@ -141,9 +141,9 @@ export default function WithdrawalTab({ summary, onChanged, showToast }) {
         title="Withdrawal History"
         action={
           <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => exportExcel("Cash Withdrawal Report", exportCols, rows)}>Excel</Button>
-            <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => printDocument({ title: "Cash Withdrawal Report", subtitle: "Cash Book", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>Print</Button>
           </>
         }

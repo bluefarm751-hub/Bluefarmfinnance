@@ -108,7 +108,7 @@ export default function PartyLedgerReport({ mode = "excel" }) {
             </Grid>
             <Grid item xs={12} md={3}>
               <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1 }}>
-                <Button variant="contained" disabled={!party || !rows.length || loading || (fromDate && toDate && fromDate > toDate)} startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={runExport}>
+                <Button variant="contained" disabled={!party || !rows.length || loading || (fromDate && toDate && fromDate  className="bf-export-button bf-export-excel"> toDate)} startIcon={isExcel ? <FaFileExcel /> : <FaFilePdf />} onClick={runExport}>
                   {isExcel ? "Download Excel" : "Generate PDF"}
                 </Button>
               </Box>

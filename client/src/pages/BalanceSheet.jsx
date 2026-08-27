@@ -51,9 +51,9 @@ export default function BalanceSheet() {
     </Grid>
 
     <SectionCard title={<><FaBalanceScale style={{ marginRight: 8, verticalAlign: -2 }} />Head-wise Balance — {farm}</>} action={rows.length > 0 && <Box sx={{ display: "flex", gap: 1 }}>
-      <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => exportExcel(`Balance Sheet - ${farm}`, columns, rows)}>Excel</Button>
-      <Button size="small" variant="outlined" startIcon={<FaFilePdf />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>PDF</Button>
-      <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>Print</Button>
+      <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => exportExcel(`Balance Sheet - ${farm}`, columns, rows)}>Excel</Button>
+      <Button size="small" variant="outlined" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>PDF</Button>
+      <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.6)" }} onClick={() => printDocument({ title: `Balance Sheet — ${farm}`, subtitle: "Head-wise remaining balances", landscape: true, bodyHtml: tableHtml(columns, rows) })}>Print</Button>
     </Box>}>
       {loading ? <Typography sx={{ py: 5, textAlign: "center" }}>Loading balance sheet...</Typography> : rows.length === 0 ? <Box sx={{ py: 6, textAlign: "center", borderRadius: 3, border: `1.5px dashed ${brand.gold}` }}><Typography fontWeight={700}>No finance heads found for {farm}.</Typography></Box> : (
         <DataTable

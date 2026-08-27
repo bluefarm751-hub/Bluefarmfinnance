@@ -162,12 +162,12 @@ export default function EmployeeDocuments({ employee, employeeId, onChanged, sho
                 </IconButton>
               </Tooltip>
               <Tooltip title="Download">
-                <IconButton size="small" onClick={() => handleDownload(doc)} sx={{ background: "#f7f9fc", color: brand.blueDeep, border: `1px solid ${brand.blueDeep}33` }}>
+                <IconButton size="small" onClick={() => handleDownload(doc)} className="bf-action-download">
                   <DownloadIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Print">
-                <IconButton size="small" onClick={() => handlePrint(doc)} sx={{ background: "#f7f9fc", color: brand.blueDeep, border: `1px solid ${brand.blueDeep}33` }}>
+                <IconButton size="small" onClick={() => handlePrint(doc)} className="bf-action-print">
                   <PrintIcon fontSize="small" />
                 </IconButton>
               </Tooltip>

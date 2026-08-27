@@ -321,7 +321,7 @@ export default function EditBill() {
       {/* Edit dialog */}
       <Dialog open={!!editing} onClose={() => setEditing(null)} fullWidth maxWidth="sm"
         PaperProps={{ sx: { borderRadius: 4 } }}>
-        <Box sx={{ background: gradients.brand, px: 3, py: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)", px: 2.5, py: 1.8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography sx={{ color: "#fff", fontWeight: 800 }}>Edit Bill</Typography>
           <IconButton size="small" onClick={() => setEditing(null)} sx={{ color: "#fff" }}>
             <CloseIcon fontSize="small" />
@@ -472,7 +472,7 @@ export default function EditBill() {
       {/* View bill — shown inside the app, same as Employee Documents */}
       <Dialog open={!!viewPic} onClose={() => setViewPic(null)} maxWidth="lg" fullWidth
         PaperProps={{ sx: { borderRadius: 4, overflow: "hidden" } }}>
-        <Box sx={{ background: gradients.brand, px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Box sx={{ background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)", px: 2.5, py: 1.8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Typography fontWeight={800} sx={{ color: "#fff" }}>Bill</Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button size="small" onClick={() => viewPic && window.open(fullUrl(viewPic), "_blank", "noopener,noreferrer")}

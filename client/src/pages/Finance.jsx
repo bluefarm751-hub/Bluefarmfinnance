@@ -183,7 +183,7 @@ export default function Finance() {
         {/* Head section header */}
         <Box sx={{
           display: "flex", alignItems: "center", justifyContent: "space-between", mt: 3, mb: 2.5,
-          p: 2, borderRadius: 3.5, background: "linear-gradient(135deg, #0F4C81 0%, #16608f 100%)",
+          px: 2.5, py: 1.8, borderRadius: 0, background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
           boxShadow: "0 10px 28px rgba(8,33,63,0.22)",
         }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>

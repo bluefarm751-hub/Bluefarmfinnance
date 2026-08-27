@@ -153,9 +153,9 @@ export default function TRTab({ onChanged, showToast }) {
         title={`Temporary Receipts — Outstanding ${money(outstanding)}`}
         action={
           <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => exportExcel("Temporary Receipt Report", exportCols, rows)}>Excel</Button>
-            <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => printDocument({ title: "Temporary Receipt Report", subtitle: "Cash Book", landscape: true, bodyHtml: tableHtml(exportCols, rows) })}>Print</Button>
           </>
         }

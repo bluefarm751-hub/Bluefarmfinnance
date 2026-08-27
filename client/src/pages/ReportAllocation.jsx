@@ -141,7 +141,7 @@ export default function ReportAllocation() {
 
           <Button
             variant="contained"
-            startIcon={<FileDownloadIcon />}
+            startIcon={<FileDownloadIcon / className="bf-export-button bf-export-excel">}
             onClick={handleExportExcel}
             sx={{ background: "#1E8E5A", "&:hover": { background: "#166B44" } }}
           >
@@ -149,7 +149,7 @@ export default function ReportAllocation() {
           </Button>
           <Button
             variant="contained"
-            startIcon={<PictureAsPdfIcon />}
+            startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">}
             onClick={handleExportPDF}
             sx={{ background: "#C0392B", "&:hover": { background: "#96281B" } }}
           >

@@ -361,13 +361,13 @@ export default function DailyClosingTab({ onChanged, showToast }) {
         title="Daily Closing — Physical Cash Verification"
         action={
           <>
-            <Button size="small" variant="contained" startIcon={<FaFileExcel />}
+            <Button size="small" variant="contained" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">}
               disabled={exportingReport || exportingReportPdf}
               sx={{ background: brand.success, color: "#fff", mr: 1, "&:hover": { background: "#166B44" } }}
               onClick={exportDailyReport}>
               {exportingReport ? "Building…" : "Daily Closing Report (Excel)"}
             </Button>
-            <Button size="small" variant="contained" startIcon={<FaFilePdf />}
+            <Button size="small" variant="contained" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">}
               disabled={exportingReport || exportingReportPdf}
               sx={{ background: brand.danger, color: "#fff", "&:hover": { background: "#9E2E22" } }}
               onClick={exportDailyReportPdf}>
@@ -481,7 +481,7 @@ export default function DailyClosingTab({ onChanged, showToast }) {
                   Save Daily Closing
                 </Button>
               </Box>
-              <Button fullWidth variant="contained" startIcon={<FaPrint size={12} />}
+              <Button fullWidth variant="contained" startIcon={<FaPrint size={12} / className="bf-export-button bf-export-print">}
                 onClick={printCashCounting}
                 sx={{ mt: 1.2, height: 34, background: brand.gold, color: brand.navy, fontWeight: 800,
                   "&:hover": { background: brand.goldDark, color: "#fff" } }}>
@@ -496,9 +496,9 @@ export default function DailyClosingTab({ onChanged, showToast }) {
         title="Daily Closing History"
         action={
           <>
-            <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => exportExcel("Daily Closing Report", exportCols, history)}>Excel</Button>
-            <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+            <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
               onClick={() => printDocument({ title: "Daily Closing Report", subtitle: "Cash Book", landscape: true, bodyHtml: tableHtml(exportCols, history) })}>Print</Button>
           </>
         }

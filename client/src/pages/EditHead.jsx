@@ -218,7 +218,7 @@ export default function EditHead() {
       {/* Edit dialog */}
       <Dialog open={!!editing} onClose={() => setEditing(null)} fullWidth maxWidth="sm"
         PaperProps={{ sx: { borderRadius: 4 } }}>
-        <Box sx={{ background: gradients.brand, px: 3, py: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)", px: 2.5, py: 1.8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography sx={{ color: "#fff", fontWeight: 800 }}>Edit Head</Typography>
           <IconButton size="small" onClick={() => setEditing(null)} sx={{ color: "#fff" }}>
             <CloseIcon fontSize="small" />
@@ -265,7 +265,7 @@ export default function EditHead() {
       {/* Locked-delete warning — shown when the head still has bills */}
       <Dialog open={!!lockedTarget} onClose={() => setLockedTarget(null)} fullWidth maxWidth="xs"
         PaperProps={{ sx: { borderRadius: 4 } }}>
-        <Box sx={{ background: gradients.brand, px: 3, py: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)", px: 2.5, py: 1.8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography sx={{ color: "#fff", fontWeight: 800, display: "flex", alignItems: "center", gap: 1 }}>
             <LockIcon fontSize="small" /> Head Locked
           </Typography>

@@ -184,11 +184,11 @@ export default function ReportsTab() {
       title={`Cash Reports — ${label}`}
       action={
         <>
-          <Button size="small" variant="outlined" startIcon={<FaFileExcel />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+          <Button size="small" variant="outlined" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
             onClick={() => exportExcel(label, columns, rows)}>Excel</Button>
-          <Button size="small" variant="outlined" startIcon={<FaFilePdf />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+          <Button size="small" variant="outlined" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
             onClick={() => printDocument({ title: label, subtitle: `${subtitle} — choose "Save as PDF"`, landscape: true, bodyHtml: tableHtml(columns, rows) })}>PDF</Button>
-          <Button size="small" variant="outlined" startIcon={<FaPrint />} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
+          <Button size="small" variant="outlined" startIcon={<FaPrint / className="bf-export-button bf-export-print">} sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.6)" }}
             onClick={() => printDocument({ title: label, subtitle, landscape: true, bodyHtml: tableHtml(columns, rows) })}>Print</Button>
         </>
       }

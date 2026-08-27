@@ -251,7 +251,7 @@ export default function AddContingentBill() {
           <CardContent sx={{ p: 3.5 }}>
             <Box sx={{
               background: "linear-gradient(90deg, #0F4C81 0%, #16608f 100%)",
-              px: 2, py: 1.1, borderRadius: 2, mb: 2,
+              px: 2.5, py: 1.8, borderRadius: 0, mb: 2, mt: -3.5, mx: -3.5,
             }}>
               <Typography sx={{ fontWeight: 800, color: "#fff", letterSpacing: 0.4 }}>Voucher Details</Typography>
             </Box>
@@ -492,11 +492,11 @@ export default function AddContingentBill() {
                 sx={{ background: "#6B7280", "&:hover": { background: "#4B5563" } }}>
                 Cancel
               </Button>
-              <Button variant="contained" startIcon={<PrintIcon />} onClick={handlePrintPreview}
+              <Button variant="contained" startIcon={<PrintIcon / className="bf-export-button bf-export-print">} onClick={handlePrintPreview}
                 sx={{ background: "#16608f", "&:hover": { background: "#124d72" } }}>
                 Print Preview
               </Button>
-              <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadPreview}
+              <Button variant="contained" startIcon={<PictureAsPdfIcon / className="bf-export-button bf-export-pdf">} onClick={handleDownloadPreview}
                 sx={{ background: "#B3261E", "&:hover": { background: "#8E1E17" } }}>
                 Download PDF
               </Button>

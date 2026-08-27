@@ -168,9 +168,9 @@ export default function PartyLedger() {
             </Grid>
             <Grid item xs={12} md={6}>
               <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "flex-end" }, gap: 1, flexWrap: "wrap" }}>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFileExcel />} onClick={() => exportExcel(`Party Ledger - ${party}`, exportColumns, flatRows)}>Excel</Button>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFilePdf />} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>PDF</Button>
-                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaPrint />} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>Print</Button>
+                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">} onClick={() => exportExcel(`Party Ledger - ${party}`, exportColumns, flatRows)}>Excel</Button>
+                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>PDF</Button>
+                <Button size="small" variant="outlined" disabled={!flatRows.length} startIcon={<FaPrint / className="bf-export-button bf-export-print">} onClick={() => printDocument({ title: `Party Ledger — ${party}`, subtitle: `${party} · ${farm}`, landscape: true, bodyHtml: tableHtml(exportColumns, flatRows) })}>Print</Button>
               </Box>
             </Grid>
           </Grid>

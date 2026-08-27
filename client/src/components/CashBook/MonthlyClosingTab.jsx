@@ -417,10 +417,10 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
           <IconButton size="small" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)} sx={{ color: brand.blueDeep, mr: 0.5 }}>
             {expandedId === r.id ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
           </IconButton>
-          <IconButton size="small" disabled={exportingRowId === `${r.id}-xlsx`} onClick={() => exportSavedExcel(r)} sx={{ color: brand.success, mr: 0.5 }}>
+          <IconButton size="small" disabled={exportingRowId === `${r.id}-xlsx`} onClick={() => exportSavedExcel(r)} className="bf-action-download">
             <FaFileExcel size={12} />
           </IconButton>
-          <IconButton size="small" disabled={exportingRowId === `${r.id}-pdf`} onClick={() => exportSavedPdf(r)} sx={{ color: brand.danger, mr: 0.5 }}>
+          <IconButton size="small" disabled={exportingRowId === `${r.id}-pdf`} onClick={() => exportSavedPdf(r)} className="bf-action-print">
             <FaFilePdf size={12} />
           </IconButton>
           <IconButton size="small" className="bf-action-delete" onClick={() => setDeleteTarget(r)} sx={{ color: brand.danger }}>
@@ -437,13 +437,13 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
         title="Monthly Closing — Physical Cash Verification"
         action={
           <>
-            <Button size="small" variant="contained" startIcon={<FaFileExcel />}
+            <Button size="small" variant="contained" startIcon={<FaFileExcel / className="bf-export-button bf-export-excel">}
               disabled={!preview || exporting || exportingPdf}
               sx={{ background: brand.success, color: "#fff", mr: 1, "&:hover": { background: "#166B44" } }}
               onClick={exportMonthlyReport}>
               {exporting ? "Building…" : "Monthly Closing Report (Excel)"}
             </Button>
-            <Button size="small" variant="contained" startIcon={<FaFilePdf />}
+            <Button size="small" variant="contained" startIcon={<FaFilePdf / className="bf-export-button bf-export-pdf">}
               disabled={!preview || exporting || exportingPdf}
               sx={{ background: brand.danger, color: "#fff", "&:hover": { background: "#9E2E22" } }}
               onClick={exportMonthlyReportPdf}>
@@ -586,7 +586,7 @@ export default function MonthlyClosingTab({ onChanged, showToast }) {
                   sx={{ height: 36, mt: 1.5, background: brand.blueDeep, fontWeight: 800, "&:hover": { background: brand.navy } }}>
                   {saving ? "Saving..." : "Save Monthly Closing"}
                 </Button>
-                <Button fullWidth variant="contained" startIcon={<FaPrint size={12} />}
+                <Button fullWidth variant="contained" startIcon={<FaPrint size={12} / className="bf-export-button bf-export-print">}
                   onClick={printCashCounting}
                   sx={{ mt: 1.2, height: 34, background: brand.gold, color: brand.navy, fontWeight: 800,
                     "&:hover": { background: brand.goldDark, color: "#fff" } }}>

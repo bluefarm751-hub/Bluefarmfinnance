@@ -216,3 +216,90 @@ html, body, #root { max-width: 100%; overflow-x: hidden; }
   font-size: 16px !important;
   color: #fff !important;
 }
+
+/* ============================================================
+   GLOBAL ACTION / EXPORT BUTTON STANDARD
+   Match the Employee list spacing everywhere: 8px between action
+   circles, consistent 30px size, and semantic colours for export/print.
+   ============================================================ */
+.MuiIconButton-root.bf-action-view,
+.MuiIconButton-root.bf-action-edit,
+.MuiIconButton-root.bf-action-delete,
+.MuiIconButton-root.bf-action-download,
+.MuiIconButton-root.bf-action-print {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 5px rgba(8,33,63,.18) !important;
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease !important;
+}
+
+/* Any flex row containing action circles gets the same 8px visual gap,
+   regardless of page/component implementation. */
+.MuiBox-root:has(> .MuiIconButton-root.bf-action-view),
+.MuiBox-root:has(> .MuiIconButton-root.bf-action-edit),
+.MuiBox-root:has(> .MuiIconButton-root.bf-action-delete),
+.MuiBox-root:has(> .MuiTooltip-root .MuiIconButton-root.bf-action-view),
+.MuiBox-root:has(> .MuiTooltip-root .MuiIconButton-root.bf-action-edit),
+.MuiBox-root:has(> .MuiTooltip-root .MuiIconButton-root.bf-action-delete) {
+  column-gap: 0 !important;
+}
+
+.MuiDataGrid-cell:has(.bf-action-view),
+.MuiDataGrid-cell:has(.bf-action-edit),
+.MuiDataGrid-cell:has(.bf-action-delete) {
+  column-gap: 0 !important;
+}
+
+.MuiIconButton-root.bf-action-download { background: #1E8E5A !important; }
+.MuiIconButton-root.bf-action-print { background: #0F4C81 !important; }
+.MuiIconButton-root.bf-action-download:hover { background: #166A44 !important; }
+.MuiIconButton-root.bf-action-print:hover { background: #08213F !important; }
+
+.MuiIconButton-root.bf-action-view .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-edit .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-delete .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-download .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-print .MuiSvgIcon-root,
+.MuiIconButton-root.bf-action-view svg,
+.MuiIconButton-root.bf-action-edit svg,
+.MuiIconButton-root.bf-action-delete svg,
+.MuiIconButton-root.bf-action-download svg,
+.MuiIconButton-root.bf-action-print svg {
+  font-size: 16px !important;
+  color: #fff !important;
+}
+
+/* Text export/print controls: coloured, consistent, and with matching spacing
+   when several report actions sit together. */
+.bf-export-button {
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-width: 1px !important;
+  min-height: 36px;
+}
+.bf-export-excel { background: #1E8E5A !important; border-color: #1E8E5A !important; }
+.bf-export-excel:hover { background: #166A44 !important; border-color: #166A44 !important; }
+.bf-export-pdf { background: #C0392B !important; border-color: #C0392B !important; }
+.bf-export-pdf:hover { background: #8E281C !important; border-color: #8E281C !important; }
+.bf-export-print { background: #0F4C81 !important; border-color: #0F4C81 !important; }
+.bf-export-print:hover { background: #08213F !important; border-color: #08213F !important; }
+
+/* Keep export/print groups visually separated even where the component
+   previously had no explicit gap. */
+.bf-export-button + .bf-export-button { margin-left: 8px !important; }
+
+/* Canonical Finance/Cash Book section header: matches HQ Remittance */
+.bf-finance-hq-header {
+  background: linear-gradient(90deg, #0F4C81 0%, #16608f 100%) !important;
+  color: #fff;
+}
