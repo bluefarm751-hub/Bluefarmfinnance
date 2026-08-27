@@ -157,6 +157,9 @@ export default function EmployeeForm({ formData, setFormData }) {
           <UploadBox label="Employee Photo" previewUrl={photoPreview} isImage onChange={(e) => setFormData({ ...formData, photo: e.target.files[0] })} />
           <UploadBox label="CNIC Copy" previewUrl={cnicPreview} isImage={cnicIsImage} fileName={cnicFileName} onChange={(e) => setFormData({ ...formData, cnicCopy: e.target.files[0] })} />
           <UploadBox label="Police Verification" previewUrl={policePreview} isImage={policeIsImage} fileName={policeFileName} onChange={(e) => setFormData({ ...formData, policeVerification: e.target.files[0] })} />
+          <Field label="Police Verification Date">
+            <DateFieldDMY label="" name="policeVerificationDate" size="small" sx={inputSx} value={formData.policeVerificationDate} onChange={handleChange} />
+          </Field>
           <Field label="Remarks"><TextField hiddenLabel size="small" fullWidth multiline minRows={1} maxRows={4} name="remarks" value={formData.remarks || ""} onChange={handleChange} sx={{ ...inputSx, "& .MuiOutlinedInput-root": { ...inputSx["& .MuiOutlinedInput-root"], height: 82, alignItems: "flex-start" }, "& .MuiInputBase-input": { ...inputSx["& .MuiInputBase-input"], height: "100% !important", overflow: "auto !important" } }} /></Field>
         </Box>
       </Section>

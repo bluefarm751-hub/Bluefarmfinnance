@@ -35,9 +35,18 @@ async function initDatabase() {
         remarks TEXT,
         "maritalStatus" TEXT,
         "policeVerification" TEXT,
+        "policeVerificationDate" TEXT,
         "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Older databases created before the police verification expiry date
+    // was tracked won't have this column yet — add it if missing so
+    // existing installs pick up the feature without a manual migration.
+    await client.query(`
+      ALTER TABLE employees
+      ADD COLUMN IF NOT EXISTS "policeVerificationDate" TEXT
     `);
 
     // ============================================================

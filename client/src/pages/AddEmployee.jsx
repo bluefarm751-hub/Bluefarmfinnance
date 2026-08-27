@@ -16,7 +16,7 @@ export default function AddEmployee() {
   const [formData, setFormData] = useState({
     employeeNo: "", name: "", fatherName: "", cnic: "", mobile: "", familyMobile: "", address: "",
     appointment: "", department: "", joiningDate: "", employeeType: "Permanent", maritalStatus: "", status: "Active",
-    grossSalary: "", bankName: "", accountTitle: "", iban: "", remarks: "", photo: "", cnicCopy: "", policeVerification: "",
+    grossSalary: "", bankName: "", accountTitle: "", iban: "", remarks: "", photo: "", cnicCopy: "", policeVerification: "", policeVerificationDate: "",
   });
 
   const handleSave = async () => {

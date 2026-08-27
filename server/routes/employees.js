@@ -233,7 +233,8 @@ router.post("/", employeeUpload, async (req, res) => {
             bankName,
             accountTitle,
             iban,
-            remarks
+            remarks,
+            policeVerificationDate
         } = req.body;
 
 
@@ -285,13 +286,14 @@ router.post("/", employeeUpload, async (req, res) => {
                 iban,
                 "cnicCopy",
                 "policeVerification",
+                "policeVerificationDate",
                 remarks
             )
             VALUES (
                 $1, $2, $3, $4, $5, $6,
                 $7, $8, $9, $10, $11, $12,
                 $13, $14, $15, $16, $17, $18,
-                $19, $20, $21, $22
+                $19, $20, $21, $22, $23
             )
             RETURNING id
             `,
@@ -317,6 +319,7 @@ router.post("/", employeeUpload, async (req, res) => {
                 iban,
                 cnicCopy,
                 policeVerification,
+                policeVerificationDate || null,
                 remarks
             ]
         );
@@ -368,7 +371,8 @@ router.put("/:id", employeeUpload, async (req, res) => {
             bankName,
             accountTitle,
             iban,
-            remarks
+            remarks,
+            policeVerificationDate
         } = req.body;
 
 
@@ -439,6 +443,11 @@ router.put("/:id", employeeUpload, async (req, res) => {
                     ? req.body.policeVerification
                     : old.policeVerification);
 
+        const effectivePoliceVerificationDate =
+            policeVerificationDate !== undefined
+                ? (policeVerificationDate || null)
+                : old.policeVerificationDate;
+
 
         // ------------------------------------------
         // UPDATE
@@ -469,9 +478,10 @@ router.put("/:id", employeeUpload, async (req, res) => {
                 iban = $19,
                 "cnicCopy" = $20,
                 "policeVerification" = $21,
-                remarks = $22,
+                "policeVerificationDate" = $22,
+                remarks = $23,
                 "updatedAt" = CURRENT_TIMESTAMP
-            WHERE id = $23
+            WHERE id = $24
             `,
             [
                 photo,
@@ -495,6 +505,7 @@ router.put("/:id", employeeUpload, async (req, res) => {
                 effectiveIban,
                 cnicCopy,
                 policeVerification,
+                effectivePoliceVerificationDate,
                 remarks,
                 req.params.id
             ]
