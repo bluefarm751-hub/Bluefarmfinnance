@@ -231,7 +231,7 @@ export default function EmployeeProfile() {
               </Grid>
             </Grid>
           </Box>
-          <CardContent sx={{ mt: -5, position: "relative", zIndex: 2, px: 4, pb: 4, background: "#f0f4fa" }}>
+          <CardContent sx={{ mt: -5, position: "relative", zIndex: 2, px: 4, pb: 4 }}>
             <Grid container spacing={2}>
               <StatChip icon={<Phone />} label="Mobile" value={employee.mobile} />
               <StatChip icon={<ContactPhone />} label="Family Mobile" value={employee.familyMobile} />
